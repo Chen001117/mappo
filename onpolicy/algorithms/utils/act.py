@@ -14,11 +14,13 @@ class ACTLayer(nn.Module):
         super(ACTLayer, self).__init__()
         self.mixed_action = False
         self.multi_discrete = False
+        self.continuous = False
 
         if action_space.__class__.__name__ == "Discrete":
             action_dim = action_space.n
             self.action_out = Categorical(inputs_dim, action_dim, use_orthogonal, gain)
         elif action_space.__class__.__name__ == "Box":
+            self.continuous = True
             action_dim = action_space.shape[0]
             self.action_out = DiagGaussian(inputs_dim, action_dim, use_orthogonal, gain)
         elif action_space.__class__.__name__ == "MultiBinary":
@@ -75,34 +77,17 @@ class ACTLayer(nn.Module):
             actions = torch.cat(actions, -1)
             action_log_probs = torch.cat(action_log_probs, -1)
         
+        elif self.continuous:
+            action_logits = self.action_out(x)
+            actions = action_logits.mode() if deterministic else action_logits.sample() 
+            action_log_probs = action_logits.log_probs(actions)
+
         else:
             action_logits = self.action_out(x, available_actions)
             actions = action_logits.mode() if deterministic else action_logits.sample() 
             action_log_probs = action_logits.log_probs(actions)
         
         return actions, action_log_probs
-
-    def get_probs(self, x, available_actions=None):
-        """
-        Compute action probabilities from inputs.
-        :param x: (torch.Tensor) input to network.
-        :param available_actions: (torch.Tensor) denotes which actions are available to agent
-                                  (if None, all actions available)
-
-        :return action_probs: (torch.Tensor)
-        """
-        if self.mixed_action or self.multi_discrete:
-            action_probs = []
-            for action_out in self.action_outs:
-                action_logit = action_out(x)
-                action_prob = action_logit.probs
-                action_probs.append(action_prob)
-            action_probs = torch.cat(action_probs, -1)
-        else:
-            action_logits = self.action_out(x, available_actions)
-            action_probs = action_logits.probs
-        
-        return action_probs
 
     def evaluate_actions(self, x, action, available_actions=None, active_masks=None):
         """
@@ -151,6 +136,15 @@ class ACTLayer(nn.Module):
             action_log_probs = torch.cat(action_log_probs, -1) # ! could be wrong
             dist_entropy = sum(dist_entropy)/len(dist_entropy)
         
+        elif self.continuous:
+            action_logits = self.action_out(x)
+            action_log_probs = action_logits.log_probs(action)
+            dist_entropy = action_logits.entropy().mean()
+            # if active_masks is not None:
+            #     dist_entropy = (action_logits.entropy()*active_masks.squeeze(-1)).sum()/active_masks.sum()
+            # else:
+            #     dist_entropy = action_logits.entropy().mean()
+
         else:
             action_logits = self.action_out(x, available_actions)
             action_log_probs = action_logits.log_probs(action)

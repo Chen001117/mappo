@@ -1,11 +1,33 @@
 """
 Modified from OpenAI Baselines code to work with multi-agent envs
 """
+import gym
 import numpy as np
 import torch
 from multiprocessing import Process, Pipe
 from abc import ABC, abstractmethod
 from onpolicy.utils.util import tile_images
+
+class MARLWrapper(gym.Wrapper):
+    def __init__(self, env):
+        gym.Wrapper.__init__(self, env)
+        self.share_observation_space = [self.observation_space]
+        self.observation_space = [self.observation_space]
+        self.action_space = [self.action_space]
+
+    def reset(self):
+        obs_n, _ = self.env.reset()
+        return np.expand_dims(obs_n, 0)
+        
+    def step(self, actions):
+        o, r, d, _, info_n = self.env.step(actions[0])
+        obs_n = np.expand_dims(o, 0)
+        reward_n = np.array([[r]])
+        done_n = np.array([d])
+        return obs_n, reward_n, done_n, info_n
+
+    def seed(self, s):
+        np.random.seed(s)
 
 class CloudpickleWrapper(object):
     """
