@@ -716,7 +716,8 @@ class DummyVecEnv(ShareVecEnv):
 
     def render(self, mode="human"):
         if mode == "rgb_array":
-            return np.array([env.render(mode=mode) for env in self.envs])
+            return np.array([env.render() for env in self.envs])
+            # return np.array([env.render(mode=mode) for env in self.envs])
         elif mode == "human":
             for env in self.envs:
                 env.render(mode=mode)

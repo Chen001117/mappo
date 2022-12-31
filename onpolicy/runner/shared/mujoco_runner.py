@@ -133,34 +133,35 @@ class MujocoRunner(Runner):
         eval_rnn_states = np.zeros((self.n_eval_rollout_threads, *self.buffer.rnn_states.shape[2:]), dtype=np.float32)
         eval_masks = np.ones((self.n_eval_rollout_threads, self.num_agents, 1), dtype=np.float32)
 
+        eval_finished = np.ones([self.n_eval_rollout_threads, self.num_agents, 1]) == 0
+
         for eval_step in range(self.episode_length):
             self.trainer.prep_rollout()
-            eval_action, eval_rnn_states = self.trainer.policy.act(np.concatenate(eval_obs),
-                                                np.concatenate(eval_rnn_states),
-                                                np.concatenate(eval_masks),
-                                                deterministic=True)
+            eval_action, eval_rnn_states = self.trainer.policy.act(
+                np.concatenate(eval_obs),
+                np.concatenate(eval_rnn_states),
+                np.concatenate(eval_masks),
+                deterministic=True
+            )
             eval_actions = np.array(np.split(_t2n(eval_action), self.n_eval_rollout_threads))
             eval_rnn_states = np.array(np.split(_t2n(eval_rnn_states), self.n_eval_rollout_threads))
             
-            if self.eval_envs.action_space[0].__class__.__name__ == 'MultiDiscrete':
-                for i in range(self.eval_envs.action_space[0].shape):
-                    eval_uc_actions_env = np.eye(self.eval_envs.action_space[0].high[i]+1)[eval_actions[:, :, i]]
-                    if i == 0:
-                        eval_actions_env = eval_uc_actions_env
-                    else:
-                        eval_actions_env = np.concatenate((eval_actions_env, eval_uc_actions_env), axis=2)
-            elif self.eval_envs.action_space[0].__class__.__name__ == 'Discrete':
-                eval_actions_env = np.squeeze(np.eye(self.eval_envs.action_space[0].n)[eval_actions], 2)
+            if self.eval_envs.action_space[0].__class__.__name__ == 'Box':
+                eval_actions_env = eval_actions.copy()
             else:
                 raise NotImplementedError
 
             # Obser reward and next obs
             eval_obs, eval_rewards, eval_dones, eval_infos = self.eval_envs.step(eval_actions_env)
-            eval_episode_rewards.append(eval_rewards)
+            eval_episode_rewards.append(eval_rewards * (1.-eval_finished))
 
             eval_rnn_states[eval_dones == True] = np.zeros(((eval_dones == True).sum(), self.recurrent_N, self.hidden_size), dtype=np.float32)
             eval_masks = np.ones((self.n_eval_rollout_threads, self.num_agents, 1), dtype=np.float32)
             eval_masks[eval_dones == True] = np.zeros(((eval_dones == True).sum(), 1), dtype=np.float32)
+            
+            eval_finished |= np.expand_dims(eval_dones, -1)
+            if eval_finished.all():
+                break
 
         eval_episode_rewards = np.array(eval_episode_rewards)
         eval_env_infos = {}
@@ -178,7 +179,8 @@ class MujocoRunner(Runner):
         for episode in range(self.all_args.render_episodes):
             obs = envs.reset()
             if self.all_args.save_gifs:
-                image = envs.render('rgb_array')[0][0]
+                image = envs.render('rgb_array')[0]
+                print(image.shape)
                 all_frames.append(image)
             else:
                 envs.render('human')
@@ -199,15 +201,8 @@ class MujocoRunner(Runner):
                 actions = np.array(np.split(_t2n(action), self.n_rollout_threads))
                 rnn_states = np.array(np.split(_t2n(rnn_states), self.n_rollout_threads))
 
-                if envs.action_space[0].__class__.__name__ == 'MultiDiscrete':
-                    for i in range(envs.action_space[0].shape):
-                        uc_actions_env = np.eye(envs.action_space[0].high[i]+1)[actions[:, :, i]]
-                        if i == 0:
-                            actions_env = uc_actions_env
-                        else:
-                            actions_env = np.concatenate((actions_env, uc_actions_env), axis=2)
-                elif envs.action_space[0].__class__.__name__ == 'Discrete':
-                    actions_env = np.squeeze(np.eye(envs.action_space[0].n)[actions], 2)
+                if envs.action_space[0].__class__.__name__ == 'Box':
+                    actions_env = actions.copy()
                 else:
                     raise NotImplementedError
 
@@ -220,7 +215,7 @@ class MujocoRunner(Runner):
                 masks[dones == True] = np.zeros(((dones == True).sum(), 1), dtype=np.float32)
 
                 if self.all_args.save_gifs:
-                    image = envs.render('rgb_array')[0][0]
+                    image = envs.render('rgb_array')[0]
                     all_frames.append(image)
                     calc_end = time.time()
                     elapsed = calc_end - calc_start
@@ -229,7 +224,10 @@ class MujocoRunner(Runner):
                 else:
                     envs.render('human')
 
+                if dones.all():
+                    break
+
             print("average episode rewards is: " + str(np.mean(np.sum(np.array(episode_rewards), axis=0))))
 
         if self.all_args.save_gifs:
-            imageio.mimsave(str(self.gif_dir) + '/render.gif', all_frames, duration=self.all_args.ifi)
+            imageio.mimsave(str(self.log_dir) + '/render.gif', all_frames, duration=self.all_args.ifi)
