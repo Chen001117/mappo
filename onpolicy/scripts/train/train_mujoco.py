@@ -11,6 +11,7 @@ import gym
 from onpolicy.config import get_config
 from onpolicy.envs.env_wrappers import SubprocVecEnv, DummyVecEnv, MARLWrapper
 from onpolicy.envs.mujoco.walker2d_v3 import Walker2dEnv as MujocoEnv
+from onpolicy.envs.mujoco2.walker2d_forward import Walker2dForwardEnv as MujocoEnv
 
 """Train script for MPEs."""
 

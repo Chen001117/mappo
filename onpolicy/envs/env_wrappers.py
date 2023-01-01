@@ -16,11 +16,13 @@ class MARLWrapper(gym.Wrapper):
         self.action_space = [self.action_space]
 
     def reset(self):
-        obs_n, _ = self.env.reset()
+        # obs_n, _ = self.env.reset()
+        obs_n = self.env.reset()
         return np.expand_dims(obs_n, 0)
         
     def step(self, actions):
-        o, r, d, _, info_n = self.env.step(actions[0])
+        # o, r, d, _, info_n = self.env.step(actions[0])
+        o, r, d, info_n = self.env.step(actions[0])
         obs_n = np.expand_dims(o, 0)
         reward_n = np.array([[r]])
         done_n = np.array([d])
