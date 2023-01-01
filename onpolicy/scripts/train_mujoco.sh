@@ -12,8 +12,7 @@ do
     echo "seed is ${seed}:"
     CUDA_VISIBLE_DEVICES=0 python train/train_mujoco.py --env_name ${env} --algorithm_name ${algo} \
     --experiment_name ${exp} --scenario_name ${scenario} --num_agents ${num_agents} --seed ${seed} \
-    --n_training_threads 1 --n_rollout_threads 2 --num_mini_batch 1 --episode_length 25 \
-    --num_env_steps 3000000 --ppo_epoch 10 --use_ReLU --entropy_coef 0.0 --use_eval \
-    --n_eval_rollout_threads 2 \
-    --wandb_name "cwz19" --user_name "cwz19" --use_wandb
+    --n_training_threads 1 --n_rollout_threads 16 --num_mini_batch 128 --episode_length 2048 --use_ReLU \
+    --num_env_steps 100000000 --ppo_epoch 10 --entropy_coef 0.0 --use_eval --n_eval_rollout_threads 32 \
+    --wandb_name "cwz19" --user_name "cwz19" --data_chunk_length 16
 done

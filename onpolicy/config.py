@@ -221,10 +221,10 @@ def get_config():
                         help="Time length of chunks used to train a recurrent_policy")
 
     # optimizer parameters
-    parser.add_argument("--lr", type=float, default=5e-4,
-                        help='learning rate (default: 5e-4)')
-    parser.add_argument("--critic_lr", type=float, default=5e-4,
-                        help='critic learning rate (default: 5e-4)')
+    parser.add_argument("--lr", type=float, default=1e-4,
+                        help='learning rate (default: 1e-4)')
+    parser.add_argument("--critic_lr", type=float, default=1e-4,
+                        help='critic learning rate (default: 1e-4)')
     parser.add_argument("--opti_eps", type=float, default=1e-5,
                         help='RMSprop optimizer epsilon (default: 1e-5)')
     parser.add_argument("--weight_decay", type=float, default=0)
@@ -241,7 +241,7 @@ def get_config():
     parser.add_argument("--entropy_coef", type=float, default=0.01,
                         help='entropy term coefficient (default: 0.01)')
     parser.add_argument("--value_loss_coef", type=float,
-                        default=1, help='value loss coefficient (default: 0.5)')
+                        default=0.5, help='value loss coefficient (default: 0.5)')
     parser.add_argument("--use_max_grad_norm",
                         action='store_false', default=True, help="by default, use max norm of gradients. If set, do not use.")
     parser.add_argument("--max_grad_norm", type=float, default=10.0,
