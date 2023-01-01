@@ -10,6 +10,7 @@ import torch
 import gym
 from onpolicy.config import get_config
 from onpolicy.envs.env_wrappers import SubprocVecEnv, DummyVecEnv, MARLWrapper
+from onpolicy.envs.mujoco.walker2d_v3 import Walker2dEnv as MujocoEnv
 
 """Train script for MPEs."""
 
@@ -17,7 +18,7 @@ def make_train_env(all_args):
     def get_env_fn(rank):
         def init_env():
             if all_args.env_name == "MuJoCo":
-                env = gym.make(all_args.scenario_name) #(all_args)
+                env = MujocoEnv() #gym.make(all_args.scenario_name) #(all_args)
                 env = MARLWrapper(env)
             else:
                 print("Can not support the " +
@@ -36,7 +37,7 @@ def make_eval_env(all_args):
     def get_env_fn(rank):
         def init_env():
             if all_args.env_name == "MuJoCo":
-                env = gym.make(all_args.scenario_name) #(all_args)
+                env = MujocoEnv() #gym.make(all_args.scenario_name) #(all_args)
                 env = MARLWrapper(env)
             else:
                 print("Can not support the " +
