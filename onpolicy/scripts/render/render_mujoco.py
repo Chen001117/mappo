@@ -13,12 +13,14 @@ from onpolicy.config import get_config
 
 import gym
 from onpolicy.envs.env_wrappers import SubprocVecEnv, DummyVecEnv, MARLWrapper
+from onpolicy.envs.mujoco.navigation import NavigationEnv as MujocoEnv
+# from onpolicy.envs.mujoco.walker2d_v3 import Walker2dEnv as MujocoEnv
 
 def make_render_env(all_args):
     def get_env_fn(rank):
         def init_env():
             if all_args.env_name == "MuJoCo":
-                env = gym.make(all_args.scenario_name, render_mode='rgb_array') #(all_args)
+                env = MujocoEnv() #gym.make(all_args.scenario_name) #(all_args)
                 env = MARLWrapper(env)
             else:
                 print("Can not support the " +
@@ -62,7 +64,7 @@ def main(args):
         raise NotImplementedError
 
     assert all_args.use_render, ("u need to set use_render be True")
-    assert not (all_args.model_dir == None or all_args.model_dir == ""), ("set model_dir first")
+    # assert not (all_args.model_dir == None or all_args.model_dir == ""), ("set model_dir first")
     assert all_args.n_rollout_threads==1, ("only support to use 1 env to render.")
     
     # cuda

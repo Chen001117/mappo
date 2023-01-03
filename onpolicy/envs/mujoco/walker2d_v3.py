@@ -48,7 +48,6 @@ class Walker2dEnv(MuJocoPyEnv, utils.EzPickle):
             exclude_current_positions_from_observation,
             **kwargs
         )
-
         self._forward_reward_weight = forward_reward_weight
         self._ctrl_cost_weight = ctrl_cost_weight
 
@@ -76,6 +75,9 @@ class Walker2dEnv(MuJocoPyEnv, utils.EzPickle):
         MuJocoPyEnv.__init__(
             self, xml_file, 4, observation_space=observation_space, **kwargs
         )
+
+    def seed(self, seed):
+        self.reset(seed=seed)
 
     @property
     def healthy_reward(self):
@@ -136,9 +138,6 @@ class Walker2dEnv(MuJocoPyEnv, utils.EzPickle):
             "x_position": x_position_after,
             "x_velocity": x_velocity,
         }
-
-        if self.render_mode == "human":
-            self.render()
 
         return observation, reward, terminated, False, info
 

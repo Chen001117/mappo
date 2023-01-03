@@ -180,7 +180,6 @@ class MujocoRunner(Runner):
             obs = envs.reset()
             if self.all_args.save_gifs:
                 image = envs.render('rgb_array')[0]
-                print(image.shape)
                 all_frames.append(image)
             else:
                 envs.render('human')
@@ -194,10 +193,12 @@ class MujocoRunner(Runner):
                 calc_start = time.time()
 
                 self.trainer.prep_rollout()
-                action, rnn_states = self.trainer.policy.act(np.concatenate(obs),
-                                                    np.concatenate(rnn_states),
-                                                    np.concatenate(masks),
-                                                    deterministic=True)
+                action, rnn_states = self.trainer.policy.act(
+                    np.concatenate(obs),
+                    np.concatenate(rnn_states),
+                    np.concatenate(masks),
+                    deterministic=False
+                )
                 actions = np.array(np.split(_t2n(action), self.n_rollout_threads))
                 rnn_states = np.array(np.split(_t2n(rnn_states), self.n_rollout_threads))
 

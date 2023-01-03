@@ -4,6 +4,7 @@ from typing import Optional, Union
 import numpy as np
 
 import gym
+import time
 from gym import error, logger, spaces
 from gym.spaces import Space
 
@@ -184,13 +185,13 @@ class MuJocoPyEnv(BaseMujocoEnv):
                 f"{MUJOCO_PY_IMPORT_ERROR}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)"
             )
 
-        logger.warn(
-            "This version of the mujoco environments depends "
-            "on the mujoco-py bindings, which are no longer maintained "
-            "and may stop working. Please upgrade to the v4 versions of "
-            "the environments (which depend on the mujoco python bindings instead), unless "
-            "you are trying to precisely replicate previous works)."
-        )
+        # logger.warn(
+        #     "This version of the mujoco environments depends "
+        #     "on the mujoco-py bindings, which are no longer maintained "
+        #     "and may stop working. Please upgrade to the v4 versions of "
+        #     "the environments (which depend on the mujoco python bindings instead), unless "
+        #     "you are trying to precisely replicate previous works)."
+        # )
 
         super().__init__(
             model_path,
@@ -224,7 +225,8 @@ class MuJocoPyEnv(BaseMujocoEnv):
         for _ in range(n_frames):
             self.sim.step()
 
-    def render(self):
+    def render(self, mode):
+        self.render_mode = mode
         if self.render_mode is None:
             gym.logger.warn(
                 "You are calling render method without specifying any render mode. "
@@ -269,7 +271,10 @@ class MuJocoPyEnv(BaseMujocoEnv):
             # original image is upside-down, so flip it
             return data[::-1, :]
         elif self.render_mode == "human":
+            start = time.time()
             self._get_viewer(self.render_mode).render()
+            wait_time = max(self.dt-time.time()+start, 0.)
+            time.sleep(wait_time)
 
     def _get_viewer(
         self, mode

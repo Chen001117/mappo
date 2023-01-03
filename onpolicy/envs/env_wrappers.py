@@ -26,9 +26,6 @@ class MARLWrapper(gym.Wrapper):
         done_n = np.array([d])
         return obs_n, reward_n, done_n, info_n
 
-    def seed(self, s):
-        np.random.seed(s)
-
 class CloudpickleWrapper(object):
     """
     Uses cloudpickle to serialize contents (otherwise multiprocessing tries to use pickle)
@@ -716,8 +713,7 @@ class DummyVecEnv(ShareVecEnv):
 
     def render(self, mode="human"):
         if mode == "rgb_array":
-            return np.array([env.render() for env in self.envs])
-            # return np.array([env.render(mode=mode) for env in self.envs])
+            return np.array([env.render(mode=mode) for env in self.envs])
         elif mode == "human":
             for env in self.envs:
                 env.render(mode=mode)
