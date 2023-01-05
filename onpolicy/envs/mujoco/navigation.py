@@ -162,10 +162,12 @@ class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.observation_space = Box(
-            low=-np.inf, high=np.inf, shape=(8,), dtype=np.float64
+            low=-np.inf, high=np.inf, shape=(9,), dtype=np.float64
         )
+        aspace_low = np.array([-0.2, -0.1, -0.6])
+        aspace_high = np.array([0.6, 0.1, 0.6])
         self.action_space = Box(
-            low=-1., high=1., shape=(3,), dtype=np.float64
+            low=aspace_low, high=aspace_high, shape=(3,), dtype=np.float64
         )
         self.kp = 50.
         self.kd = 0.01
@@ -182,17 +184,21 @@ class NavigationEnv(BaseEnv):
         return obs, {}
 
     def _get_obs(self):
-        position = self.sim.data.qpos.flat.copy()[:3]
+        position = self.sim.data.qpos.flat.copy()[:2]
+        dir_cos = np.cos(self.sim.data.qpos.flat.copy()[2:3])
+        dir_sin = np.sin(self.sim.data.qpos.flat.copy()[2:3])
         velocity = self.sim.data.qvel.flat.copy()[:3]
-        observation = np.concatenate((position, velocity, self.goal.copy())).ravel()
+        observation = np.concatenate([
+            position, dir_cos, dir_sin, velocity, self.goal.copy()
+        ]).ravel()
         return observation
 
     def _local_to_global(self, input_action):
         local_action = input_action[:2].copy().reshape([1,2])
         theta = self.sim.data.qpos.flat.copy()[2]
         rotate_mat = np.array([
-            [np.cos(theta), -np.sin(theta)],
             [np.cos(theta), np.sin(theta)],
+            [-np.sin(theta), np.cos(theta)],
         ])
         global_action = local_action[:2] @ rotate_mat
         output_action = np.concatenate([global_action[0], input_action[2:]])
