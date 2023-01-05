@@ -79,7 +79,7 @@ class DiagGaussian(nn.Module):
 
         self.fc_mean = init_(nn.Linear(num_inputs, num_outputs))
         action_range = (action_space.high-action_space.low)
-        action_range = torch.ones(num_outputs) * action_range/2
+        action_range = torch.ones(num_outputs) * action_range
         self.logstd = AddBias(torch.log(action_range))
 
     def forward(self, x):

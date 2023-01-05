@@ -7,7 +7,6 @@ from gym import utils
 from onpolicy.envs.mujoco.mujoco_env import MuJocoPyEnv
 from gym.spaces import Box
 from typing import Optional, Union
-import matplotlib.pyplot as plt
 
 DEFAULT_CAMERA_CONFIG = {
     "trackbodyid": 2,
@@ -209,7 +208,9 @@ class NavigationEnv(BaseEnv):
         return np.exp(-dist)
 
     def _get_done(self):
-        return self.t > 10. 
+        ood = (abs(self.sim.data.qpos.copy().flat[:2])>7.).any()
+        to = self.t > 10.
+        return ood or to
 
     def do_simulation(self, action, n_frames):
         for _ in range(n_frames):
