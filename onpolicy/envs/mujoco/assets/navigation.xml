@@ -11,14 +11,14 @@
       <joint axis="0 1 0" limited="false" name="axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="axisz" pos="0 0 0" type="slide"/>
-      <geom mass="1." size="0.6 0.6 0.6" name="dog" type="box"/>
+      <geom mass="1." size="0.6 0.6 0.6" name="dog" type="box" friction="0.01 0.005 0.0001" />
     </body>
   </worldbody>
 
   <actuator>
-    <motor ctrllimited="true" ctrlrange="-10.0 10.0" joint="axisx"/>
-    <motor ctrllimited="true" ctrlrange="-10.0 10.0" joint="axisy"/>
-    <motor ctrllimited="true" ctrlrange="-10.0 10.0" joint="rootz"/>
+    <motor ctrllimited="true" ctrlrange="-100.0 100.0" joint="axisx"/>
+    <motor ctrllimited="true" ctrlrange="-100.0 100.0" joint="axisy"/>
+    <motor ctrllimited="true" ctrlrange="-100.0 100.0" joint="rootz"/>
   </actuator>
 
   <asset>

@@ -7,6 +7,7 @@ from gym import utils
 from onpolicy.envs.mujoco.mujoco_env import MuJocoPyEnv
 from gym.spaces import Box
 from typing import Optional, Union
+import matplotlib.pyplot as plt
 
 DEFAULT_CAMERA_CONFIG = {
     "trackbodyid": 2,
@@ -62,18 +63,6 @@ class BaseEnv(gym.Env):
         state = mujoco_py.MjSimState(state.time, qpos, qvel, state.act, state.udd_state)
         self.sim.set_state(state)
         self.sim.forward()
-
-    def do_simulation(self, ctrl, n_frames):
-        """
-        Step the simulation n number of frames and applying a control action.
-        """
-        # Check control input is contained in the action space
-        if np.array(ctrl).shape != self.action_space.shape:
-            raise ValueError("Action dimension mismatch")
-        self.sim.data.ctrl[:] = ctrl
-        for _ in range(n_frames):
-            self.sim.step()
-        self.t += self.dt
 
     @property
     def dt(self):
@@ -169,9 +158,11 @@ class NavigationEnv(BaseEnv):
         self.action_space = Box(
             low=aspace_low, high=aspace_high, shape=(3,), dtype=np.float64
         )
-        self.kp = 50.
-        self.kd = 0.01
+        self.kp = np.array([90., 90., 80.])
+        self.kd = np.array([0.0095, 0.0095, 0.0065])
         self.goal = np.zeros(2)
+        self.his_vel = []
+        self.tmp = 0.
 
     def reset(self):
         self.t = 0.
@@ -201,29 +192,36 @@ class NavigationEnv(BaseEnv):
             [-np.sin(theta), np.cos(theta)],
         ])
         global_action = local_action[:2] @ rotate_mat
-        output_action = np.concatenate([global_action[0], input_action[2:]])
+        output_action = np.concatenate([global_action[0], input_action[2:].copy()])
         return output_action
 
-    def _pd_contorl(self, target_vel):
+    def _pd_contorl(self, target_vel, dt):
         error = target_vel - self.sim.data.qvel[:3]
         d_output = self.sim.data.qvel[:3] - self.prev_output
-        torque = self.kp*error-self.kd*(d_output/self.dt)
+        torque = self.kp*error-self.kd*(d_output/dt)
         torque = np.clip(torque, self.torque_low, self.torque_high)
         self.prev_output = torque.copy()
         return torque
     
     def _get_reward(self):
-        position = self.sim.data.qpos.flat.copy()[:2]
+        position = self.sim.data.qpos.copy().flat[:2]
         dist = np.linalg.norm(position-self.goal)
         return np.exp(-dist)
 
     def _get_done(self):
         return self.t > 10. 
 
-    def step(self, action):
-        action = self._local_to_global(action)
-        torque = self._pd_contorl(action)
-        self.do_simulation(torque, self.frame_skip)
+    def do_simulation(self, action, n_frames):
+        for _ in range(n_frames):
+            ctrl = self._pd_contorl(action, self.dt/n_frames)
+            assert np.array(ctrl).shape==self.action_space.shape, "Action dimension mismatch"
+            self.sim.data.ctrl[:] = ctrl
+            self.sim.step()
+        self.t += self.dt
+
+    def step(self, command):
+        action = self._local_to_global(command)
+        self.do_simulation(action, self.frame_skip)
         observation = self._get_obs()
         reward = self._get_reward()
         terminated = self._get_done()
