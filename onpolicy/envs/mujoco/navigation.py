@@ -195,7 +195,7 @@ class NavigationEnv(BaseEnv):
             [np.cos(theta), np.sin(theta)],
         ])
         global_action = local_action[:2] @ rotate_mat
-        output_action = np.concatenate([global_action[0], input_action[:2]])
+        output_action = np.concatenate([global_action[0], input_action[2:]])
         return output_action
 
     def _pd_contorl(self, target_vel):
