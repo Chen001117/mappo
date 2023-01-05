@@ -73,6 +73,7 @@ class BaseEnv(gym.Env):
         self.sim.data.ctrl[:] = ctrl
         for _ in range(n_frames):
             self.sim.step()
+        self.t += self.dt
 
     @property
     def dt(self):
@@ -186,7 +187,18 @@ class NavigationEnv(BaseEnv):
         observation = np.concatenate((position, velocity, self.goal.copy())).ravel()
         return observation
 
-    def pd_contorl(self, target_vel):
+    def _local_to_global(self, input_action):
+        local_action = input_action[:2].copy().reshape([1,2])
+        theta = self.sim.data.qpos.flat.copy()[2]
+        rotate_mat = np.array([
+            [np.cos(theta), -np.sin(theta)],
+            [np.cos(theta), np.sin(theta)],
+        ])
+        global_action = local_action[:2] @ rotate_mat
+        output_action = np.concatenate([global_action[0], input_action[2]])
+        return output_action
+
+    def _pd_contorl(self, target_vel):
         error = target_vel - self.sim.data.qvel[:3]
         d_output = self.sim.data.qvel[:3] - self.prev_output
         torque = self.kp*error-self.kd*(d_output/self.dt)
@@ -203,11 +215,13 @@ class NavigationEnv(BaseEnv):
         return self.t > 10. 
 
     def step(self, action):
-        torque = self.pd_contorl(action)
+        action = self._local_to_global(action)
+        torque = self._pd_contorl(action)
         self.do_simulation(torque, self.frame_skip)
         observation = self._get_obs()
         reward = self._get_reward()
         terminated = self._get_done()
         info = dict()
-        self.t += self.dt
         return observation, reward, terminated, False, info
+
+        

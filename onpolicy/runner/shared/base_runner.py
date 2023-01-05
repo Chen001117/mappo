@@ -136,7 +136,7 @@ class Runner(object):
 
     def restore(self):
         """Restore policy's networks from a saved model."""
-        policy_actor_state_dict = torch.load(str(self.model_dir) + '/actor.pt')
+        policy_actor_state_dict = torch.load(str(self.model_dir) + '/actor.pt', map_location=torch.device('cpu'))
         self.policy.actor.load_state_dict(policy_actor_state_dict)
         if not self.all_args.use_render:
             policy_critic_state_dict = torch.load(str(self.model_dir) + '/critic.pt')

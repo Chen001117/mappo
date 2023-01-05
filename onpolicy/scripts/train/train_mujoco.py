@@ -10,7 +10,8 @@ import torch
 import gym
 from onpolicy.config import get_config
 from onpolicy.envs.env_wrappers import SubprocVecEnv, DummyVecEnv, MARLWrapper
-from onpolicy.envs.mujoco.walker2d_v3 import Walker2dEnv as MujocoEnv
+# from onpolicy.envs.mujoco.walker2d_v3 import Walker2dEnv as MujocoEnv
+from onpolicy.envs.mujoco.navigation import NavigationEnv as MujocoEnv
 
 """Train script for MPEs."""
 
