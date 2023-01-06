@@ -7,6 +7,7 @@ from gym import utils
 from onpolicy.envs.mujoco.mujoco_env import MuJocoPyEnv
 from gym.spaces import Box
 from typing import Optional, Union
+from .generate import get_xml
 
 DEFAULT_CAMERA_CONFIG = {
     "trackbodyid": 2,
@@ -26,13 +27,11 @@ class BaseEnv(gym.Env):
     }
 
     def __init__(self, **kwargs):
-        self.fullpath = path.join(path.dirname(__file__), "assets", "navigation.xml")
         self.width, self.height = 480, 480
+        self.fullpath = path.join(path.dirname(__file__), "assets", "navigation.xml")
         self.model = mujoco_py.load_model_from_path(self.fullpath)
         self.sim = mujoco_py.MjSim(self.model)
         self.data = self.sim.data
-        self.init_qpos = self.data.qpos.ravel().copy()
-        self.init_qvel = self.data.qvel.ravel().copy()
         self._viewers = {}
         self.frame_skip = 4
         self.viewer = None
@@ -46,15 +45,18 @@ class BaseEnv(gym.Env):
         super().reset(seed=seed)
 
     def reset_model(self):
-        noise_low = -self._reset_noise_scale
-        noise_high = self._reset_noise_scale
-        qpos = self.init_qpos + self.np_random.uniform(
-            low=noise_low, high=noise_high, size=self.model.nq
-        )
-        qvel = self.init_qvel + self.np_random.uniform(
-            low=noise_low, high=noise_high, size=self.model.nv
-        )
-        self.set_state(qpos, qvel)
+        self.sim.reset()
+        pos_x = np.random.rand() * 9. - 4.5
+        pos_y = np.random.rand() * 9. - 4.5
+        yaw = np.random.rand() * np.pi * 2.
+        qpos = [pos_x, pos_y, yaw, 0.3]
+        self.rands = np.random.choice(range(400), 20, replace=False)
+        for rand in self.rands:
+            pos_x = (rand%20) * 0.5 - 4.75
+            pos_y = (rand//20) * 0.5 - 4.75
+            qpos.append(pos_x)
+            qpos.append(pos_y)
+        self.set_state(np.array(qpos), np.zeros_like(qpos))
 
     def set_state(self, qpos, qvel):
         assert qpos.shape == (self.model.nq,) and qvel.shape == (self.model.nv,)
@@ -150,25 +152,26 @@ class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.observation_space = Box(
-            low=-np.inf, high=np.inf, shape=(9,), dtype=np.float64
+            low=-np.inf, high=np.inf, shape=(49,), dtype=np.float64
         )
         aspace_low = np.array([-0.2, -0.1, -0.6])
         aspace_high = np.array([0.6, 0.1, 0.6])
         self.action_space = Box(
             low=aspace_low, high=aspace_high, shape=(3,), dtype=np.float64
         )
-        self.kp = np.array([90., 90., 80.])
-        self.kd = np.array([0.0095, 0.0095, 0.0065])
+        self.kp = np.array([50, 50, 50])
+        self.kd = np.array([0.01, 0.01, 0.01])
         self.goal = np.zeros(2)
         self.his_vel = []
-        self.tmp = 0.
+        self.t = 0.
 
     def reset(self):
-        self.t = 0.
         self.prev_output = np.zeros(3)
         super().reset()
-        self.sim.reset()
         self.reset_model()
+        for _ in range(10):
+            self.do_simulation(np.zeros(3), self.frame_skip)
+        self.t = 0.
         obs = self._get_obs()
         self.goal = np.random.rand(2) * 10. - 5.
         return obs, {}
@@ -179,8 +182,10 @@ class NavigationEnv(BaseEnv):
         dir_sin = np.sin(self.sim.data.qpos.flat.copy()[2:3])
         velocity = self.sim.data.qvel.flat.copy()[:3]
         observation = np.concatenate([
-            position, dir_cos, dir_sin, velocity, self.goal.copy()
+            position, dir_cos, dir_sin, velocity, self.goal.copy(),
+            self.rands%20*0.5-4.75, self.rands//20*0.5-4.75,
         ]).ravel()
+        print(observation)
         return observation
 
     def _local_to_global(self, input_action):
@@ -208,9 +213,13 @@ class NavigationEnv(BaseEnv):
         return np.exp(-dist)
 
     def _get_done(self):
-        ood = (abs(self.sim.data.qpos.copy().flat[:2])>7.).any()
-        to = self.t > 10.
-        return ood or to
+        done = self.t > 10.
+        for i in range(self.sim.data.ncon):
+            con = self.sim.data.contact[i]
+            obj1 = self.sim.model.geom_id2name(con.geom1)
+            obj2 = self.sim.model.geom_id2name(con.geom2)
+            done |= (obj1=="dog" or obj2=="dog") and (obj1!="floor" and obj2!="floor")
+        return done
 
     def do_simulation(self, action, n_frames):
         for _ in range(n_frames):
@@ -221,6 +230,7 @@ class NavigationEnv(BaseEnv):
         self.t += self.dt
 
     def step(self, command):
+        command = np.array([-0.5, 0, 0])
         action = self._local_to_global(command)
         self.do_simulation(action, self.frame_skip)
         observation = self._get_obs()
