@@ -28,13 +28,24 @@ class R_Actor(nn.Module):
         self._use_recurrent_policy = args.use_recurrent_policy
         self._recurrent_N = args.recurrent_N
         self.tpdv = dict(dtype=torch.float32, device=device)
-
-        obs_shape = get_shape_from_obs_space(obs_space)
-        base = CNNBase if len(obs_shape) == 3 else MLPBase
-        self.base = base(args, obs_shape)
+        
+        if obs_space.__class__.__name__ == 'Box':
+            self.tuple_input = False
+            base = CNNBase if len(obs_space.shape) == 3 else MLPBase
+            self.base = base(args, obs_space.shape)
+        elif obs_space.__class__.__name__ == 'list':
+            self.tuple_input = False
+            self.base = base(args, obs_space)
+        elif obs_space.__class__.__name__ == 'Tuple':
+            self.tuple_input = True
+            self.base_vec = MLPBase(args, obs_space[0].shape)
+            self.base_img = CNNBase(args, obs_space[1].shape)
+        else:
+            raise NotImplementedError
 
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-            self.rnn = RNNLayer(self.hidden_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
+            input_size = self.hidden_size * (1+self.tuple_input)
+            self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
 
         self.act = ACTLayer(action_space, self.hidden_size, self._use_orthogonal, self._gain)
 
@@ -54,13 +65,21 @@ class R_Actor(nn.Module):
         :return action_log_probs: (torch.Tensor) log probabilities of taken actions.
         :return rnn_states: (torch.Tensor) updated RNN hidden states.
         """
-        obs = check(obs).to(**self.tpdv)
+        
         rnn_states = check(rnn_states).to(**self.tpdv)
         masks = check(masks).to(**self.tpdv)
         if available_actions is not None:
             available_actions = check(available_actions).to(**self.tpdv)
 
-        actor_features = self.base(obs)
+        if self.tuple_input:
+            obs_vec = check(obs[0]).to(**self.tpdv)
+            obs_img = check(obs[1]).to(**self.tpdv)
+            vec_features = self.base_vec(obs_vec)
+            img_features = self.base_img(obs_img)
+            actor_features = torch.cat([vec_features, img_features], dim=-1)
+        else:
+            obs = check(obs).to(**self.tpdv)
+            actor_features = self.base(obs)
 
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:
             actor_features, rnn_states = self.rnn(actor_features, rnn_states, masks)
@@ -83,7 +102,6 @@ class R_Actor(nn.Module):
         :return action_log_probs: (torch.Tensor) log probabilities of the input actions.
         :return dist_entropy: (torch.Tensor) action distribution entropy for the given inputs.
         """
-        obs = check(obs).to(**self.tpdv)
         rnn_states = check(rnn_states).to(**self.tpdv)
         action = check(action).to(**self.tpdv)
         masks = check(masks).to(**self.tpdv)
@@ -93,16 +111,23 @@ class R_Actor(nn.Module):
         if active_masks is not None:
             active_masks = check(active_masks).to(**self.tpdv)
 
-        actor_features = self.base(obs)
+        if self.tuple_input:
+            obs_vec = check(obs[0]).to(**self.tpdv)
+            obs_img = check(obs[1]).to(**self.tpdv)
+            vec_features = self.base_vec(obs_vec)
+            img_features = self.base_img(obs_img)
+            actor_features = torch.cat([vec_features, img_features], dim=-1)
+        else:
+            obs = check(obs).to(**self.tpdv)
+            actor_features = self.base(obs)
 
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:
             actor_features, rnn_states = self.rnn(actor_features, rnn_states, masks)
 
-        action_log_probs, dist_entropy = self.act.evaluate_actions(actor_features,
-                                                                   action, available_actions,
-                                                                   active_masks=
-                                                                   active_masks if self._use_policy_active_masks
-                                                                   else None)
+        action_log_probs, dist_entropy = self.act.evaluate_actions(
+            actor_features, action, available_actions,
+            active_masks=active_masks if self._use_policy_active_masks else None
+        )
 
         return action_log_probs, dist_entropy
 
@@ -126,12 +151,23 @@ class R_Critic(nn.Module):
         self.tpdv = dict(dtype=torch.float32, device=device)
         init_method = [nn.init.xavier_uniform_, nn.init.orthogonal_][self._use_orthogonal]
 
-        cent_obs_shape = get_shape_from_obs_space(cent_obs_space)
-        base = CNNBase if len(cent_obs_shape) == 3 else MLPBase
-        self.base = base(args, cent_obs_shape)
+        if cent_obs_space.__class__.__name__ == 'Box':
+            self.tuple_input = False
+            base = CNNBase if len(cent_obs_space.shape) == 3 else MLPBase
+            self.base = base(args, cent_obs_space.shape)
+        elif cent_obs_space.__class__.__name__ == 'list':
+            self.tuple_input = False
+            self.base = base(args, cent_obs_space)
+        elif cent_obs_space.__class__.__name__ == 'Tuple':
+            self.tuple_input = True
+            self.base_vec = MLPBase(args, cent_obs_space[0].shape)
+            self.base_img = CNNBase(args, cent_obs_space[1].shape)
+        else:
+            raise NotImplementedError
 
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-            self.rnn = RNNLayer(self.hidden_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
+            input_size = self.hidden_size * (1+self.tuple_input)
+            self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
 
         def init_(m):
             return init(m, init_method, lambda x: nn.init.constant_(x, 0))
@@ -153,11 +189,19 @@ class R_Critic(nn.Module):
         :return values: (torch.Tensor) value function predictions.
         :return rnn_states: (torch.Tensor) updated RNN hidden states.
         """
-        cent_obs = check(cent_obs).to(**self.tpdv)
         rnn_states = check(rnn_states).to(**self.tpdv)
         masks = check(masks).to(**self.tpdv)
 
-        critic_features = self.base(cent_obs)
+        if self.tuple_input:
+            cent_obs_vec = check(cent_obs[0]).to(**self.tpdv)
+            cent_obs_img = check(cent_obs[1]).to(**self.tpdv)
+            vec_features = self.base_vec(cent_obs_vec)
+            img_features = self.base_img(cent_obs_img)
+            critic_features = torch.cat([vec_features, img_features], dim=-1)
+        else:
+            cent_obs = check(cent_obs).to(**self.tpdv)
+            critic_features = self.base(cent_obs)
+
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:
             critic_features, rnn_states = self.rnn(critic_features, rnn_states, masks)
         values = self.v_out(critic_features)

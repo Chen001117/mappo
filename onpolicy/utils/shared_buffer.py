@@ -33,18 +33,28 @@ class SharedReplayBuffer(object):
         self._use_valuenorm = args.use_valuenorm
         self._use_proper_time_limits = args.use_proper_time_limits
 
-        obs_shape = get_shape_from_obs_space(obs_space)
-        share_obs_shape = get_shape_from_obs_space(cent_obs_space)
+        if obs_space.__class__.__name__ == "Tuple":
+            self.tuple_input = True
+            obs_vec_shape = get_shape_from_obs_space(obs_space[0])
+            obs_img_shape = get_shape_from_obs_space(obs_space[1])
+            share_obs_vec_shape = get_shape_from_obs_space(cent_obs_space[0])
+            share_obs_img_shape = get_shape_from_obs_space(cent_obs_space[1])
+            self.obs_vec = np.zeros((self.episode_length+1, self.n_rollout_threads, num_agents, *obs_vec_shape), dtype=np.float32)
+            self.obs_img = np.zeros((self.episode_length+1, self.n_rollout_threads, num_agents, *obs_img_shape), dtype=np.float32)
+            self.share_obs_vec = np.zeros((self.episode_length+1, self.n_rollout_threads, num_agents, *share_obs_vec_shape), dtype=np.float32)
+            self.share_obs_img = np.zeros((self.episode_length+1, self.n_rollout_threads, num_agents, *share_obs_img_shape), dtype=np.float32)
+        else:
+            self.tuple_input = False
+            obs_shape = get_shape_from_obs_space(obs_space)
+            share_obs_shape = get_shape_from_obs_space(cent_obs_space)
 
-        if type(obs_shape[-1]) == list:
-            obs_shape = obs_shape[:1]
+            if type(obs_shape[-1]) == list:
+                obs_shape = obs_shape[:1]
+            if type(share_obs_shape[-1]) == list:
+                share_obs_shape = share_obs_shape[:1]
 
-        if type(share_obs_shape[-1]) == list:
-            share_obs_shape = share_obs_shape[:1]
-
-        self.share_obs = np.zeros((self.episode_length + 1, self.n_rollout_threads, num_agents, *share_obs_shape),
-                                  dtype=np.float32)
-        self.obs = np.zeros((self.episode_length + 1, self.n_rollout_threads, num_agents, *obs_shape), dtype=np.float32)
+            self.share_obs = np.zeros((self.episode_length + 1, self.n_rollout_threads, num_agents, *share_obs_shape), dtype=np.float32)
+            self.obs = np.zeros((self.episode_length + 1, self.n_rollout_threads, num_agents, *obs_shape), dtype=np.float32)
 
         self.rnn_states = np.zeros(
             (self.episode_length + 1, self.n_rollout_threads, num_agents, self.recurrent_N, self.hidden_size),
@@ -93,8 +103,14 @@ class SharedReplayBuffer(object):
         :param active_masks: (np.ndarray) denotes whether an agent is active or dead in the env.
         :param available_actions: (np.ndarray) actions available to each agent. If None, all actions are available.
         """
-        self.share_obs[self.step + 1] = share_obs.copy()
-        self.obs[self.step + 1] = obs.copy()
+        if self.tuple_input:
+            self.share_obs_vec[self.step + 1] = share_obs[0].copy()
+            self.share_obs_img[self.step + 1] = share_obs[1].copy()
+            self.obs_vec[self.step + 1] = obs[0].copy()
+            self.obs_img[self.step + 1] = obs[1].copy()
+        else:
+            self.share_obs[self.step + 1] = share_obs.copy()
+            self.obs[self.step + 1] = obs.copy()
         self.rnn_states[self.step + 1] = rnn_states_actor.copy()
         self.rnn_states_critic[self.step + 1] = rnn_states_critic.copy()
         self.actions[self.step] = actions.copy()
@@ -109,47 +125,16 @@ class SharedReplayBuffer(object):
         if available_actions is not None:
             self.available_actions[self.step + 1] = available_actions.copy()
 
-        self.step = (self.step + 1) % self.episode_length
-
-    def chooseinsert(self, share_obs, obs, rnn_states, rnn_states_critic, actions, action_log_probs,
-                     value_preds, rewards, masks, bad_masks=None, active_masks=None, available_actions=None):
-        """
-        Insert data into the buffer. This insert function is used specifically for Hanabi, which is turn based.
-        :param share_obs: (argparse.Namespace) arguments containing relevant model, policy, and env information.
-        :param obs: (np.ndarray) local agent observations.
-        :param rnn_states_actor: (np.ndarray) RNN states for actor network.
-        :param rnn_states_critic: (np.ndarray) RNN states for critic network.
-        :param actions:(np.ndarray) actions taken by agents.
-        :param action_log_probs:(np.ndarray) log probs of actions taken by agents
-        :param value_preds: (np.ndarray) value function prediction at each step.
-        :param rewards: (np.ndarray) reward collected at each step.
-        :param masks: (np.ndarray) denotes whether the environment has terminated or not.
-        :param bad_masks: (np.ndarray) denotes indicate whether whether true terminal state or due to episode limit
-        :param active_masks: (np.ndarray) denotes whether an agent is active or dead in the env.
-        :param available_actions: (np.ndarray) actions available to each agent. If None, all actions are available.
-        """
-        self.share_obs[self.step] = share_obs.copy()
-        self.obs[self.step] = obs.copy()
-        self.rnn_states[self.step + 1] = rnn_states.copy()
-        self.rnn_states_critic[self.step + 1] = rnn_states_critic.copy()
-        self.actions[self.step] = actions.copy()
-        self.action_log_probs[self.step] = action_log_probs.copy()
-        self.value_preds[self.step] = value_preds.copy()
-        self.rewards[self.step] = rewards.copy()
-        self.masks[self.step + 1] = masks.copy()
-        if bad_masks is not None:
-            self.bad_masks[self.step + 1] = bad_masks.copy()
-        if active_masks is not None:
-            self.active_masks[self.step] = active_masks.copy()
-        if available_actions is not None:
-            self.available_actions[self.step] = available_actions.copy()
-
-        self.step = (self.step + 1) % self.episode_length
-
     def after_update(self):
         """Copy last timestep data to first index. Called after update to model."""
-        self.share_obs[0] = self.share_obs[-1].copy()
-        self.obs[0] = self.obs[-1].copy()
+        if self.tuple_input:
+            self.share_obs_vec[0] = self.share_obs_vec[-1].copy()
+            self.share_obs_img[0] = self.share_obs_img[-1].copy()
+            self.obs_vec[0] = self.obs_vec[-1].copy()
+            self.obs_img[0] = self.obs_img[-1].copy()
+        else:
+            self.share_obs[0] = self.share_obs[-1].copy()
+            self.obs[0] = self.obs[-1].copy()
         self.rnn_states[0] = self.rnn_states[-1].copy()
         self.rnn_states_critic[0] = self.rnn_states_critic[-1].copy()
         self.masks[0] = self.masks[-1].copy()
@@ -157,13 +142,6 @@ class SharedReplayBuffer(object):
         self.active_masks[0] = self.active_masks[-1].copy()
         if self.available_actions is not None:
             self.available_actions[0] = self.available_actions[-1].copy()
-
-    def chooseafter_update(self):
-        """Copy last timestep data to first index. This method is used for Hanabi."""
-        self.rnn_states[0] = self.rnn_states[-1].copy()
-        self.rnn_states_critic[0] = self.rnn_states_critic[-1].copy()
-        self.masks[0] = self.masks[-1].copy()
-        self.bad_masks[0] = self.bad_masks[-1].copy()
 
     def compute_returns(self, next_value, value_normalizer=None):
         """
@@ -397,12 +375,18 @@ class SharedReplayBuffer(object):
         rand = torch.randperm(data_chunks).numpy()
         sampler = [rand[i * mini_batch_size:(i + 1) * mini_batch_size] for i in range(num_mini_batch)]
 
-        if len(self.share_obs.shape) > 4:
-            share_obs = self.share_obs[:-1].transpose(1, 2, 0, 3, 4, 5).reshape(-1, *self.share_obs.shape[3:])
-            obs = self.obs[:-1].transpose(1, 2, 0, 3, 4, 5).reshape(-1, *self.obs.shape[3:])
+        if self.tuple_input:
+            share_obs_img = self.share_obs_img[:-1].transpose(1, 2, 0, 3, 4, 5).reshape(-1, *self.share_obs_img.shape[3:])
+            obs_img = self.obs_img[:-1].transpose(1, 2, 0, 3, 4, 5).reshape(-1, *self.obs_img.shape[3:])
+            share_obs_vec = _cast(self.share_obs_vec[:-1])
+            obs_vec = _cast(self.obs_vec[:-1])
         else:
-            share_obs = _cast(self.share_obs[:-1])
-            obs = _cast(self.obs[:-1])
+            if len(self.share_obs.shape) > 4:
+                share_obs = self.share_obs[:-1].transpose(1, 2, 0, 3, 4, 5).reshape(-1, *self.share_obs.shape[3:])
+                obs = self.obs[:-1].transpose(1, 2, 0, 3, 4, 5).reshape(-1, *self.obs.shape[3:])
+            else:
+                share_obs = _cast(self.share_obs[:-1])
+                obs = _cast(self.obs[:-1])
 
         actions = _cast(self.actions)
         action_log_probs = _cast(self.action_log_probs)
@@ -411,19 +395,21 @@ class SharedReplayBuffer(object):
         returns = _cast(self.returns[:-1])
         masks = _cast(self.masks[:-1])
         active_masks = _cast(self.active_masks[:-1])
-        # rnn_states = _cast(self.rnn_states[:-1])
-        # rnn_states_critic = _cast(self.rnn_states_critic[:-1])
         rnn_states = self.rnn_states[:-1].transpose(1, 2, 0, 3, 4).reshape(-1, *self.rnn_states.shape[3:])
-        rnn_states_critic = self.rnn_states_critic[:-1].transpose(1, 2, 0, 3, 4).reshape(-1,
-                                                                                         *self.rnn_states_critic.shape[
-                                                                                          3:])
+        rnn_states_critic = self.rnn_states_critic[:-1].transpose(1, 2, 0, 3, 4).reshape(-1, *self.rnn_states_critic.shape[3:])
 
         if self.available_actions is not None:
             available_actions = _cast(self.available_actions[:-1])
 
         for indices in sampler:
-            share_obs_batch = []
-            obs_batch = []
+            if self.tuple_input:
+                share_obs_vec_batch = []
+                share_obs_img_batch = []
+                obs_img_batch = []
+                obs_vec_batch = []
+            else:
+                share_obs_batch = []
+                obs_batch = []
             rnn_states_batch = []
             rnn_states_critic_batch = []
             actions_batch = []
@@ -439,8 +425,14 @@ class SharedReplayBuffer(object):
 
                 ind = index * data_chunk_length
                 # size [T+1 N M Dim]-->[T N M Dim]-->[N,M,T,Dim]-->[N*M*T,Dim]-->[L,Dim]
-                share_obs_batch.append(share_obs[ind:ind + data_chunk_length])
-                obs_batch.append(obs[ind:ind + data_chunk_length])
+                if self.tuple_input:
+                    share_obs_vec_batch.append(share_obs_vec[ind:ind + data_chunk_length])
+                    share_obs_img_batch.append(share_obs_img[ind:ind + data_chunk_length])
+                    obs_vec_batch.append(obs_vec[ind:ind + data_chunk_length])
+                    obs_img_batch.append(obs_img[ind:ind + data_chunk_length])
+                else:
+                    share_obs_batch.append(share_obs[ind:ind + data_chunk_length])
+                    obs_batch.append(obs[ind:ind + data_chunk_length])
                 actions_batch.append(actions[ind:ind + data_chunk_length])
                 if self.available_actions is not None:
                     available_actions_batch.append(available_actions[ind:ind + data_chunk_length])
@@ -456,9 +448,15 @@ class SharedReplayBuffer(object):
 
             L, N = data_chunk_length, mini_batch_size
 
-            # These are all from_numpys of size (L, N, Dim)           
-            share_obs_batch = np.stack(share_obs_batch, axis=1)
-            obs_batch = np.stack(obs_batch, axis=1)
+            # These are all from_numpys of size (L, N, Dim)       
+            if self.tuple_input:
+                share_obs_vec_batch = np.stack(share_obs_vec_batch, axis=1)
+                share_obs_img_batch = np.stack(share_obs_img_batch, axis=1)
+                obs_vec_batch = np.stack(obs_vec_batch, axis=1)
+                obs_img_batch = np.stack(obs_img_batch, axis=1)
+            else:    
+                share_obs_batch = np.stack(share_obs_batch, axis=1)
+                obs_batch = np.stack(obs_batch, axis=1)
 
             actions_batch = np.stack(actions_batch, axis=1)
             if self.available_actions is not None:
@@ -475,8 +473,14 @@ class SharedReplayBuffer(object):
             rnn_states_critic_batch = np.stack(rnn_states_critic_batch).reshape(N, *self.rnn_states_critic.shape[3:])
 
             # Flatten the (L, N, ...) from_numpys to (L * N, ...)
-            share_obs_batch = _flatten(L, N, share_obs_batch)
-            obs_batch = _flatten(L, N, obs_batch)
+            if self.tuple_input:
+                share_obs_vec_batch = _flatten(L, N, share_obs_vec_batch)
+                share_obs_img_batch = _flatten(L, N, share_obs_img_batch)
+                obs_vec_batch = _flatten(L, N, obs_vec_batch)
+                obs_img_batch = _flatten(L, N, obs_img_batch)
+            else:
+                share_obs_batch = _flatten(L, N, share_obs_batch)
+                obs_batch = _flatten(L, N, obs_batch)
             actions_batch = _flatten(L, N, actions_batch)
             if self.available_actions is not None:
                 available_actions_batch = _flatten(L, N, available_actions_batch)
@@ -489,6 +493,13 @@ class SharedReplayBuffer(object):
             old_action_log_probs_batch = _flatten(L, N, old_action_log_probs_batch)
             adv_targ = _flatten(L, N, adv_targ)
 
-            yield share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch,\
-                  value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch,\
-                  adv_targ, available_actions_batch
+            if self.tuple_input: 
+                share_obs_batch = share_obs_vec_batch, share_obs_img_batch
+                obs_batch = obs_vec_batch, obs_img_batch
+                yield share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch,\
+                    value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch,\
+                    adv_targ, available_actions_batch
+            else:
+                yield share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch,\
+                    value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch,\
+                    adv_targ, available_actions_batch

@@ -5,7 +5,7 @@ import mujoco_py
 import gym
 from gym import utils
 from onpolicy.envs.mujoco.mujoco_env import MuJocoPyEnv
-from gym.spaces import Box
+from gym.spaces import Box, Tuple
 from typing import Optional, Union
 
 DEFAULT_CAMERA_CONFIG = {
@@ -42,20 +42,7 @@ class BaseEnv(gym.Env):
 
     def seed(self, seed):
         super().reset(seed=seed)
-
-    def reset_model(self):
-        self.sim.reset()
-        pos_x = np.random.rand() * 9. - 4.5
-        pos_y = np.random.rand() * 9. - 4.5
-        yaw = np.random.rand() * np.pi * 2.
-        qpos = [pos_x, pos_y, yaw, 0.3]
-        self.rands = np.random.choice(range(400), 20, replace=False)
-        for rand in self.rands:
-            pos_x = (rand%20) * 0.5 - 4.75 + 10.
-            pos_y = (rand//20) * 0.5 - 4.75 + 10.
-            qpos.append(pos_x)
-            qpos.append(pos_y)
-        self.set_state(np.array(qpos), np.zeros_like(qpos))
+        np.random.seed(seed)
 
     def set_state(self, qpos, qvel):
         assert qpos.shape == (self.model.nq,) and qvel.shape == (self.model.nv,)
@@ -150,9 +137,10 @@ class BaseEnv(gym.Env):
 class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.observation_space = Box(
-            low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64
-        )
+        self.observation_space = Tuple((
+            Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(1,20,20), dtype=np.float64),
+        ))
         aspace_low = np.array([-0.2, -0.1, -0.6])
         aspace_high = np.array([0.6, 0.1, 0.6])
         self.action_space = Box(
@@ -175,15 +163,31 @@ class NavigationEnv(BaseEnv):
         obs = self._get_obs()
         return obs, {}
 
+    def reset_model(self):
+        self.sim.reset()
+        pos_x = np.random.rand() * 9. - 4.5
+        pos_y = np.random.rand() * 9. - 4.5
+        yaw = np.random.rand() * np.pi * 2.
+        qpos = [pos_x, pos_y, yaw, 0.3]
+        self.rands = np.random.choice(range(400), 20, replace=False)
+        self.obs_map = np.zeros([1, 20, 20])
+        for rand in self.rands:
+            pos_x = (rand%20) * 0.5 - 4.75 + 10.
+            pos_y = (rand//20) * 0.5 - 4.75 + 10.
+            qpos.append(pos_x)
+            qpos.append(pos_y)
+            self.obs_map[:, rand%20, rand//20] = 1.
+        self.set_state(np.array(qpos), np.zeros_like(qpos))
+
     def _get_obs(self):
         position = self.sim.data.qpos.flat.copy()[:2]
         dir_cos = np.cos(self.sim.data.qpos.flat.copy()[2:3])
         dir_sin = np.sin(self.sim.data.qpos.flat.copy()[2:3])
         velocity = self.sim.data.qvel.flat.copy()[:3]
         observation = np.concatenate([
-            position, dir_cos, dir_sin, velocity, self.goal.copy(), self.t
+            position, dir_cos, dir_sin, velocity, self.goal.copy(), [self.t]
         ]).ravel()
-        return observation
+        return observation, self.obs_map
 
     def _local_to_global(self, input_action):
         local_action = input_action[:2].copy().reshape([1,2])
@@ -227,7 +231,6 @@ class NavigationEnv(BaseEnv):
         self.t += self.dt
 
     def step(self, command):
-
         action = self._local_to_global(command)
         self.do_simulation(action, self.frame_skip)
         observation = self._get_obs()

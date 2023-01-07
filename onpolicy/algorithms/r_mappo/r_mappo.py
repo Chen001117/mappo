@@ -12,10 +12,7 @@ class R_MAPPO():
     :param policy: (R_MAPPO_Policy) policy to update.
     :param device: (torch.device) specifies the device to run on (cpu/gpu).
     """
-    def __init__(self,
-                 args,
-                 policy,
-                 device=torch.device("cpu")):
+    def __init__(self, args, policy, device=torch.device("cpu")):
 
         self.device = device
         self.tpdv = dict(dtype=torch.float32, device=device)
@@ -112,24 +109,25 @@ class R_MAPPO():
         active_masks_batch = check(active_masks_batch).to(**self.tpdv)
 
         # Reshape to do in a single forward pass for all steps
-        values, action_log_probs, dist_entropy = self.policy.evaluate_actions(share_obs_batch,
-                                                                              obs_batch, 
-                                                                              rnn_states_batch, 
-                                                                              rnn_states_critic_batch, 
-                                                                              actions_batch, 
-                                                                              masks_batch, 
-                                                                              available_actions_batch,
-                                                                              active_masks_batch)
+        values, action_log_probs, dist_entropy = self.policy.evaluate_actions(
+            share_obs_batch, 
+            obs_batch, 
+            rnn_states_batch, 
+            rnn_states_critic_batch, 
+            actions_batch, 
+            masks_batch, 
+            available_actions_batch,
+            active_masks_batch
+        )
+
         # actor update
         imp_weights = torch.exp(action_log_probs - old_action_log_probs_batch)
-
         surr1 = imp_weights * adv_targ
         surr2 = torch.clamp(imp_weights, 1.0 - self.clip_param, 1.0 + self.clip_param) * adv_targ
 
         if self._use_policy_active_masks:
-            policy_action_loss = (-torch.sum(torch.min(surr1, surr2),
-                                             dim=-1,
-                                             keepdim=True) * active_masks_batch).sum() / active_masks_batch.sum()
+            policy_action_loss = (-torch.sum(torch.min(surr1, surr2), dim=-1, keepdim=True) \
+                * active_masks_batch).sum() / active_masks_batch.sum()
         else:
             policy_action_loss = -torch.sum(torch.min(surr1, surr2), dim=-1, keepdim=True).mean()
 
@@ -181,7 +179,6 @@ class R_MAPPO():
         std_advantages = np.nanstd(advantages_copy)
         advantages = (advantages - mean_advantages) / (std_advantages + 1e-5)
         
-
         train_info = {}
 
         train_info['value_loss'] = 0

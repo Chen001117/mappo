@@ -74,26 +74,28 @@ class MujocoRunner(Runner):
     def warmup(self):
         # reset env
         obs = self.envs.reset()
-
-        # # replay buffer
-        # if self.use_centralized_V:
-        #     share_obs = obs.reshape(self.n_rollout_threads, -1)
-        #     share_obs = np.expand_dims(share_obs, 1).repeat(self.num_agents, axis=1)
-        # else:
-        #     share_obs = obs
-
-        self.buffer.share_obs[0] = obs.copy()
-        self.buffer.obs[0] = obs.copy()
+        self.buffer.share_obs_vec[0] = obs[0].copy()
+        self.buffer.share_obs_img[1] = obs[1].copy()
+        self.buffer.obs_vec[0] = obs[0].copy()
+        self.buffer.obs_img[0] = obs[1].copy()
 
     @torch.no_grad()
     def collect(self, step):
         self.trainer.prep_rollout()
         value, action, action_log_prob, rnn_states, rnn_states_critic \
-            = self.trainer.policy.get_actions(np.concatenate(self.buffer.share_obs[step]),
-                            np.concatenate(self.buffer.obs[step]),
-                            np.concatenate(self.buffer.rnn_states[step]),
-                            np.concatenate(self.buffer.rnn_states_critic[step]),
-                            np.concatenate(self.buffer.masks[step]))
+            = self.trainer.policy.get_actions(
+                (
+                    np.concatenate(self.buffer.share_obs_vec[step]),
+                    np.concatenate(self.buffer.share_obs_img[step])
+                ),
+                (
+                    np.concatenate(self.buffer.obs_vec[step]),
+                    np.concatenate(self.buffer.obs_img[step]),
+                ),
+                np.concatenate(self.buffer.rnn_states[step]),
+                np.concatenate(self.buffer.rnn_states_critic[step]),
+                np.concatenate(self.buffer.masks[step])
+            )
         # [self.envs, agents, dim]
         values = np.array(np.split(_t2n(value), self.n_rollout_threads))
         actions = np.array(np.split(_t2n(action), self.n_rollout_threads))
@@ -115,15 +117,23 @@ class MujocoRunner(Runner):
         rnn_states_critic[dones == True] = np.zeros(((dones == True).sum(), *self.buffer.rnn_states_critic.shape[3:]), dtype=np.float32)
         masks = np.ones((self.n_rollout_threads, self.num_agents, 1), dtype=np.float32)
         masks[dones == True] = np.zeros(((dones == True).sum(), 1), dtype=np.float32)
-
-        # if self.use_centralized_V:
-        #     share_obs = obs.reshape(self.n_rollout_threads, -1)
-        #     share_obs = np.expand_dims(share_obs, 1).repeat(self.num_agents, axis=1)
-        # else:
-        #     share_obs = obs
-        share_obs = obs.copy()
-
+        share_obs = (obs[0].copy(), obs[1].copy())
         self.buffer.insert(share_obs, obs, rnn_states, rnn_states_critic, actions, action_log_probs, values, rewards, masks)
+    
+    @torch.no_grad()
+    def compute(self):
+        """Calculate returns for the collected data."""
+        self.trainer.prep_rollout()
+        next_values = self.trainer.policy.get_values(
+            (
+                np.concatenate(self.buffer.share_obs_vec[-1]),
+                np.concatenate(self.buffer.share_obs_img[-1]),
+            ),
+            np.concatenate(self.buffer.rnn_states_critic[-1]),
+            np.concatenate(self.buffer.masks[-1])
+        )
+        next_values = np.array(np.split(_t2n(next_values), self.n_rollout_threads))
+        self.buffer.compute_returns(next_values, self.trainer.value_normalizer)
 
     @torch.no_grad()
     def eval(self, total_num_steps):
@@ -192,9 +202,10 @@ class MujocoRunner(Runner):
             for step in range(self.episode_length):
                 calc_start = time.time()
 
+                observation = np.concatenate(obs[0]), np.concatenate(obs[1])
                 self.trainer.prep_rollout()
                 action, rnn_states = self.trainer.policy.act(
-                    np.concatenate(obs),
+                    observation,
                     np.concatenate(rnn_states),
                     np.concatenate(masks),
                     deterministic=False
