@@ -7,7 +7,6 @@ from gym import utils
 from onpolicy.envs.mujoco.mujoco_env import MuJocoPyEnv
 from gym.spaces import Box
 from typing import Optional, Union
-from .generate import get_xml
 
 DEFAULT_CAMERA_CONFIG = {
     "trackbodyid": 2,
@@ -52,8 +51,8 @@ class BaseEnv(gym.Env):
         qpos = [pos_x, pos_y, yaw, 0.3]
         self.rands = np.random.choice(range(400), 20, replace=False)
         for rand in self.rands:
-            pos_x = (rand%20) * 0.5 - 4.75
-            pos_y = (rand//20) * 0.5 - 4.75
+            pos_x = (rand%20) * 0.5 - 4.75 + 10.
+            pos_y = (rand//20) * 0.5 - 4.75 + 10.
             qpos.append(pos_x)
             qpos.append(pos_y)
         self.set_state(np.array(qpos), np.zeros_like(qpos))
@@ -152,7 +151,7 @@ class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.observation_space = Box(
-            low=-np.inf, high=np.inf, shape=(49,), dtype=np.float64
+            low=-np.inf, high=np.inf, shape=(9,), dtype=np.float64
         )
         aspace_low = np.array([-0.2, -0.1, -0.6])
         aspace_high = np.array([0.6, 0.1, 0.6])
@@ -183,9 +182,7 @@ class NavigationEnv(BaseEnv):
         velocity = self.sim.data.qvel.flat.copy()[:3]
         observation = np.concatenate([
             position, dir_cos, dir_sin, velocity, self.goal.copy(),
-            self.rands%20*0.5-4.75, self.rands//20*0.5-4.75,
         ]).ravel()
-        print(observation)
         return observation
 
     def _local_to_global(self, input_action):
@@ -230,7 +227,6 @@ class NavigationEnv(BaseEnv):
         self.t += self.dt
 
     def step(self, command):
-        command = np.array([-0.5, 0, 0])
         action = self._local_to_global(command)
         self.do_simulation(action, self.frame_skip)
         observation = self._get_obs()
