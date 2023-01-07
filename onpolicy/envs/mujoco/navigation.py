@@ -32,7 +32,7 @@ class BaseEnv(gym.Env):
         self.sim = mujoco_py.MjSim(self.model)
         self.data = self.sim.data
         self._viewers = {}
-        self.frame_skip = 4
+        self.frame_skip = 4 
         self.viewer = None
         self.camera_name = "camera"
         self.camera_id = 2
@@ -151,7 +151,7 @@ class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.observation_space = Box(
-            low=-np.inf, high=np.inf, shape=(9,), dtype=np.float64
+            low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64
         )
         aspace_low = np.array([-0.2, -0.1, -0.6])
         aspace_high = np.array([0.6, 0.1, 0.6])
@@ -171,8 +171,8 @@ class NavigationEnv(BaseEnv):
         for _ in range(10):
             self.do_simulation(np.zeros(3), self.frame_skip)
         self.t = 0.
+        self.goal = np.random.rand(2) * 9. - 4.5
         obs = self._get_obs()
-        self.goal = np.random.rand(2) * 10. - 5.
         return obs, {}
 
     def _get_obs(self):
@@ -181,7 +181,7 @@ class NavigationEnv(BaseEnv):
         dir_sin = np.sin(self.sim.data.qpos.flat.copy()[2:3])
         velocity = self.sim.data.qvel.flat.copy()[:3]
         observation = np.concatenate([
-            position, dir_cos, dir_sin, velocity, self.goal.copy(),
+            position, dir_cos, dir_sin, velocity, self.goal.copy(), self.t
         ]).ravel()
         return observation
 
@@ -227,6 +227,7 @@ class NavigationEnv(BaseEnv):
         self.t += self.dt
 
     def step(self, command):
+
         action = self._local_to_global(command)
         self.do_simulation(action, self.frame_skip)
         observation = self._get_obs()
