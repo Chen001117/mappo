@@ -48,7 +48,7 @@ class Runner(object):
         self.eval_interval = self.all_args.eval_interval
 
         # observation space 
-        self.tuple_obs = type(self.envs.observation_space[0]) == tuple
+        self.tuple_obs = self.envs.observation_space[0].__class__.__name__ == "Tuple"
 
         # dir
         self.model_dir = self.all_args.model_dir

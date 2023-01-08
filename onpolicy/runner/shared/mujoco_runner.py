@@ -164,8 +164,15 @@ class MujocoRunner(Runner):
 
         for eval_step in range(self.episode_length):
             self.trainer.prep_rollout()
+            if self.tuple_obs:
+                observation = (
+                    np.concatenate(eval_obs[0]),
+                    np.concatenate(eval_obs[1]),
+                )
+            else:
+                observation = np.concatenate(eval_obs)
             eval_action, eval_rnn_states = self.trainer.policy.act(
-                np.concatenate(eval_obs),
+                observation,
                 np.concatenate(eval_rnn_states),
                 np.concatenate(eval_masks),
                 deterministic=True

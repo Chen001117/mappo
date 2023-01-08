@@ -124,6 +124,8 @@ class SharedReplayBuffer(object):
             self.active_masks[self.step + 1] = active_masks.copy()
         if available_actions is not None:
             self.available_actions[self.step + 1] = available_actions.copy()
+        
+        self.step = (self.step + 1) % self.episode_length
 
     def after_update(self):
         """Copy last timestep data to first index. Called after update to model."""
