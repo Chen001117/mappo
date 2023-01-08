@@ -42,10 +42,13 @@ class Runner(object):
         self.recurrent_N = self.all_args.recurrent_N
 
         # interval
-        self.save_interval = self.all_args.save_interval
         self.use_eval = self.all_args.use_eval
-        self.eval_interval = self.all_args.eval_interval
         self.log_interval = self.all_args.log_interval
+        self.save_interval = self.all_args.save_interval
+        self.eval_interval = self.all_args.eval_interval
+
+        # observation space 
+        self.tuple_obs = type(self.envs.observation_space[0]) == tuple
 
         # dir
         self.model_dir = self.all_args.model_dir
@@ -69,11 +72,13 @@ class Runner(object):
         share_observation_space = self.envs.share_observation_space[0] if self.use_centralized_V else self.envs.observation_space[0]
 
         # policy network
-        self.policy = Policy(self.all_args,
-                            self.envs.observation_space[0],
-                            share_observation_space,
-                            self.envs.action_space[0],
-                            device = self.device)
+        self.policy = Policy(
+            self.all_args,
+            self.envs.observation_space[0],
+            share_observation_space,
+            self.envs.action_space[0],
+            device = self.device
+        )
 
         if self.model_dir is not None:
             self.restore()

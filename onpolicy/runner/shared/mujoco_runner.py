@@ -74,24 +74,34 @@ class MujocoRunner(Runner):
     def warmup(self):
         # reset env
         obs = self.envs.reset()
-        self.buffer.share_obs_vec[0] = obs[0].copy()
-        self.buffer.share_obs_img[1] = obs[1].copy()
-        self.buffer.obs_vec[0] = obs[0].copy()
-        self.buffer.obs_img[0] = obs[1].copy()
+        if self.tuple_obs:
+            self.buffer.share_obs_vec[0] = obs[0].copy()
+            self.buffer.share_obs_img[1] = obs[1].copy()
+            self.buffer.obs_vec[0] = obs[0].copy()
+            self.buffer.obs_img[0] = obs[1].copy()
+        else:
+            self.buffer.share_obs[0] = obs.copy()
+            self.buffer.obs[0] = obs.copy()
 
     @torch.no_grad()
     def collect(self, step):
         self.trainer.prep_rollout()
+        if self.tuple_obs:
+            share_obs = (
+                np.concatenate(self.buffer.share_obs_vec[step]),
+                np.concatenate(self.buffer.share_obs_img[step])
+            )
+            obs = (
+                np.concatenate(self.buffer.obs_vec[step]),
+                np.concatenate(self.buffer.obs_img[step]),
+            )
+        else:
+            share_obs = np.concatenate(self.buffer.share_obs[step])
+            obs = np.concatenate(self.buffer.obs[step])
         value, action, action_log_prob, rnn_states, rnn_states_critic \
             = self.trainer.policy.get_actions(
-                (
-                    np.concatenate(self.buffer.share_obs_vec[step]),
-                    np.concatenate(self.buffer.share_obs_img[step])
-                ),
-                (
-                    np.concatenate(self.buffer.obs_vec[step]),
-                    np.concatenate(self.buffer.obs_img[step]),
-                ),
+                share_obs,
+                obs,
                 np.concatenate(self.buffer.rnn_states[step]),
                 np.concatenate(self.buffer.rnn_states_critic[step]),
                 np.concatenate(self.buffer.masks[step])
@@ -117,18 +127,25 @@ class MujocoRunner(Runner):
         rnn_states_critic[dones == True] = np.zeros(((dones == True).sum(), *self.buffer.rnn_states_critic.shape[3:]), dtype=np.float32)
         masks = np.ones((self.n_rollout_threads, self.num_agents, 1), dtype=np.float32)
         masks[dones == True] = np.zeros(((dones == True).sum(), 1), dtype=np.float32)
-        share_obs = (obs[0].copy(), obs[1].copy())
+        if self.tuple_obs:
+            share_obs = (obs[0].copy(), obs[1].copy())
+        else:
+            share_obs = obs.copy()
         self.buffer.insert(share_obs, obs, rnn_states, rnn_states_critic, actions, action_log_probs, values, rewards, masks)
     
     @torch.no_grad()
     def compute(self):
         """Calculate returns for the collected data."""
         self.trainer.prep_rollout()
-        next_values = self.trainer.policy.get_values(
-            (
+        if self.tuple_obs:
+            share_obs = (
                 np.concatenate(self.buffer.share_obs_vec[-1]),
                 np.concatenate(self.buffer.share_obs_img[-1]),
-            ),
+            )
+        else:
+            share_obs = np.concatenate(self.buffer.share_obs[-1])
+        next_values = self.trainer.policy.get_values(
+            share_obs,
             np.concatenate(self.buffer.rnn_states_critic[-1]),
             np.concatenate(self.buffer.masks[-1])
         )
