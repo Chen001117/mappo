@@ -137,12 +137,13 @@ class BaseEnv(gym.Env):
 class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.observation_space = Tuple((
-            Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64),
-            Box(low=-np.inf, high=np.inf, shape=(1,20,20), dtype=np.float64),
-        ))
-        aspace_low = np.array([-0.2, -0.1, -0.6])
-        aspace_high = np.array([0.6, 0.1, 0.6])
+        # self.observation_space = Tuple((
+        #     Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64),
+        #     Box(low=-np.inf, high=np.inf, shape=(1,20,20), dtype=np.float64),
+        # ))
+        self.observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
+        aspace_low = np.array([-0.6, -0.6, -0.6])
+        aspace_high = np.array([0.6, 0.6, 0.6])
         self.action_space = Box(
             low=aspace_low, high=aspace_high, shape=(3,), dtype=np.float64
         )
@@ -159,14 +160,16 @@ class NavigationEnv(BaseEnv):
         for _ in range(10):
             self.do_simulation(np.zeros(3), self.frame_skip)
         self.t = 0.
-        self.goal = np.random.rand(2) * 9. - 4.5
+        position = self.sim.data.qpos.copy().flat[:2]
+        self.prev_dist = np.linalg.norm(position-self.goal)
+        self.goal = np.array([3., 3.]) #np.random.rand(2) * 9. - 4.5
         obs = self._get_obs()
         return obs, {}
 
     def reset_model(self):
         self.sim.reset()
-        pos_x = np.random.rand() * 9. - 4.5
-        pos_y = np.random.rand() * 9. - 4.5
+        pos_x = 0. #np.random.rand() * 9. - 4.5
+        pos_y = 0. #np.random.rand() * 9. - 4.5
         yaw = np.random.rand() * np.pi * 2.
         qpos = [pos_x, pos_y, yaw, 0.3]
         self.rands = np.random.choice(range(400), 20, replace=False)
@@ -187,7 +190,7 @@ class NavigationEnv(BaseEnv):
         observation = np.concatenate([
             position, dir_cos, dir_sin, velocity, self.goal.copy(), [self.t]
         ]).ravel()
-        return observation, self.obs_map
+        return observation#, self.obs_map
 
     def _local_to_global(self, input_action):
         local_action = input_action[:2].copy().reshape([1,2])
@@ -207,11 +210,14 @@ class NavigationEnv(BaseEnv):
         torque = np.clip(torque, self.torque_low, self.torque_high)
         self.prev_output = torque.copy()
         return torque
-    
+
     def _get_reward(self):
         position = self.sim.data.qpos.copy().flat[:2]
         dist = np.linalg.norm(position-self.goal)
-        return np.exp(-dist)
+        rew = self.prev_dist-dist
+        rew += (dist < 0.25) * 0.05
+        self.prev_dist = dist.copy()
+        return rew
 
     def _get_done(self):
         done = self.t > 10.
@@ -231,7 +237,9 @@ class NavigationEnv(BaseEnv):
         self.t += self.dt
 
     def step(self, command):
-        action = self._local_to_global(command)
+        command = np.clip(command, self.action_space.low, self.action_space.high)
+        # action = self._local_to_global(command)
+        action = command.copy()
         self.do_simulation(action, self.frame_skip)
         observation = self._get_obs()
         reward = self._get_reward()

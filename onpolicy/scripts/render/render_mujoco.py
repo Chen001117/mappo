@@ -12,7 +12,7 @@ import torch
 from onpolicy.config import get_config
 
 import gym
-from onpolicy.envs.env_wrappers import TupleDummyVecEnv, MARLWrapper
+from onpolicy.envs.env_wrappers import TupleDummyVecEnv, DummyVecEnv, MARLWrapper
 from onpolicy.envs.mujoco.navigation import NavigationEnv as MujocoEnv
 # from onpolicy.envs.mujoco.walker2d_v3 import Walker2dEnv as MujocoEnv
 
@@ -30,7 +30,7 @@ def make_render_env(all_args):
             return env
         return init_env
     if all_args.n_rollout_threads == 1:
-        return TupleDummyVecEnv([get_env_fn(0)])
+        return DummyVecEnv([get_env_fn(0)])
     else:
         raise NotImplementedError
 

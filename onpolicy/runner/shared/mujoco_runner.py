@@ -201,14 +201,16 @@ class MujocoRunner(Runner):
             
             for step in range(self.episode_length):
                 calc_start = time.time()
-
-                observation = np.concatenate(obs[0]), np.concatenate(obs[1])
+                if type(obs) == tuple:
+                    observation = np.concatenate(obs[0]), np.concatenate(obs[1])
+                else:
+                    observation = np.concatenate(obs)
                 self.trainer.prep_rollout()
                 action, rnn_states = self.trainer.policy.act(
                     observation,
                     np.concatenate(rnn_states),
                     np.concatenate(masks),
-                    deterministic=False
+                    deterministic=True
                 )
                 actions = np.array(np.split(_t2n(action), self.n_rollout_threads))
                 rnn_states = np.array(np.split(_t2n(rnn_states), self.n_rollout_threads))
