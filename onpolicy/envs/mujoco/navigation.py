@@ -139,7 +139,7 @@ class NavigationEnv(BaseEnv):
         super().__init__(**kwargs)
         self.observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64),
-            Box(low=-np.inf, high=np.inf, shape=(1,20,20), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(3,20,20), dtype=np.float64),
         ))
         # self.observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
         aspace_low = np.array([-0.6, -0.6, -0.6])
@@ -156,13 +156,15 @@ class NavigationEnv(BaseEnv):
     def reset(self):
         self.prev_output = np.zeros(3)
         super().reset()
-        self.reset_model()
+        regenerate = True
+        while regenerate:
+            self.reset_model()
+            regenerate = self._get_done()
         for _ in range(10):
             self.do_simulation(np.zeros(3), self.frame_skip)
         self.t = 0.
         position = self.sim.data.qpos.copy().flat[:2]
         self.prev_dist = np.linalg.norm(position-self.goal)
-        self.goal = np.random.rand(2) * 9. - 4.5
         obs = self._get_obs()
         return obs, {}
 
@@ -171,15 +173,18 @@ class NavigationEnv(BaseEnv):
         pos_x = np.random.rand() * 9. - 4.5
         pos_y = np.random.rand() * 9. - 4.5
         yaw = np.random.rand() * np.pi * 2.
+        self.goal = np.random.rand(2) * 9. - 4.5
         qpos = [pos_x, pos_y, yaw, 0.3]
         self.rands = np.random.choice(range(400), 20, replace=False)
-        self.obs_map = np.zeros([1, 20, 20])
+        self.obs_map = np.zeros([3, 20, 20])
         for rand in self.rands:
             pos_x = (rand%20) * 0.5 - 4.75 
             pos_y = (rand//20) * 0.5 - 4.75 
             qpos.append(pos_x)
             qpos.append(pos_y)
-            self.obs_map[:, rand%20, rand//20] = 1.
+            self.obs_map[0, rand%20, rand//20] = 1.
+        qpos.append(self.goal[0])        
+        qpos.append(self.goal[1])  
         self.set_state(np.array(qpos), np.zeros_like(qpos))
 
     def _get_obs(self):
@@ -190,6 +195,9 @@ class NavigationEnv(BaseEnv):
         observation = np.concatenate([
             position, dir_cos, dir_sin, velocity, self.goal.copy(), [self.t]
         ]).ravel()
+        obs_map = self.obs_map.copy()
+        obs_map[1,int((position[0]+5.)*2.), int((position[1]+5.)*2.)] = 1.
+        obs_map[2,int((self.goal[0]+5.)*2.), int((self.goal[1]+5.)*2.)] = 1.
         return observation, self.obs_map
 
     def _local_to_global(self, input_action):
@@ -215,7 +223,7 @@ class NavigationEnv(BaseEnv):
         position = self.sim.data.qpos.copy().flat[:2]
         dist = np.linalg.norm(position-self.goal)
         rew = self.prev_dist - dist
-        rew += (dist < 0.25) * 0.05
+        rew = 0.1 if dist < 0.25 else rew 
         self.prev_dist = dist.copy()
         return rew
 

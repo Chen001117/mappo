@@ -30,7 +30,7 @@ def make_render_env(all_args):
             return env
         return init_env
     if all_args.n_rollout_threads == 1:
-        return DummyVecEnv([get_env_fn(0)])
+        return TupleDummyVecEnv([get_env_fn(0)])
     else:
         raise NotImplementedError
 
