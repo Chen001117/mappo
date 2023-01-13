@@ -13,7 +13,7 @@
       <joint axis="0 1 0" limited="false" name="axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="axisz" pos="0 0 0" type="slide"/>
-      <geom mass="8." size="0.25 0.25 0.25" name="dog" type="box" rgba="0.8 0.4 0. 1" friction="1 0.005 0.0001" />
+      <geom mass="8." size="0.25 0.25 " name="dog" type="cylinder" rgba="0.8 0.4 0. 1" friction="1 0.005 0.0001" />
     </body>
 
     <body name="wall_0" pos="-5.25 0. 0.5">

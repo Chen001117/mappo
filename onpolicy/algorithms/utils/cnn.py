@@ -9,7 +9,7 @@ class Flatten(nn.Module):
 
 
 class CNNLayer(nn.Module):
-    def __init__(self, obs_shape, hidden_size, use_orthogonal, use_ReLU, kernel_size=3, stride=1):
+    def __init__(self, obs_shape, hidden_size, use_orthogonal, use_ReLU, kernel_size=3, stride=1, padding=1):
         super(CNNLayer, self).__init__()
 
         active_func = [nn.Tanh(), nn.ReLU()][use_ReLU]
@@ -29,14 +29,26 @@ class CNNLayer(nn.Module):
                     in_channels=input_channel,
                     out_channels=hidden_size // 2,
                     kernel_size=kernel_size,
-                    stride=stride
+                    stride=stride,
+                    padding=padding
+                )
+            ),
+            active_func,
+            nn.AvgPool2d(kernel_size, stride=kernel_size),
+            init_(
+                nn.Conv2d(
+                    in_channels=hidden_size // 2,
+                    out_channels=hidden_size // 2,
+                    kernel_size=kernel_size,
+                    stride=stride,
+                    padding=padding
                 )
             ),
             active_func,
             Flatten(),
             init_(
                 nn.Linear(
-                    hidden_size // 2 * (input_width - kernel_size + stride) * (input_height - kernel_size + stride),
+                    hidden_size // 2 * (input_width//kernel_size) * (input_height//kernel_size),
                     hidden_size
                 )
             ),

@@ -80,11 +80,11 @@ class Runner(object):
             device = self.device
         )
 
-        if self.model_dir is not None:
-            self.restore()
-
         # algorithm
         self.trainer = TrainAlgo(self.all_args, self.policy, device = self.device)
+
+        if self.model_dir is not None:
+            self.restore()
         
         # buffer
         self.buffer = SharedReplayBuffer(self.all_args,
