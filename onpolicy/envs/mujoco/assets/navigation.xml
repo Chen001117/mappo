@@ -16,126 +16,7 @@
       <geom mass="8." size="0.25 0.25 " name="dog" type="cylinder" rgba="0.8 0.4 0. 1" friction="1 0.005 0.0001" />
     </body>
 
-    <body name="wall_0" pos="-5.25 0. 0.5">
-      <geom mass="1000." size="0.25 5. 0.5" name="wall_0" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="wall_1" pos="5.25 0. 0.5">
-      <geom mass="1000." size="0.25 5. 0.5" name="wall_1" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="wall_2" pos="0. -5.25 0.5">
-      <geom mass="1000." size="5. 0.25 0.5" name="wall_2" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="wall_3" pos="0. 5.25 0.5">
-      <geom mass="1000." size="5. 0.25 0.5" name="wall_3" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-
-    <body name="obs_00" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_00" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_00" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_00" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_01" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_01" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_01" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_01" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_02" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_02" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_02" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_02" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_03" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_03" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_03" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_03" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_04" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_04" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_04" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_04" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_05" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_05" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_05" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_05" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_06" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_06" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_06" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_06" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_07" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_07" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_07" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_07" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_08" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_08" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_08" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_08" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_09" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_09" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_09" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_09" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_10" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_10" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_10" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_10" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_11" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_11" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_11" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_11" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_12" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_12" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_12" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_12" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_13" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_13" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_13" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_13" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_14" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_14" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_14" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_14" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_15" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_15" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_15" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_15" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_16" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_16" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_16" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_16" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_17" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_17" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_17" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_17" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_18" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_18" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_18" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_18" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-    <body name="obs_19" pos="0. 0. 0.5">
-      <joint axis="1 0 0" limited="false" name="axisx_19" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="axisy_19" pos="0 0 0" type="slide"/>
-      <geom mass="1000." size="0.25 0.25 0.5" name="obs_19" type="box" rgba="0. 0. 0.8 1"/>
-    </body>
-
-    <body name="destination" pos="0 0 0">
-      <site name="destination" pos="0 0 0"/>
-      <joint axis="1 0 0" limited="false" name="destinationx" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="destinationy" pos="0 0 0" type="slide"/>
-      <geom name="destination" pos="0 0 0" size="0.01 0.01 0.01" type="box"/>
-    </body>
+    <geom name='hf' pos='0.0 0 -0.01' hfield='hf_asset' type='hfield' condim='3' conaffinity='15'/>
 
   </worldbody>
 
@@ -158,6 +39,7 @@
     <texture builtin="checker" height="100" name="texplane" rgb1="0 0 0" rgb2="0.8 0.8 0.8" type="2d" width="100"/>
     <material name="MatPlane" reflectance="0.5" shininess="1" specular="1" texrepeat="5 5" texture="texplane"/>
     <material name="geom" texture="texgeom" texuniform="true"/>
+    <hfield name='hf_asset' nrow='512' ncol='512' size="10 10 2. 0.01"/>
   </asset>
 
 </mujoco>

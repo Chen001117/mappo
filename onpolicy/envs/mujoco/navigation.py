@@ -7,6 +7,8 @@ from gym import utils
 from onpolicy.envs.mujoco.mujoco_env import MuJocoPyEnv
 from gym.spaces import Box, Tuple
 from typing import Optional, Union
+import os
+import ctypes
 
 DEFAULT_CAMERA_CONFIG = {
     "trackbodyid": 2,
@@ -137,12 +139,12 @@ class BaseEnv(gym.Env):
 class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # self.img_size = 60
-        # self.observation_space = Tuple((
-        #     Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64),
-        #     Box(low=-np.inf, high=np.inf, shape=(3,self.img_size,self.img_size), dtype=np.float64),
-        # ))
-        self.observation_space = Box(low=-np.inf, high=np.inf, shape=(22,), dtype=np.float64)
+        self.img_size = 40
+        self.observation_space = Tuple((
+            Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(3,self.img_size,self.img_size), dtype=np.float64),
+        ))
+        # self.observation_space = Box(low=-np.inf, high=np.inf, shape=(22,), dtype=np.float64)
         aspace_low = np.array([-0.6, -0.6, -0.6])
         aspace_high = np.array([0.6, 0.6, 0.6])
         self.action_space = Box(
@@ -153,6 +155,7 @@ class NavigationEnv(BaseEnv):
         self.goal = np.zeros(2)
         self.his_vel = []
         self.t = 0.
+
 
     def reset(self):
         regenerate = True
