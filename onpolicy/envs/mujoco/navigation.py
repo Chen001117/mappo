@@ -80,7 +80,7 @@ class BaseEnv(gym.Env):
         image[0, :] = 255
         image[:,-1] = 255
         image[-1,:] = 255
-        for _ in range(10):
+        for _ in range(15):
             x1 = np.random.randint(512)
             x2 = x1 + min(np.random.randint(50,100), 512-x1)
             y1 = np.random.randint(512)
@@ -203,8 +203,10 @@ class NavigationEnv(BaseEnv):
         self.kd = np.array([0.01, 0.01, 0.01])
         self.goal = np.zeros(2)
         self.t = 0.
+        self.total_cnt = 0
 
     def reset(self):
+        self.total_cnt += 1
         self.con_cnt = 0
         regenerate = True
         while regenerate:
@@ -230,6 +232,12 @@ class NavigationEnv(BaseEnv):
         yaw = np.random.rand() * np.pi * 2.
         while True:
             self.goal = np.random.rand(2) * 9. - 4.5
+            if self.total_cnt < 100:
+                if np.random.rand() < 0.05:
+                    vec = self.goal-np.array([pos_x,pos_y])
+                    dist = np.linalg.norm(vec)
+                    if dist > .1:
+                        self.goal = vec/dist*0.1 + np.array([pos_x,pos_y])
             coor = self._pos2map(self.goal)
             if self.map[coor[0], coor[1], 0] == 0:
                 break
@@ -299,7 +307,7 @@ class NavigationEnv(BaseEnv):
 
     def _get_done(self):
 
-        done = self.t > 10.
+        done = self.t > 15.
         pos = self.sim.data.qpos.copy().flat[:2]
         coor = self._pos2map(pos)
         mx1 = coor[0]
