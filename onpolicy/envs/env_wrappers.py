@@ -265,8 +265,8 @@ class SubprocVecEnv(ShareVecEnv):
             return np.stack(frame) 
 
 class TupleSubprocVecEnv(SubprocVecEnv):
-    def __init__(self, env_fns, spaces=None):
-        SubprocVecEnv.__init__(self, env_fns, spaces=None,eval=False)
+    def __init__(self, env_fns, spaces=None, eval=False):
+        SubprocVecEnv.__init__(self, env_fns, spaces=None, eval=False)
 
     def step_wait(self):
         obs_vec, obs_img = [], []

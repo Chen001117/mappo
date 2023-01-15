@@ -58,7 +58,23 @@ class BaseEnv(gym.Env):
         self.con_map[self.con_size:-self.con_size,self.con_size:-self.con_size] = self.map.copy()
         self.obs_map = self.obs_map.transpose([2,0,1])
         self.con_map = self.con_map.transpose([2,0,1])
-
+        self.cost_map = self.map.copy()[:,:,0].astype('float64')
+        for _ in range(self.con_size):
+            tmp = self.cost_map.copy()
+            tmp[1:] += self.cost_map[:-1] 
+            tmp[:-1] += self.cost_map[1:] 
+            tmp[:,1:] += self.cost_map[:,:-1] 
+            tmp[:,:-1] += self.cost_map[:,1:]
+            self.cost_map = np.clip(tmp, 0., 1.)
+        for _ in range(self.con_size):
+            tmp = self.cost_map.copy()
+            tmp[1:] += np.sqrt(self.cost_map[:-1]) * 0.1
+            tmp[:-1] += np.sqrt(self.cost_map[1:]) * 0.1
+            tmp[:,1:] += np.sqrt(self.cost_map[:,:-1]) * 0.1
+            tmp[:,:-1] += np.sqrt(self.cost_map[:,1:]) * 0.1
+            self.cost_map = np.clip(tmp, 0., 1.)
+        # imageio.imwrite("test.png", (self.cost_map.reshape([512,512,1])*255).astype('uint8'))
+        # print(self.cost_map[20:30,10:20])
 
     def _get_map(self):
         image = np.zeros([512,512,1]).astype(np.uint8)
@@ -191,6 +207,7 @@ class NavigationEnv(BaseEnv):
         self.t = 0.
 
     def reset(self):
+        self.con_cnt = 0
         regenerate = True
         while regenerate:
             if np.random.rand() < 0.1:
@@ -267,6 +284,8 @@ class NavigationEnv(BaseEnv):
         dist = np.linalg.norm(position-self.goal)
         rew = self.prev_dist - dist #+ 0.01
         rew = 0.1 if dist < 0.25 else rew 
+        coor = self._pos2map(position)
+        rew += (1-self.cost_map[coor[0],coor[1]]) * 0.01
         self.prev_dist = dist.copy()
         return rew
 
@@ -277,7 +296,7 @@ class NavigationEnv(BaseEnv):
 
     def _get_done(self):
 
-        done = self.t > 100.
+        done = self.t > 10.
         pos = self.sim.data.qpos.copy().flat[:2]
         coor = self._pos2map(pos)
         mx1 = coor[0]
@@ -285,8 +304,10 @@ class NavigationEnv(BaseEnv):
         my1 = coor[1]
         my2 = coor[1]+self.con_size*2+1
         local_map = self.con_map[0, mx1:mx2, my1:my2]
+        con_done = local_map.any()
+        self.con_cnt += con_done
     
-        return done or local_map.any()
+        return done or self.con_cnt>3
 
     def do_simulation(self, action, n_frames):
         for _ in range(n_frames):
