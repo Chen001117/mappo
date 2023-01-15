@@ -162,9 +162,12 @@ class ShareVecEnv(ABC):
             self.viewer = rendering.SimpleImageViewer()
         return self.viewer
 
-def worker(remote, parent_remote, env_fn_wrapper):
+def worker(remote, parent_remote, env_fn_wrapper, rank=None):
     parent_remote.close()
-    env = env_fn_wrapper.x()
+    if rank is not None:
+        env = env_fn_wrapper.x(rank)
+    else:
+        env = env_fn_wrapper.x()
     while True:
         cmd, data = remote.recv()
         if cmd == 'step':
@@ -199,7 +202,7 @@ def worker(remote, parent_remote, env_fn_wrapper):
             raise NotImplementedError
 
 class SubprocVecEnv(ShareVecEnv):
-    def __init__(self, env_fns, spaces=None):
+    def __init__(self, env_fns, spaces=None, eval=True):
         """
         envs: list of gym environments to run in subprocesses
         """
@@ -207,8 +210,8 @@ class SubprocVecEnv(ShareVecEnv):
         self.closed = False
         nenvs = len(env_fns)
         self.remotes, self.work_remotes = zip(*[Pipe() for _ in range(nenvs)])
-        self.ps = [Process(target=worker, args=(work_remote, remote, CloudpickleWrapper(env_fn)))
-                   for (work_remote, remote, env_fn) in zip(self.work_remotes, self.remotes, env_fns)]
+        self.ps = [Process(target=worker, args=(work_remote, remote, CloudpickleWrapper(env_fn), (eval==1)*100+i))
+                   for i, (work_remote, remote, env_fn) in enumerate(zip(self.work_remotes, self.remotes, env_fns))]
         for p in self.ps:
             p.daemon = True  # if the main process crashes, we should not cause things to hang
             p.start()
@@ -217,8 +220,7 @@ class SubprocVecEnv(ShareVecEnv):
 
         self.remotes[0].send(('get_spaces', None))
         observation_space, share_observation_space, action_space = self.remotes[0].recv()
-        ShareVecEnv.__init__(self, len(env_fns), observation_space,
-                             share_observation_space, action_space)
+        ShareVecEnv.__init__(self, len(env_fns), observation_space, share_observation_space, action_space)
 
     def step_async(self, actions):
         for remote, action in zip(self.remotes, actions):
@@ -264,7 +266,7 @@ class SubprocVecEnv(ShareVecEnv):
 
 class TupleSubprocVecEnv(SubprocVecEnv):
     def __init__(self, env_fns, spaces=None):
-        SubprocVecEnv.__init__(self, env_fns, spaces=None)
+        SubprocVecEnv.__init__(self, env_fns, spaces=None,eval=True)
 
     def step_wait(self):
         obs_vec, obs_img = [], []
@@ -291,9 +293,12 @@ class TupleSubprocVecEnv(SubprocVecEnv):
             obs_img.append(o_img)
         return np.stack(obs_vec), np.stack(obs_img)
 
-def shareworker(remote, parent_remote, env_fn_wrapper):
+def shareworker(remote, parent_remote, env_fn_wrapper, rank):
     parent_remote.close()
-    env = env_fn_wrapper.x()
+    if rank is not None:
+        env = env_fn_wrapper.x(rank)
+    else:
+        env = env_fn_wrapper.x()
     while True:
         cmd, data = remote.recv()
         if cmd == 'step':
