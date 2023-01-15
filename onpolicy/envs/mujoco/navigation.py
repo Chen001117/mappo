@@ -7,8 +7,7 @@ from gym import utils
 from onpolicy.envs.mujoco.mujoco_env import MuJocoPyEnv
 from gym.spaces import Box, Tuple
 from typing import Optional, Union
-import os
-import ctypes
+import imageio
 
 DEFAULT_CAMERA_CONFIG = {
     "trackbodyid": 2,
@@ -30,6 +29,7 @@ class BaseEnv(gym.Env):
     def __init__(self, **kwargs):
         self.width, self.height = 480, 480
         self.fullpath = path.join(path.dirname(__file__), "assets", "navigation.xml")
+        self.map = self._get_map()
         self.model = mujoco_py.load_model_from_path(self.fullpath)
         self.sim = mujoco_py.MjSim(self.model)
         self.data = self.sim.data
@@ -41,6 +41,31 @@ class BaseEnv(gym.Env):
         bounds = self.model.actuator_ctrlrange.copy().astype(np.float32)
         self.torque_low, self.torque_high = bounds.T
         self._reset_noise_scale = 5e-3
+
+        self.obs_size = 104
+        self.con_size = 14
+        self.obs_map = np.ones([self.obs_size*2+512,self.obs_size*2+512,1])
+        self.con_map = np.ones([self.con_size*2+512,self.con_size*2+512,1])
+        self.obs_map[self.obs_size:-self.obs_size,self.obs_size:-self.obs_size] = self.map.copy()
+        self.con_map[self.con_size:-self.con_size,self.con_size:-self.con_size] = self.map.copy()
+        self.obs_map = self.obs_map.transpose([2,0,1])
+        self.con_map = self.con_map.transpose([2,0,1])
+
+    def _get_map(self):
+        image = np.zeros([512,512,1]).astype(np.uint8)
+        image[:, 0] = 255
+        image[0, :] = 255
+        image[:,-1] = 255
+        image[-1,:] = 255
+        for _ in range(10):
+            x1 = np.random.randint(512)
+            x2 = x1 + min(np.random.randint(50,100), 512-x1)
+            y1 = np.random.randint(512)
+            y2 = y1 + min(np.random.randint(50,100), 512-y1)
+            image[x1:x2,y1:y2] = 255
+        save_img = np.transpose(image.copy()[:,::-1], [1,0,2])
+        imageio.imwrite("../envs/mujoco/assets/map.png", save_img)
+        return image
 
     def seed(self, seed):
         super().reset(seed=seed)
@@ -135,16 +160,15 @@ class BaseEnv(gym.Env):
             wait_time = max(self.dt-time.time()+start, 0.)
             time.sleep(wait_time)
 
-
 class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.img_size = 40
+        self.img_size = 52
         self.observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64),
-            Box(low=-np.inf, high=np.inf, shape=(3,self.img_size,self.img_size), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(1,self.img_size,self.img_size), dtype=np.float64),
         ))
-        # self.observation_space = Box(low=-np.inf, high=np.inf, shape=(22,), dtype=np.float64)
+        # self.observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
         aspace_low = np.array([-0.6, -0.6, -0.6])
         aspace_high = np.array([0.6, 0.6, 0.6])
         self.action_space = Box(
@@ -153,9 +177,7 @@ class NavigationEnv(BaseEnv):
         self.kp = np.array([50, 50, 50])
         self.kd = np.array([0.01, 0.01, 0.01])
         self.goal = np.zeros(2)
-        self.his_vel = []
         self.t = 0.
-
 
     def reset(self):
         regenerate = True
@@ -180,28 +202,13 @@ class NavigationEnv(BaseEnv):
         yaw = np.random.rand() * np.pi * 2.
         self.goal = np.random.rand(2) * 9. - 4.5
         qpos = [pos_x, pos_y, yaw, 0.3]
-        self.osize = 20
-        self.obs_num = 20
-        self.rands = np.random.choice(range(self.osize*self.osize), self.obs_num, replace=False)
-        # self.obs_map = np.zeros([3, self.img_size, self.img_size])
-        self.obs_list = []
-        for rand in self.rands:
-            pos_x = (rand%self.osize) * 0.5 - 4.75 
-            pos_y = (rand//self.osize) * 0.5 - 4.75 
-            qpos.append(pos_x)
-            qpos.append(pos_y)
-            # pos_x1 = (rand%self.osize) * (self.img_size//self.osize)
-            # pos_x2 = (rand%self.osize+1) * (self.img_size//self.osize)
-            # pos_y1 = (rand//self.osize) * (self.img_size//self.osize)
-            # pos_y2 = (rand//self.osize+1) * (self.img_size//self.osize)
-            # self.obs_map[0, pos_x1:pos_x2, pos_y1:pos_y2] = 1.
-            self.obs_list.append([pos_x, pos_y])
-        self.obs_list = np.array(self.obs_list)
         qpos.append(self.goal[0])        
         qpos.append(self.goal[1])  
         self.set_state(np.array(qpos), np.zeros_like(qpos))
 
+
     def _get_obs(self):
+
         position = self.sim.data.qpos.flat.copy()[:2]
         dir_cos = np.cos(self.sim.data.qpos.flat.copy()[2:3])
         dir_sin = np.sin(self.sim.data.qpos.flat.copy()[2:3])
@@ -210,30 +217,17 @@ class NavigationEnv(BaseEnv):
             position, dir_cos, dir_sin, velocity, self.goal.copy(), [self.t]
         ]).ravel()
 
-        lnum = 12
-        d = np.ones(lnum) * 4.
-        for i in range(lnum):
-            dir_vec = np.array([np.cos(i*np.pi*2/lnum), np.sin(i*np.pi*2/lnum)])
-            for j in range(40):
-                pnt = position + dir_vec * j / 10.
-                dist = pnt - self.obs_list
-                dist = np.linalg.norm(dist, np.inf, axis=-1)
-                if min(dist) < 0.25:
-                    d[i] = j / 10.
-                    break
-                if (pnt<-5).any() or (pnt>5.).any():
-                    d[i] = j / 10.
-                    break
-        observation = np.concatenate([observation, d])
-
-        # obs_map = self.obs_map.copy()
-        # pos_x = int((position[0]+5.) * (self.img_size/10.))
-        # pos_y = int((position[1]+5.) * (self.img_size/10.))
-        # obs_map[1, pos_x, pos_y] = 1.
-        # pos_x = int((self.goal[0]+5.) * (self.img_size/10.))
-        # pos_x = int((self.goal[1]+5.) * (self.img_size/10.))
-        # obs_map[2, pos_x, pos_y] = 1.
-        return observation#, obs_map
+        pos = self.sim.data.qpos.copy().flat[:2]
+        coor = self._pos2map(pos)
+        mx1 = coor[0]
+        mx2 = coor[0]+self.obs_size*2
+        my1 = coor[1]
+        my2 = coor[1]+self.obs_size*2
+        local_map = self.obs_map[:,mx1:mx2, my1:my2]
+        local_map = local_map[:,0::2,0::2] + local_map[:,1::2,1::2] + local_map[:,0::2,1::2] + local_map[:,1::2,0::2]
+        local_map = local_map[:,0::2,0::2] + local_map[:,1::2,1::2] + local_map[:,0::2,1::2] + local_map[:,1::2,0::2]
+        local_map = (local_map!=0) * 1.
+        return observation, local_map
 
     def _local_to_global(self, input_action):
         local_action = input_action[:2].copy().reshape([1,2])
@@ -259,21 +253,26 @@ class NavigationEnv(BaseEnv):
         dist = np.linalg.norm(position-self.goal)
         rew = self.prev_dist - dist #+ 0.01
         rew = 0.1 if dist < 0.25 else rew 
-        rew -= self.con_done * 2.5
         self.prev_dist = dist.copy()
         return rew
 
+    def _pos2map(self, pos):
+        norm = pos / 10. + 0.5
+        coor = (norm * 512).astype('long')
+        return coor
+
     def _get_done(self):
+
         done = self.t > 10.
-        self.con_done = False
-        for i in range(self.sim.data.ncon):
-            con = self.sim.data.contact[i]
-            obj1 = self.sim.model.geom_id2name(con.geom1)
-            obj2 = self.sim.model.geom_id2name(con.geom2)
-            self.con_done |= (obj1=="dog" or obj2=="dog") \
-                and (obj1!="floor" and obj2!="floor" and obj1!="destination" and obj2!="destination")
-        
-        return done or self.con_done
+        pos = self.sim.data.qpos.copy().flat[:2]
+        coor = self._pos2map(pos)
+        mx1 = coor[0]
+        mx2 = coor[0]+self.con_size*2+1
+        my1 = coor[1]
+        my2 = coor[1]+self.con_size*2+1
+        local_map = self.con_map[0, mx1:mx2, my1:my2]
+    
+        return done or local_map.any()
 
     def do_simulation(self, action, n_frames):
         for _ in range(n_frames):
