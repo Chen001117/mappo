@@ -5,6 +5,7 @@ import mujoco_py
 import gym
 from gym import utils
 from onpolicy.envs.mujoco.mujoco_env import MuJocoPyEnv
+from onpolicy.envs.mujoco.xml_gen import get_xml
 from gym.spaces import Box, Tuple
 from typing import Optional, Union
 import imageio
@@ -26,11 +27,14 @@ class BaseEnv(gym.Env):
         "render_fps": 125,
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, rank, **kwargs):
+        self.rank = rank
         self.width, self.height = 480, 480
         self.fullpath = path.join(path.dirname(__file__), "assets", "navigation.xml")
         self.map = self._get_map()
-        self.model = mujoco_py.load_model_from_path(self.fullpath)
+        # self.model = mujoco_py.load_model_from_path(self.fullpath)
+        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank))
+        self.model = mujoco_py.load_model_from_xml(get_xml(fullpath))
         self.sim = mujoco_py.MjSim(self.model)
         self.data = self.sim.data
         self._viewers = {}
@@ -64,7 +68,8 @@ class BaseEnv(gym.Env):
             y2 = y1 + min(np.random.randint(50,100), 512-y1)
             image[x1:x2,y1:y2] = 255
         save_img = np.transpose(image.copy()[:,::-1], [1,0,2])
-        imageio.imwrite("../envs/mujoco/assets/map.png", save_img)
+        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank))
+        imageio.imwrite(fullpath, save_img)
         return image
 
     def seed(self, seed):
@@ -161,8 +166,8 @@ class BaseEnv(gym.Env):
             time.sleep(wait_time)
 
 class NavigationEnv(BaseEnv):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, rank, **kwargs):
+        super().__init__(rank, **kwargs)
         self.img_size = 52
         self.observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64),

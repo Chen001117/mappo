@@ -18,9 +18,9 @@ from onpolicy.envs.mujoco.navigation import NavigationEnv as MujocoEnv
 
 def make_render_env(all_args):
     def get_env_fn(rank):
-        def init_env():
+        def init_env(rank):
             if all_args.env_name == "MuJoCo":
-                env = MujocoEnv() #gym.make(all_args.scenario_name) #(all_args)
+                env = MujocoEnv(rank) #gym.make(all_args.scenario_name) #(all_args)
                 env = MARLWrapper(env)
             else:
                 print("Can not support the " +

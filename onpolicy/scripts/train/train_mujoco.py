@@ -19,13 +19,13 @@ def make_train_env(all_args):
     def get_env_fn(rank):
         def init_env():
             if all_args.env_name == "MuJoCo":
-                env = MujocoEnv() #gym.make(all_args.scenario_name) #(all_args)
+                env = MujocoEnv(rank) #gym.make(all_args.scenario_name) #(all_args)
                 env = MARLWrapper(env)
             else:
                 print("Can not support the " +
                       all_args.env_name + "environment.")
                 raise NotImplementedError
-            env.seed(all_args.seed + rank * 1000)
+            env.seed(all_args.seed + rank *1000)
             return env
         return init_env
     if all_args.n_rollout_threads == 1:

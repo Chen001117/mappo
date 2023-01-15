@@ -241,8 +241,6 @@ class MujocoRunner(Runner):
 
                 if envs.action_space[0].__class__.__name__ == 'Box':
                     actions_env = actions.copy()
-                    actions_env *= 0.
-                    actions_env[:,:,0] = 1.
                 else:
                     raise NotImplementedError
 
