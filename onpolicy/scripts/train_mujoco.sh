@@ -3,7 +3,7 @@ env="MuJoCo"
 scenario="Walker2d-v3" 
 num_agents=1
 algo="rmappo"
-exp="check"
+exp="check2"
 seed_max=1
 
 echo "env is ${env}, scenario is ${scenario}, algo is ${algo}, exp is ${exp}, max seed is ${seed_max}"

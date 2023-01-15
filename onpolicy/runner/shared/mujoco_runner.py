@@ -234,7 +234,7 @@ class MujocoRunner(Runner):
                     observation,
                     np.concatenate(rnn_states),
                     np.concatenate(masks),
-                    deterministic=True
+                    deterministic=False
                 )
                 actions = np.array(np.split(_t2n(action), self.n_rollout_threads))
                 rnn_states = np.array(np.split(_t2n(rnn_states), self.n_rollout_threads))

@@ -37,7 +37,7 @@ class BaseEnv(gym.Env):
         self.fullpath = path.join(path.dirname(__file__), "assets", "navigation.xml")
         self.map = self._get_map()
         # self.model = mujoco_py.load_model_from_path(self.fullpath)
-        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank))
+        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank+500))
         self.model = mujoco_py.load_model_from_xml(get_xml(fullpath))
         self.sim = mujoco_py.MjSim(self.model)
         self.data = self.sim.data
@@ -73,8 +73,6 @@ class BaseEnv(gym.Env):
             tmp[:,1:] += np.sqrt(self.cost_map[:,:-1]) * 0.1
             tmp[:,:-1] += np.sqrt(self.cost_map[:,1:]) * 0.1
             self.cost_map = np.clip(tmp, 0., 1.)
-        # imageio.imwrite("test.png", (self.cost_map.reshape([512,512,1])*255).astype('uint8'))
-        # print(self.cost_map[20:30,10:20])
 
     def _get_map(self):
         image = np.zeros([512,512,1]).astype(np.uint8)
@@ -89,7 +87,7 @@ class BaseEnv(gym.Env):
             y2 = y1 + min(np.random.randint(50,100), 512-y1)
             image[x1:x2,y1:y2] = 255
         save_img = np.transpose(image.copy()[:,::-1], [1,0,2])
-        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank))
+        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank+500))
         imageio.imwrite(fullpath, save_img)
         # image = imageio.imread(fullpath).reshape([512,512,1])
         return image
@@ -230,7 +228,11 @@ class NavigationEnv(BaseEnv):
         pos_x = np.random.rand() * 9. - 4.5
         pos_y = np.random.rand() * 9. - 4.5
         yaw = np.random.rand() * np.pi * 2.
-        self.goal = np.random.rand(2) * 9. - 4.5
+        while True:
+            self.goal = np.random.rand(2) * 9. - 4.5
+            coor = self._pos2map(self.goal)
+            if self.map[coor[0], coor[1], 0] == 0:
+                break
         qpos = [pos_x, pos_y, yaw, 0.3]
         qpos.append(self.goal[0])        
         qpos.append(self.goal[1])  
@@ -285,13 +287,14 @@ class NavigationEnv(BaseEnv):
         rew = self.prev_dist - dist #+ 0.01
         rew = 0.1 if dist < 0.25 else rew 
         coor = self._pos2map(position)
-        rew += (1-self.cost_map[coor[0],coor[1]]) * 0.01
+        rew += (1-self.cost_map[coor[0],coor[1]]) * 0.01 * (3-self.con_cnt)
         self.prev_dist = dist.copy()
         return rew
 
     def _pos2map(self, pos):
         norm = pos / 10. + 0.5
         coor = (norm * 512).astype('long')
+        coor = np.clip(coor, 0, 511)
         return coor
 
     def _get_done(self):
