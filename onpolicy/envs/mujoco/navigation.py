@@ -29,6 +29,10 @@ class BaseEnv(gym.Env):
 
     def __init__(self, rank, **kwargs):
         self.rank = rank
+        self._init()
+
+    def _init(self):
+        
         self.width, self.height = 480, 480
         self.fullpath = path.join(path.dirname(__file__), "assets", "navigation.xml")
         self.map = self._get_map()
@@ -55,6 +59,7 @@ class BaseEnv(gym.Env):
         self.obs_map = self.obs_map.transpose([2,0,1])
         self.con_map = self.con_map.transpose([2,0,1])
 
+
     def _get_map(self):
         image = np.zeros([512,512,1]).astype(np.uint8)
         image[:, 0] = 255
@@ -70,6 +75,7 @@ class BaseEnv(gym.Env):
         save_img = np.transpose(image.copy()[:,::-1], [1,0,2])
         fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank))
         imageio.imwrite(fullpath, save_img)
+        # image = imageio.imread(fullpath).reshape([512,512,1])
         return image
 
     def seed(self, seed):
@@ -187,6 +193,8 @@ class NavigationEnv(BaseEnv):
     def reset(self):
         regenerate = True
         while regenerate:
+            if np.random.rand() < 0.1:
+                self._init()
             self.t = 0.
             super().reset()
             self.reset_model()
@@ -232,6 +240,7 @@ class NavigationEnv(BaseEnv):
         local_map = local_map[:,0::2,0::2] + local_map[:,1::2,1::2] + local_map[:,0::2,1::2] + local_map[:,1::2,0::2]
         local_map = local_map[:,0::2,0::2] + local_map[:,1::2,1::2] + local_map[:,0::2,1::2] + local_map[:,1::2,0::2]
         local_map = (local_map!=0) * 1.
+
         return observation, local_map
 
     def _local_to_global(self, input_action):
@@ -268,7 +277,7 @@ class NavigationEnv(BaseEnv):
 
     def _get_done(self):
 
-        done = self.t > 10.
+        done = self.t > 100.
         pos = self.sim.data.qpos.copy().flat[:2]
         coor = self._pos2map(pos)
         mx1 = coor[0]

@@ -202,7 +202,7 @@ def worker(remote, parent_remote, env_fn_wrapper, rank=None):
             raise NotImplementedError
 
 class SubprocVecEnv(ShareVecEnv):
-    def __init__(self, env_fns, spaces=None, eval=True):
+    def __init__(self, env_fns, spaces=None, eval=False):
         """
         envs: list of gym environments to run in subprocesses
         """
@@ -266,7 +266,7 @@ class SubprocVecEnv(ShareVecEnv):
 
 class TupleSubprocVecEnv(SubprocVecEnv):
     def __init__(self, env_fns, spaces=None):
-        SubprocVecEnv.__init__(self, env_fns, spaces=None,eval=True)
+        SubprocVecEnv.__init__(self, env_fns, spaces=None,eval=False)
 
     def step_wait(self):
         obs_vec, obs_img = [], []
