@@ -27,8 +27,10 @@ class BaseEnv(gym.Env):
         "render_fps": 125,
     }
 
-    def __init__(self, rank, **kwargs):
+    def __init__(self, rank, eval, **kwargs):
         self.rank = rank
+        self.eval = eval
+        self.seed(rank+eval*100)
         self._init()
 
     def _init(self):
@@ -37,7 +39,7 @@ class BaseEnv(gym.Env):
         self.fullpath = path.join(path.dirname(__file__), "assets", "navigation.xml")
         self.map = self._get_map()
         # self.model = mujoco_py.load_model_from_path(self.fullpath)
-        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank+500))
+        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank+self.eval*100+500))
         self.model = mujoco_py.load_model_from_xml(get_xml(fullpath))
         self.sim = mujoco_py.MjSim(self.model)
         self.data = self.sim.data
@@ -80,14 +82,14 @@ class BaseEnv(gym.Env):
         image[0, :] = 255
         image[:,-1] = 255
         image[-1,:] = 255
-        for _ in range(15):
+        for _ in range(10):
             x1 = np.random.randint(512)
             x2 = x1 + min(np.random.randint(50,100), 512-x1)
             y1 = np.random.randint(512)
             y2 = y1 + min(np.random.randint(50,100), 512-y1)
             image[x1:x2,y1:y2] = 255
         save_img = np.transpose(image.copy()[:,::-1], [1,0,2])
-        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank+500))
+        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank+self.eval*100))
         imageio.imwrite(fullpath, save_img)
         # image = imageio.imread(fullpath).reshape([512,512,1])
         return image
@@ -186,11 +188,11 @@ class BaseEnv(gym.Env):
             time.sleep(wait_time)
 
 class NavigationEnv(BaseEnv):
-    def __init__(self, rank, **kwargs):
-        super().__init__(rank, **kwargs)
+    def __init__(self, rank, eval=False, **kwargs):
+        super().__init__(rank, eval=eval, **kwargs)
         self.img_size = 52
         self.observation_space = Tuple((
-            Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(13,), dtype=np.float64),
             Box(low=-np.inf, high=np.inf, shape=(1,self.img_size,self.img_size), dtype=np.float64),
         ))
         # self.observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
@@ -206,6 +208,7 @@ class NavigationEnv(BaseEnv):
         self.total_cnt = 0
 
     def reset(self):
+        self.last_cmd = np.zeros(3)
         self.total_cnt += 1
         self.con_cnt = 0
         regenerate = True
@@ -227,19 +230,23 @@ class NavigationEnv(BaseEnv):
 
     def reset_model(self):
         self.sim.reset()
-        pos_x = np.random.rand() * 9. - 4.5
-        pos_y = np.random.rand() * 9. - 4.5
-        yaw = np.random.rand() * np.pi * 2.
         while True:
+            pos_x = np.random.rand() * 9. - 4.5
+            pos_y = np.random.rand() * 9. - 4.5
+            yaw = np.random.rand() * np.pi * 2.
             self.goal = np.random.rand(2) * 9. - 4.5
-            if self.total_cnt < 100:
-                if np.random.rand() < 0.05:
-                    vec = self.goal-np.array([pos_x,pos_y])
-                    dist = np.linalg.norm(vec)
-                    if dist > .1:
-                        self.goal = vec/dist*0.1 + np.array([pos_x,pos_y])
+            vec = self.goal-np.array([pos_x,pos_y])
+            dist = np.linalg.norm(vec)
+            if dist > 1.:
+                self.goal = vec/dist*1. + np.array([pos_x,pos_y])
+            # if self.total_cnt < 100 and not self.eval:
+            #     if np.random.rand() < (100-self.total_cnt) / 200.:
+            #         vec = self.goal-np.array([pos_x,pos_y])
+            #         dist = np.linalg.norm(vec)
+            #         if dist > .25:
+            #             self.goal = vec/dist*0.25 + np.array([pos_x,pos_y])
             coor = self._pos2map(self.goal)
-            if self.map[coor[0], coor[1], 0] == 0:
+            if (self.map[coor[0]-self.con_size:coor[0]+self.con_size, coor[1]-self.con_size:coor[1]+self.con_size] == 0).all():
                 break
         qpos = [pos_x, pos_y, yaw, 0.3]
         qpos.append(self.goal[0])        
@@ -254,7 +261,7 @@ class NavigationEnv(BaseEnv):
         dir_sin = np.sin(self.sim.data.qpos.flat.copy()[2:3])
         velocity = self.sim.data.qvel.flat.copy()[:3]
         observation = np.concatenate([
-            position, dir_cos, dir_sin, velocity, self.goal.copy(), [self.t]
+            position, dir_cos, dir_sin, velocity, self.last_cmd.copy(), self.goal.copy(), [self.t]
         ]).ravel()
 
         pos = self.sim.data.qpos.copy().flat[:2]
@@ -289,14 +296,16 @@ class NavigationEnv(BaseEnv):
         self.prev_output = torque.copy()
         return torque
 
-    def _get_reward(self):
+    def _get_reward(self, cmd):
         position = self.sim.data.qpos.copy().flat[:2]
         dist = np.linalg.norm(position-self.goal)
-        rew = self.prev_dist - dist #+ 0.01
-        rew = 0.1 if dist < 0.25 else rew 
-        coor = self._pos2map(position)
-        rew += (1-self.cost_map[coor[0],coor[1]]) * 0.01 * (3-self.con_cnt)
-        self.prev_dist = dist.copy()
+        rew = np.exp(-dist)
+        # rew = self.prev_dist - dist #+ 0.01
+        # coor = self._pos2map(position)
+        # rew = 0.1 if dist < 0.5 else rew 
+        # rew += (1-self.cost_map[coor[0],coor[1]]) * 0.01 * (3-self.con_cnt)
+        # rew -= np.linalg.norm(cmd-self.last_cmd) * 1.
+        # self.prev_dist = dist.copy()
         return rew
 
     def _pos2map(self, pos):
@@ -318,7 +327,7 @@ class NavigationEnv(BaseEnv):
         con_done = local_map.any()
         self.con_cnt += con_done
     
-        return done or self.con_cnt>3
+        return done or local_map.any()
 
     def do_simulation(self, action, n_frames):
         for _ in range(n_frames):
@@ -330,13 +339,16 @@ class NavigationEnv(BaseEnv):
 
     def step(self, command):
         command = np.clip(command, self.action_space.low, self.action_space.high)
+        # command = self.last_cmd * .9 + command * .1
         # action = self._local_to_global(command)
         action = command.copy()
         self.do_simulation(action, self.frame_skip)
         observation = self._get_obs()
         terminated = self._get_done()
-        reward = self._get_reward()
+        reward = self._get_reward(command)
         info = dict()
+        self.last_cmd = command.copy()
         return observation, reward, terminated, False, info
+
 
         
