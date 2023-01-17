@@ -27,10 +27,10 @@ class BaseEnv(gym.Env):
         "render_fps": 125,
     }
 
-    def __init__(self, rank, eval, **kwargs):
+    def __init__(self, rank, eval=False, seed=1, **kwargs):
         self.rank = rank
         self.eval = eval
-        self.seed(rank+eval*100)
+        self.seed(seed)
         self._init()
 
     def _init(self):
@@ -39,7 +39,7 @@ class BaseEnv(gym.Env):
         self.fullpath = path.join(path.dirname(__file__), "assets", "navigation.xml")
         self.map = self._get_map()
         # self.model = mujoco_py.load_model_from_path(self.fullpath)
-        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank+self.eval*100+500))
+        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank+self.eval*100))
         self.model = mujoco_py.load_model_from_xml(get_xml(fullpath))
         self.sim = mujoco_py.MjSim(self.model)
         self.data = self.sim.data
@@ -82,7 +82,7 @@ class BaseEnv(gym.Env):
         image[0, :] = 255
         image[:,-1] = 255
         image[-1,:] = 255
-        for _ in range(10):
+        for _ in range(12):
             x1 = np.random.randint(512)
             x2 = x1 + min(np.random.randint(50,100), 512-x1)
             y1 = np.random.randint(512)
@@ -213,7 +213,7 @@ class NavigationEnv(BaseEnv):
         self.con_cnt = 0
         regenerate = True
         while regenerate:
-            if np.random.rand() < 0.1:
+            if np.random.rand() < 0.5:
                 self._init()
             self.t = 0.
             super().reset()
@@ -235,16 +235,6 @@ class NavigationEnv(BaseEnv):
             pos_y = np.random.rand() * 9. - 4.5
             yaw = np.random.rand() * np.pi * 2.
             self.goal = np.random.rand(2) * 9. - 4.5
-            vec = self.goal-np.array([pos_x,pos_y])
-            dist = np.linalg.norm(vec)
-            if dist > 1.:
-                self.goal = vec/dist*1. + np.array([pos_x,pos_y])
-            # if self.total_cnt < 100 and not self.eval:
-            #     if np.random.rand() < (100-self.total_cnt) / 200.:
-            #         vec = self.goal-np.array([pos_x,pos_y])
-            #         dist = np.linalg.norm(vec)
-            #         if dist > .25:
-            #             self.goal = vec/dist*0.25 + np.array([pos_x,pos_y])
             coor = self._pos2map(self.goal)
             if (self.map[coor[0]-self.con_size:coor[0]+self.con_size, coor[1]-self.con_size:coor[1]+self.con_size] == 0).all():
                 break
@@ -260,6 +250,10 @@ class NavigationEnv(BaseEnv):
         dir_cos = np.cos(self.sim.data.qpos.flat.copy()[2:3])
         dir_sin = np.sin(self.sim.data.qpos.flat.copy()[2:3])
         velocity = self.sim.data.qvel.flat.copy()[:3]
+        position += (np.random.rand(2)-.5) * 0.01
+        dir_cos += (np.random.rand()-.5) * 0.01
+        dir_sin += (np.random.rand()-.5) * 0.01
+        velocity += (np.random.rand(3)-.5) * 0.01
         observation = np.concatenate([
             position, dir_cos, dir_sin, velocity, self.last_cmd.copy(), self.goal.copy(), [self.t]
         ]).ravel()
@@ -296,16 +290,15 @@ class NavigationEnv(BaseEnv):
         self.prev_output = torque.copy()
         return torque
 
-    def _get_reward(self, cmd):
+    def _get_reward(self):
         position = self.sim.data.qpos.copy().flat[:2]
         dist = np.linalg.norm(position-self.goal)
-        rew = np.exp(-dist)
-        # rew = self.prev_dist - dist #+ 0.01
-        # coor = self._pos2map(position)
-        # rew = 0.1 if dist < 0.5 else rew 
-        # rew += (1-self.cost_map[coor[0],coor[1]]) * 0.01 * (3-self.con_cnt)
-        # rew -= np.linalg.norm(cmd-self.last_cmd) * 1.
-        # self.prev_dist = dist.copy()
+        rew = (self.prev_dist - dist) 
+        coor = self._pos2map(position)
+        rew += (1-self.cost_map[coor[0], coor[1]]) * 0.01
+        dt = (15.-self.t) / self.dt
+        rew = 0.05*(1-0.99**dt)/(1-0.99) if dist < 0.25 else rew 
+        self.prev_dist = dist.copy()
         return rew
 
     def _pos2map(self, pos):
@@ -324,10 +317,10 @@ class NavigationEnv(BaseEnv):
         my1 = coor[1]
         my2 = coor[1]+self.con_size*2+1
         local_map = self.con_map[0, mx1:mx2, my1:my2]
-        con_done = local_map.any()
-        self.con_cnt += con_done
+        position = self.sim.data.qpos.copy().flat[:2]
+        dist = np.linalg.norm(position-self.goal)
     
-        return done or local_map.any()
+        return done or local_map.any() or dist<0.25
 
     def do_simulation(self, action, n_frames):
         for _ in range(n_frames):
@@ -345,7 +338,7 @@ class NavigationEnv(BaseEnv):
         self.do_simulation(action, self.frame_skip)
         observation = self._get_obs()
         terminated = self._get_done()
-        reward = self._get_reward(command)
+        reward = self._get_reward()
         info = dict()
         self.last_cmd = command.copy()
         return observation, reward, terminated, False, info

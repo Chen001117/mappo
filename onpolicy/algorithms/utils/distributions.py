@@ -78,12 +78,14 @@ class DiagGaussian(nn.Module):
             
 
         self.fc_mean = init_(nn.Linear(num_inputs, num_outputs))
+        self.fc_std_bias = init_(nn.Linear(num_inputs, num_outputs))
         action_range = (action_space.high-action_space.low)
         action_range = torch.ones(num_outputs) * action_range
         self.logstd = AddBias(torch.log(action_range))
 
     def forward(self, x):
         action_mean = self.fc_mean(x)
+        action_std_bias = self.fc_std_bias(x)
 
         #  An ugly hack for my KFAC implementation.
         zeros = torch.zeros(action_mean.size())
@@ -91,7 +93,8 @@ class DiagGaussian(nn.Module):
             zeros = zeros.cuda()
 
         action_logstd = self.logstd(zeros)
-        return FixedNormal(action_mean, action_logstd.exp())
+        action_std = action_logstd.exp() * torch.clip(action_std_bias.exp(),0.75,1.25)
+        return FixedNormal(action_mean, action_std)
 
 
 class Bernoulli(nn.Module):
