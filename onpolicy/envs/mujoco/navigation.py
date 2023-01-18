@@ -27,10 +27,9 @@ class BaseEnv(gym.Env):
         "render_fps": 125,
     }
 
-    def __init__(self, rank, eval=False, seed=1, **kwargs):
-        self.rank = rank
-        self.eval = eval
-        self.seed(seed)
+    def __init__(self, seed=1, **kwargs):
+        self.seed_num = seed
+        self.seed(self.seed_num)
         self._init()
 
     def _init(self):
@@ -39,7 +38,7 @@ class BaseEnv(gym.Env):
         self.fullpath = path.join(path.dirname(__file__), "assets", "navigation.xml")
         self.map = self._get_map()
         # self.model = mujoco_py.load_model_from_path(self.fullpath)
-        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank+self.eval*100))
+        fullpath = path.join(path.dirname(__file__), "map_{}.png".format(self.seed_num))
         self.model = mujoco_py.load_model_from_xml(get_xml(fullpath))
         self.sim = mujoco_py.MjSim(self.model)
         self.data = self.sim.data
@@ -59,22 +58,22 @@ class BaseEnv(gym.Env):
         self.obs_map[self.obs_size:-self.obs_size,self.obs_size:-self.obs_size] = self.map.copy()
         self.con_map[self.con_size:-self.con_size,self.con_size:-self.con_size] = self.map.copy()
         self.obs_map = self.obs_map.transpose([2,0,1])
-        self.con_map = self.con_map.transpose([2,0,1])
-        self.cost_map = self.map.copy()[:,:,0].astype('float64')
-        for _ in range(self.con_size):
-            tmp = self.cost_map.copy()
-            tmp[1:] += self.cost_map[:-1] 
-            tmp[:-1] += self.cost_map[1:] 
-            tmp[:,1:] += self.cost_map[:,:-1] 
-            tmp[:,:-1] += self.cost_map[:,1:]
-            self.cost_map = np.clip(tmp, 0., 1.)
-        for _ in range(self.con_size):
-            tmp = self.cost_map.copy()
-            tmp[1:] += np.sqrt(self.cost_map[:-1]) * 0.1
-            tmp[:-1] += np.sqrt(self.cost_map[1:]) * 0.1
-            tmp[:,1:] += np.sqrt(self.cost_map[:,:-1]) * 0.1
-            tmp[:,:-1] += np.sqrt(self.cost_map[:,1:]) * 0.1
-            self.cost_map = np.clip(tmp, 0., 1.)
+        # self.con_map = self.con_map.transpose([2,0,1])
+        # self.cost_map = self.map.copy()[:,:,0].astype('float64')
+        # for _ in range(self.con_size):
+        #     tmp = self.cost_map.copy()
+        #     tmp[1:] += self.cost_map[:-1] 
+        #     tmp[:-1] += self.cost_map[1:] 
+        #     tmp[:,1:] += self.cost_map[:,:-1] 
+        #     tmp[:,:-1] += self.cost_map[:,1:]
+        #     self.cost_map = np.clip(tmp, 0., 1.)
+        # for _ in range(self.con_size):
+        #     tmp = self.cost_map.copy()
+        #     tmp[1:] += np.sqrt(self.cost_map[:-1]) * 0.1
+        #     tmp[:-1] += np.sqrt(self.cost_map[1:]) * 0.1
+        #     tmp[:,1:] += np.sqrt(self.cost_map[:,:-1]) * 0.1
+        #     tmp[:,:-1] += np.sqrt(self.cost_map[:,1:]) * 0.1
+        #     self.cost_map = np.clip(tmp, 0., 1.)
 
     def _get_map(self):
         image = np.zeros([512,512,1]).astype(np.uint8)
@@ -82,14 +81,14 @@ class BaseEnv(gym.Env):
         image[0, :] = 255
         image[:,-1] = 255
         image[-1,:] = 255
-        for _ in range(12):
+        for _ in range(24):
             x1 = np.random.randint(512)
             x2 = x1 + min(np.random.randint(50,100), 512-x1)
             y1 = np.random.randint(512)
             y2 = y1 + min(np.random.randint(50,100), 512-y1)
             image[x1:x2,y1:y2] = 255
         save_img = np.transpose(image.copy()[:,::-1], [1,0,2])
-        fullpath = path.join(path.dirname(__file__), "map_{:03d}.png".format(self.rank+self.eval*100))
+        fullpath = path.join(path.dirname(__file__), "map_{}.png".format(self.seed_num))
         imageio.imwrite(fullpath, save_img)
         # image = imageio.imread(fullpath).reshape([512,512,1])
         return image
@@ -192,7 +191,7 @@ class NavigationEnv(BaseEnv):
         super().__init__(rank, eval=eval, **kwargs)
         self.img_size = 52
         self.observation_space = Tuple((
-            Box(low=-np.inf, high=np.inf, shape=(13,), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(13+28,), dtype=np.float64),
             Box(low=-np.inf, high=np.inf, shape=(1,self.img_size,self.img_size), dtype=np.float64),
         ))
         # self.observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
@@ -206,6 +205,7 @@ class NavigationEnv(BaseEnv):
         self.goal = np.zeros(2)
         self.t = 0.
         self.total_cnt = 0
+        self.hist_obs = np.zeros([4,7])
 
     def reset(self):
         self.last_cmd = np.zeros(3)
@@ -225,6 +225,7 @@ class NavigationEnv(BaseEnv):
         self.t = 0.
         position = self.sim.data.qpos.copy().flat[:2]
         self.prev_dist = np.linalg.norm(position-self.goal)
+        self.hist_obs = np.zeros([4,7])
         obs = self._get_obs()
         return obs, {}
 
@@ -244,7 +245,7 @@ class NavigationEnv(BaseEnv):
         self.set_state(np.array(qpos), np.zeros_like(qpos))
 
 
-    def _get_obs(self):
+    def _get_obs(self, cmd=np.zeros(3)):
 
         position = self.sim.data.qpos.flat.copy()[:2]
         dir_cos = np.cos(self.sim.data.qpos.flat.copy()[2:3])
@@ -257,6 +258,7 @@ class NavigationEnv(BaseEnv):
         observation = np.concatenate([
             position, dir_cos, dir_sin, velocity, self.last_cmd.copy(), self.goal.copy(), [self.t]
         ]).ravel()
+        observation = np.concatenate([observation, self.hist_obs.flatten()])
 
         pos = self.sim.data.qpos.copy().flat[:2]
         coor = self._pos2map(pos)
@@ -268,6 +270,7 @@ class NavigationEnv(BaseEnv):
         local_map = local_map[:,0::2,0::2] + local_map[:,1::2,1::2] + local_map[:,0::2,1::2] + local_map[:,1::2,0::2]
         local_map = local_map[:,0::2,0::2] + local_map[:,1::2,1::2] + local_map[:,0::2,1::2] + local_map[:,1::2,0::2]
         local_map = (local_map!=0) * 1.
+        self.hist_obs[-1] = np.concatenate([position, dir_cos, dir_sin, cmd])
 
         return observation, local_map
 
@@ -294,8 +297,8 @@ class NavigationEnv(BaseEnv):
         position = self.sim.data.qpos.copy().flat[:2]
         dist = np.linalg.norm(position-self.goal)
         rew = (self.prev_dist - dist) 
-        coor = self._pos2map(position)
-        rew += (1-self.cost_map[coor[0], coor[1]]) * 0.01
+        # coor = self._pos2map(position)
+        # rew += (1-self.cost_map[coor[0], coor[1]]) * 0.01
         dt = (15.-self.t) / self.dt
         rew = 0.05*(1-0.99**dt)/(1-0.99) if dist < 0.25 else rew 
         self.prev_dist = dist.copy()
@@ -336,7 +339,7 @@ class NavigationEnv(BaseEnv):
         # action = self._local_to_global(command)
         action = command.copy()
         self.do_simulation(action, self.frame_skip)
-        observation = self._get_obs()
+        observation = self._get_obs(action)
         terminated = self._get_done()
         reward = self._get_reward()
         info = dict()

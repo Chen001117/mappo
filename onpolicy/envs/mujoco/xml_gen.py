@@ -12,7 +12,7 @@ def get_xml(seed):
     <geom conaffinity="1" condim="3" name="floor" pos="0 0 0" rgba="0.8 0.9 0.8 1" size="5 5 5" type="plane" material="MatPlane"/>
     <body name="dog" pos="0 0 0.5">
       <site name="dog" pos="0 0 0"/>
-      <camera name="camera" mode="trackcom" pos="0 -3. 1.5." xyaxes="1 0 0 0 0.5 1"/>
+      <camera name="camera" mode="trackcom" pos="0 0. 10." xyaxes="1 0 0 0 1 0"/>
       <joint axis="1 0 0" limited="false" name="axisx" pos="0 0 0" type="slide"/>
       <joint axis="0 1 0" limited="false" name="axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="rootz" pos="0 0 0" type="hinge"/>

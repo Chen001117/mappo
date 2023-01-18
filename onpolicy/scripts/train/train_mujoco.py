@@ -19,7 +19,7 @@ def make_train_env(all_args):
     def get_env_fn(rank):
         def init_env(rank):
             if all_args.env_name == "MuJoCo":
-                env = MujocoEnv(rank, seed=all_args.seed+rank*1000) #gym.make(all_args.scenario_name) #(all_args)
+                env = MujocoEnv(all_args.seed+rank*1000) #gym.make(all_args.scenario_name) #(all_args)
                 env = MARLWrapper(env)
             else:
                 print("Can not support the " +
@@ -39,7 +39,7 @@ def make_eval_env(all_args):
     def get_env_fn(rank):
         def init_env(rank):
             if all_args.env_name == "MuJoCo":
-                env = MujocoEnv(rank, eval=True, seed=all_args.seed*50000+rank*10000) #gym.make(all_args.scenario_name) #(all_args)
+                env = MujocoEnv(seed=all_args.seed*50000+rank*10000) #gym.make(all_args.scenario_name) #(all_args)
                 env = MARLWrapper(env)
             else:
                 print("Can not support the " +
