@@ -187,8 +187,8 @@ class BaseEnv(gym.Env):
             time.sleep(wait_time)
 
 class NavigationEnv(BaseEnv):
-    def __init__(self, rank, eval=False, **kwargs):
-        super().__init__(rank, eval=eval, **kwargs)
+    def __init__(self, seed=1, **kwargs):
+        super().__init__(seed, **kwargs)
         self.img_size = 52
         self.observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(13+28,), dtype=np.float64),
