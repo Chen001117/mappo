@@ -72,29 +72,32 @@ class DiagGaussian(nn.Module):
     def __init__(self, action_space, num_inputs, num_outputs, use_orthogonal=True, gain=0.01):
         super(DiagGaussian, self).__init__()
 
+        self.hidden_size = 64
         init_method = [nn.init.xavier_uniform_, nn.init.orthogonal_][use_orthogonal]
         def init_(m): 
             return init(m, init_method, lambda x: nn.init.constant_(x, 0), gain)
             
-
-        self.fc_mean = init_(nn.Linear(num_inputs, num_outputs))
-        self.fc_std_bias = init_(nn.Linear(num_inputs, num_outputs))
+        self.fc_mean = nn.Sequential(
+          nn.Linear(num_inputs, self.hidden_size),
+          nn.ReLU(),
+          nn.Linear(self.hidden_size, self.hidden_size),
+          nn.ReLU(),
+          nn.Linear(self.hidden_size, num_outputs)
+        )    
+        self.fc_std = nn.Sequential(
+          nn.Linear(num_inputs, self.hidden_size),
+          nn.ReLU(),
+          nn.Linear(self.hidden_size, self.hidden_size),
+          nn.ReLU(),
+          init_(nn.Linear(self.hidden_size, num_outputs))
+        )
         action_range = (action_space.high-action_space.low)
-        action_range = torch.ones(num_outputs) * action_range
-        self.logstd = AddBias(torch.log(action_range))
+        self.action_range = torch.ones(num_outputs) * action_range
 
     def forward(self, x):
         action_mean = self.fc_mean(x)
-        action_std_bias = self.fc_std_bias(x)
-
-        #  An ugly hack for my KFAC implementation.
-        zeros = torch.zeros(action_mean.size())
-        if x.is_cuda:
-            zeros = zeros.cuda()
-
-        action_logstd = self.logstd(zeros)
-        action_std = action_logstd.exp() * torch.clip(action_std_bias.exp(),0.75,1.25)
-        return FixedNormal(action_mean, action_std)
+        action_std = self.fc_std(x) * self.action_range
+        return FixedNormal(action_mean, action_std.exp())
 
 
 class Bernoulli(nn.Module):
