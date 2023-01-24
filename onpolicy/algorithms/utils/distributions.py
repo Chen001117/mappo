@@ -78,26 +78,35 @@ class DiagGaussian(nn.Module):
             return init(m, init_method, lambda x: nn.init.constant_(x, 0), gain)
             
         self.fc_mean = nn.Sequential(
-          nn.Linear(num_inputs, self.hidden_size),
-          nn.ReLU(),
-          nn.Linear(self.hidden_size, self.hidden_size),
-          nn.ReLU(),
-          nn.Linear(self.hidden_size, num_outputs)
+            nn.Linear(num_inputs, num_outputs)
+            # nn.Linear(num_inputs, self.hidden_size),
+            # nn.ReLU(),
+            # nn.Linear(self.hidden_size, self.hidden_size),
+            # nn.ReLU(),
+            # nn.Linear(self.hidden_size, num_outputs)
         )    
         self.fc_std = nn.Sequential(
-          nn.Linear(num_inputs, self.hidden_size),
-          nn.ReLU(),
-          nn.Linear(self.hidden_size, self.hidden_size),
-          nn.ReLU(),
-          init_(nn.Linear(self.hidden_size, num_outputs))
+            nn.Linear(num_inputs, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, self.hidden_size),
+            nn.ReLU(),
+            init_(nn.Linear(self.hidden_size, num_outputs))
         )
         action_range = (action_space.high-action_space.low)
-        self.action_range = torch.ones(num_outputs) * action_range
+        self.action_range = torch.ones(num_outputs) #* action_range
+        self.logstd = AddBias(torch.log(self.action_range))
 
     def forward(self, x):
         action_mean = self.fc_mean(x)
-        action_std = self.fc_std(x) * self.action_range
-        return FixedNormal(action_mean, action_std.exp())
+        action_logstd_bias = self.fc_std(x) # * self.action_range
+        zeros = torch.zeros(action_mean.size())
+        if x.is_cuda:
+            zeros = zeros.cuda()
+
+        action_logstd = self.logstd(zeros)
+        action_stdbias = torch.clip(action_logstd_bias.exp(),0.5,1.5)
+        action_std = action_logstd.exp() #* action_stdbias
+        return FixedNormal(action_mean, action_std)
 
 
 class Bernoulli(nn.Module):

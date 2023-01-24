@@ -8,6 +8,7 @@ from gym.spaces import Box, Tuple
 class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
         # hyper-para
+        self.max_time = 15
         self.lmlen = 29 # local map length (pixels)
         assert self.lmlen%2==1, "The length of the local map should be an odd number"
         self.warm_step = 10 # 
@@ -240,7 +241,17 @@ class NavigationEnv(BaseEnv):
         output_action = np.concatenate([global_action, input_action[:,2:].copy()], axis=-1)
         return output_action
 
-    def _get_done(self):    
+    def _get_done(self): 
+        if self.t > self.max_time:
+            return True
+        state = self.sim.data.qpos.copy()[:self.num_agent*4]
+        state = state.reshape([self.num_agent, 4])
+        pos, yaw = state[:,:2], state[:,2:3]  
+        if (abs(pos)>4.9).any():
+            return True
+        dist = np.linalg.norm(state[:,:2]-self.goal)
+        if dist < 0.25:
+            return True
         for i in range(self.sim.data.ncon):
             con = self.sim.data.contact[i]
             obj1 = self.sim.model.geom_id2name(con.geom1)
@@ -255,6 +266,8 @@ class NavigationEnv(BaseEnv):
         state = state.reshape([self.num_agent, 4])
         dist = np.linalg.norm(state[:,:2]-self.goal)
         rew = self.prev_dist - dist 
+        dt = (15.-self.t) / self.dt
+        rew = 0.05*(1-0.99**dt)/(1-0.99) if dist < 0.25 else rew 
         return rew
 
 

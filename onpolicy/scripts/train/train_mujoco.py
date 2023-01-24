@@ -10,8 +10,8 @@ import torch
 import gym
 from onpolicy.config import get_config
 from onpolicy.envs.env_wrappers import TupleSubprocVecEnv, SubprocVecEnv, DummyVecEnv, MARLWrapper
-# from onpolicy.envs.mujoco.walker2d_v3 import Walker2dEnv as MujocoEnv
-from onpolicy.envs.mujoco.navigation import NavigationEnv as MujocoEnv
+from onpolicy.envs.mujoco.walker2d_v3 import Walker2dEnv as MujocoEnv
+# from onpolicy.envs.mujoco.navigation import NavigationEnv as MujocoEnv
 
 """Train script for MPEs."""
 
@@ -19,7 +19,7 @@ def make_train_env(all_args):
     def get_env_fn(rank):
         def init_env(rank):
             if all_args.env_name == "MuJoCo":
-                env = MujocoEnv(all_args.seed+rank*1000) #gym.make(all_args.scenario_name) #(all_args)
+                env = MujocoEnv()#all_args.seed+rank*1000) #gym.make(all_args.scenario_name) #(all_args)
                 env = MARLWrapper(env)
             else:
                 print("Can not support the " +
@@ -31,15 +31,15 @@ def make_train_env(all_args):
     if all_args.n_rollout_threads == 1:
         return DummyVecEnv([get_env_fn(0)])
     else:
-        # return SubprocVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)])
-        return TupleSubprocVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)])
+        return SubprocVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)])
+        # return TupleSubprocVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)])
 
 
 def make_eval_env(all_args):
     def get_env_fn(rank):
         def init_env(rank):
             if all_args.env_name == "MuJoCo":
-                env = MujocoEnv(seed=all_args.seed*50000+rank*10000) #gym.make(all_args.scenario_name) #(all_args)
+                env = MujocoEnv()#seed=all_args.seed*50000+rank*10000) #gym.make(all_args.scenario_name) #(all_args)
                 env = MARLWrapper(env)
             else:
                 print("Can not support the " +
@@ -51,8 +51,8 @@ def make_eval_env(all_args):
     if all_args.n_eval_rollout_threads == 1:
         return DummyVecEnv([get_env_fn(0)])
     else:
-        # return SubprocVecEnv([get_env_fn(i) for i in range(all_args.n_eval_rollout_threads)])
-        return TupleSubprocVecEnv([get_env_fn(i) for i in range(all_args.n_eval_rollout_threads)],eval=True)
+        return SubprocVecEnv([get_env_fn(i) for i in range(all_args.n_eval_rollout_threads)])
+        # return TupleSubprocVecEnv([get_env_fn(i) for i in range(all_args.n_eval_rollout_threads)],eval=True)
 
 
 def parse_args(args, parser):
