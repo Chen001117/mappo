@@ -43,7 +43,6 @@ class NavigationEnv(BaseEnv):
 
     def reset(self):
         # init variables
-        t0 = time.time()
         self.last_cmd = np.zeros([self.num_agent, self.action_space.shape[0]])
         hist_size = self.action_space.shape[0] + 4 
         self.hist_obs = np.zeros([self.hist_len, self.num_agent, hist_size])
@@ -80,30 +79,21 @@ class NavigationEnv(BaseEnv):
         info = dict()
         # post process
         self._post_update(self.last_cmd.copy())
-        t1 = time.time()
-        print("R", t1-t0)
         return obs, info
 
     def step(self, command):
         # pre process
         command = np.clip(command, self.action_space.low, self.action_space.high)
         action = self._local_to_global(command)
-        t0 = time.time()
         self._do_simulation(action, self.frame_skip)
         self.t += self.dt
-        t1 = time.time()
         # update RL info
         observation = self._get_obs()
-        t2 = time.time()
         terminated = self._get_done()
-        t3 = time.time()
         reward = self._get_reward()
-        t4 = time.time()
         info = dict()
         # post process
         self._post_update(command)
-        t5 = time.time()
-        print("S", t1-t0,t2-t1,t3-t2,t4-t3,t5-t4)
         return observation, reward, terminated, False, info
 
     def _get_toward(self, theta):

@@ -59,7 +59,7 @@ class MujocoRunner(Runner):
                                 total_num_steps,
                                 self.num_env_steps,
                                 fps))
-                wandb.log({"FPS": fps}, step=total_num_steps)
+                train_infos["FPS"] = fps
 
                 if self.env_name == "MuJoCo":
                     env_infos = dict()
