@@ -32,8 +32,8 @@ class NavigationEnv(BaseEnv):
             Box(low=-np.inf, high=np.inf, shape=(1,self.lmlen,self.lmlen), dtype=np.float64),
         ))
         # action space
-        aspace_low = np.array([-0.6, -0.6, -0.6])
-        aspace_high = np.array([0.6, 0.6, 0.6])
+        aspace_low = np.array([-0.3, -0., -0.6])
+        aspace_high = np.array([0.6, 0., 0.6])
         self.action_space = Box(
             low=aspace_low, high=aspace_high, shape=(3,), dtype=np.float64
         )
@@ -174,16 +174,18 @@ class NavigationEnv(BaseEnv):
         obs_map = (obs_map!=0) * 1.
         return obs_map 
 
-    def _get_cost_map(self, obs_map):
-        cost_map = obs_map.copy() * 0.5
-        obs_map = obs_map.astype('bool')
-        for i in range(10):
+    def _get_cost_map(self, obstacle_map):
+        hmlen = (self.lmlen*3-1) // 2
+        cost_map = np.zeros_like(obstacle_map[:,hmlen:-hmlen,hmlen:-hmlen])
+        obs_map = obstacle_map[:,hmlen:-hmlen,hmlen:-hmlen].astype('bool')
+        times = 35
+        for _ in range(times):
             tmp_map = obs_map.copy().astype('bool')
             obs_map[:,:-1,:] |= tmp_map[:,1:,:]
             obs_map[:,1:,:] |= tmp_map[:,:-1,:]
             obs_map[:,:,:-1] |= tmp_map[:,:,1:]
             obs_map[:,:,1:] |= tmp_map[:,:,:-1]
-            cost_map += obs_map * 0.05
+            cost_map += obs_map / times
         return cost_map
 
     def _do_simulation(self, action, n_frames):
@@ -279,7 +281,7 @@ class NavigationEnv(BaseEnv):
         state = self.sim.data.qpos.copy()[:self.num_agent*4]
         state = state.reshape([self.num_agent, 4])
         pos, yaw = state[:,:2], state[:,2:3]  
-        if (abs(pos)>4.9).any():
+        if (abs(pos)>4.99).any():
             return True
         dist = np.linalg.norm(state[:,:2]-self.goal)
         if dist < 0.25:
@@ -307,9 +309,13 @@ class NavigationEnv(BaseEnv):
         coor_f = ((f_pos/self.msize+.5)*self.mlen).astype('long')
         coor_r = ((r_pos/self.msize+.5)*self.mlen).astype('long')
         for i in range(self.num_agent):
-            obs_rew_f = (1 - self.cost_map[0,coor_f[i,0], coor_f[i,1]]) * 0.01
-            obs_rew_r = (1 - self.cost_map[0,coor_r[i,0], coor_r[i,1]]) * 0.01
+            obs_rew_f = (1 - self.cost_map[0,coor_f[i,0], coor_f[i,1]]) * 0.0025
+            obs_rew_r = (1 - self.cost_map[0,coor_r[i,0], coor_r[i,1]]) * 0.0025
             rew += min(obs_rew_f, obs_rew_r)
+            print(min(obs_rew_f, obs_rew_r))
+        #     import imageio
+        #     imageio.imwrite('test.png', 255*self.cost_map[0,coor_f[i,0]-100:coor_f[i,0]+100, coor_f[i,1]-100:coor_f[i,1]+100])
+        
         # reach goal rewards
         dt = (15.-self.t) / self.dt
         rew = 0.05*(1-0.99**dt)/(1-0.99) if dist < 0.25 else rew 
