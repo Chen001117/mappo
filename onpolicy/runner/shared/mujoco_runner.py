@@ -49,6 +49,7 @@ class MujocoRunner(Runner):
             # log information
             if episode % self.log_interval == 0:
                 end = time.time()
+                fps = int(total_num_steps / (end - start))
                 print("\n Scenario {} Algo {} Exp {} updates {}/{} episodes, total num timesteps {}/{}, FPS {}.\n"
                         .format(self.all_args.scenario_name,
                                 self.algorithm_name,
@@ -57,7 +58,8 @@ class MujocoRunner(Runner):
                                 episodes,
                                 total_num_steps,
                                 self.num_env_steps,
-                                int(total_num_steps / (end - start))))
+                                fps))
+                wandb.log({"FPS": fps}, step=total_num_steps)
 
                 if self.env_name == "MuJoCo":
                     env_infos = dict()

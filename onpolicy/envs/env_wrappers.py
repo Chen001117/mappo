@@ -17,9 +17,7 @@ class MARLWrapper(gym.Wrapper):
 
     def reset(self):
         obs_n, _ = self.env.reset()
-        return np.expand_dims(obs_n, 0)
-        # obs_n, _ = self.env.reset()
-        # return obs_n
+        return obs_n
         # if type(obs_n) == tuple:
         #     obs_vec = np.expand_dims(obs_n[0], 0)
         #     obs_img = np.expand_dims(obs_n[1], 0)
@@ -28,14 +26,13 @@ class MARLWrapper(gym.Wrapper):
         #     return np.expand_dims(obs_n, 0)
         
     def step(self, actions):
-        o, r, d, _, info_n = self.env.step(actions[0])
+        obs_n, r, d, _, info_n = self.env.step(actions[0])
         # if type(o) == tuple:
         #     obs_n = np.expand_dims(o[0], 0), np.expand_dims(o[1], 0)
         # else:
         #     obs_n = np.expand_dims(o, 0)
         reward_n = np.array([[r]])
         done_n = np.array([d])
-        obs_n = np.expand_dims(o, 0)
         return obs_n, reward_n, done_n, info_n
 
 class CloudpickleWrapper(object):

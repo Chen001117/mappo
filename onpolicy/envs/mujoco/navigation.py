@@ -4,6 +4,7 @@ from gym import utils
 from onpolicy.envs.mujoco.base_env import BaseEnv
 from onpolicy.envs.mujoco.xml_gen import get_xml
 from gym.spaces import Box, Tuple
+import time
 
 class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
@@ -17,10 +18,11 @@ class NavigationEnv(BaseEnv):
         self.random_scale = 0.01 # add noise to the observed coordinate (m)
         self.frame_skip = 4 
         self.num_agent = 1
-        self.num_obs = 15
+        self.num_obs = 10
         self.hist_len = 4
         self.kp = np.array([[50, 50, 50]])
         self.kd = np.array([[0.01, 0.01, 0.01]])
+        self.first_time = True
         # simulator
         model = get_xml(dog_num=self.num_agent, obs_num=self.num_obs)
         super().__init__(model, **kwargs)
@@ -41,49 +43,67 @@ class NavigationEnv(BaseEnv):
 
     def reset(self):
         # init variables
+        t0 = time.time()
         self.last_cmd = np.zeros([self.num_agent, self.action_space.shape[0]])
         hist_size = self.action_space.shape[0] + 4 
         self.hist_obs = np.zeros([self.hist_len, self.num_agent, hist_size])
         # init state 
+        regenerate_obstacle = self.first_time or np.random.rand() < 1.
         regenerate = True
         while regenerate:
             self.prev_output = np.zeros([self.num_agent, self.action_space.shape[0]])
-            init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
-            init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
-            init_obs_z = np.ones([self.num_obs, 1]) * 0.55
+            if regenerate_obstacle:
+                init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
+                init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
+                init_obs_z = np.ones([self.num_obs, 1]) * 0.55
+                obs_p = np.concatenate([init_obs_pos, init_obs_yaw, init_obs_z], axis=-1).flatten()
+            else:
+                idx1 = self.num_agent*4
+                idx2 = self.num_agent*4 + self.num_obs*4
+                obs_p = self.sim.data.qpos.copy()[idx1:idx2]
             init_pos = (np.random.random([self.num_agent, 2])-.5) * self.msize
             init_yaw = np.random.random([self.num_agent, 1]) * np.pi * 2.
             init_z = np.ones([self.num_agent, 1]) * 0.2
             self.goal = (np.random.random([self.num_agent, 2])-.5) * self.msize 
             dog_p = np.concatenate([init_pos, init_yaw, init_z], axis=-1).flatten()
-            obs_p = np.concatenate([init_obs_pos, init_obs_yaw, init_obs_z], axis=-1).flatten()
             qpos = np.concatenate([dog_p, obs_p, self.goal.flatten()])
             self.set_state(np.array(qpos), np.zeros_like(qpos))
             for _ in range(self.warm_step):
                 self._do_simulation(self.last_cmd.copy(), self.frame_skip)
             self.t = 0.
             regenerate = self._get_done()
-        self.obs_map = self._get_obs_map(init_obs_pos, init_obs_yaw)
+        if regenerate_obstacle:
+            self.obs_map = self._get_obs_map(init_obs_pos, init_obs_yaw)
+            self.cost_map = self._get_cost_map(self.obs_map)
         # update RL_info
         obs = self._get_obs()
         info = dict()
         # post process
         self._post_update(self.last_cmd.copy())
+        t1 = time.time()
+        print("R", t1-t0)
         return obs, info
 
     def step(self, command):
         # pre process
         command = np.clip(command, self.action_space.low, self.action_space.high)
         action = self._local_to_global(command)
+        t0 = time.time()
         self._do_simulation(action, self.frame_skip)
         self.t += self.dt
+        t1 = time.time()
         # update RL info
         observation = self._get_obs()
+        t2 = time.time()
         terminated = self._get_done()
+        t3 = time.time()
         reward = self._get_reward()
+        t4 = time.time()
         info = dict()
         # post process
         self._post_update(command)
+        t5 = time.time()
+        print("S", t1-t0,t2-t1,t3-t2,t4-t3,t5-t4)
         return observation, reward, terminated, False, info
 
     def _get_toward(self, theta):
@@ -122,17 +142,20 @@ class NavigationEnv(BaseEnv):
         
         return vertice
 
-    def draw_rect(self, rect):
-        rect = (rect / self.msize + .5) * self.mlen
+    def draw_rect(self, rect, min_idx, max_idx):
+
+        # print("R", rect, "\nA", min_idx, "\nB", max_idx)
+        
         # get line function y = ax + b
         lines = [[rect[i], rect[(i+1)%4]] for i in range(4)]
         lines = np.array(lines)
         a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
         b = lines[:,0,1] - a * lines[:,0,0]
         # get x,y coor idx
-        x_axis = np.arange(self.mlen) + .5
-        y_axis = np.arange(self.mlen) + .5
-        y_map, x_map = np.meshgrid(x_axis, y_axis)
+        length = max_idx - min_idx
+        x_axis = np.arange(length[0]) + .5 + min_idx[0]
+        y_axis = np.arange(length[1]) + .5 + min_idx[1]
+        y_map, x_map = np.meshgrid(y_axis, x_axis)
         x_map = np.expand_dims(x_map, 0) 
         x_map = np.repeat(x_map, 4, 0)
         y_map = np.expand_dims(y_map, 0) 
@@ -152,9 +175,26 @@ class NavigationEnv(BaseEnv):
         hmlen = (self.lmlen*3-1) // 2
         obs_map = np.zeros([1, self.mlen+hmlen*2, self.mlen+hmlen*2])
         for rect in obs_vertice:
-            obs_map[0,hmlen:-hmlen,hmlen:-hmlen] += self.draw_rect(rect)
+            norm_rect = (rect.copy() / self.msize + .5) * self.mlen
+            clip_rect = np.clip(norm_rect.astype('long'), 0, self.mlen)
+            min_i = np.min(clip_rect, axis=0) + hmlen
+            max_i = np.max(clip_rect, axis=0) + hmlen
+            obs_map[0,min_i[0]:max_i[0],min_i[1]:max_i[1]] += \
+                self.draw_rect(norm_rect, min_i-hmlen, max_i-hmlen)
         obs_map = (obs_map!=0) * 1.
         return obs_map 
+
+    def _get_cost_map(self, obs_map):
+        cost_map = obs_map.copy() * 0.5
+        obs_map = obs_map.astype('bool')
+        for i in range(10):
+            tmp_map = obs_map.copy().astype('bool')
+            obs_map[:,:-1,:] |= tmp_map[:,1:,:]
+            obs_map[:,1:,:] |= tmp_map[:,:-1,:]
+            obs_map[:,:,:-1] |= tmp_map[:,:,1:]
+            obs_map[:,:,1:] |= tmp_map[:,:,:-1]
+            cost_map += obs_map * 0.05
+        return cost_map
 
     def _do_simulation(self, action, n_frames):
         """ 
@@ -195,6 +235,7 @@ class NavigationEnv(BaseEnv):
         cmd = cmd.reshape([self.num_agent, -1])
         self.hist_obs[-1] = np.concatenate([pos, sin_yaw, cos_yaw, cmd], axis=-1)
         self.prev_dist = np.linalg.norm(pos-self.goal)
+        self.first_time = False
 
     def _get_obs(self):
         
@@ -211,12 +252,13 @@ class NavigationEnv(BaseEnv):
         observation += np.random.random(observation.shape) * self.random_scale
         # img_obs
         coor = ((pos/self.msize+.5)*self.mlen).astype('long')
-        hlmlen = (self.lmlen*3-1)//2
-        x1, x2 = coor[:,0], coor[:,0]+hlmlen*2+1
-        y1, y2 = coor[:,1], coor[:,1]+hlmlen*2+1
+        x1, x2 = coor[:,0], coor[:,0]+self.lmlen*3
+        y1, y2 = coor[:,1], coor[:,1]+self.lmlen*3
         local_map = []
         for i in range(self.num_agent):
             m = self.obs_map[:, x1[i]:x2[i], y1[i]:y2[i]]
+            if np.array(m.shape[1:]) != np.array(self.observation_space[1].shape[1:]*3):
+                m = np.zeros([1,self.lmlen*3,self.lmlen*3])
             m = m[:,0::3,0::3] + m[:,1::3,0::3] + m[:,2::3,0::3] + \
                 m[:,0::3,1::3] + m[:,1::3,1::3] + m[:,2::3,1::3] + \
                 m[:,0::3,2::3] + m[:,1::3,2::3] + m[:,2::3,2::3] 
@@ -264,8 +306,21 @@ class NavigationEnv(BaseEnv):
     def _get_reward(self):
         state = self.sim.data.qpos.copy().flatten()[:self.num_agent*4]
         state = state.reshape([self.num_agent, 4])
+        # goal distance rewards
         dist = np.linalg.norm(state[:,:2]-self.goal)
         rew = self.prev_dist - dist 
+        # obstacle rewards
+        pos, yaw = state[:,:2], state[:,2:3]
+        toward, _ = self._get_toward(yaw)
+        f_pos = pos + toward * 0.15
+        r_pos = pos - toward * 0.15
+        coor_f = ((f_pos/self.msize+.5)*self.mlen).astype('long')
+        coor_r = ((r_pos/self.msize+.5)*self.mlen).astype('long')
+        for i in range(self.num_agent):
+            obs_rew_f = (1 - self.cost_map[0,coor_f[i,0], coor_f[i,1]]) * 0.01
+            obs_rew_r = (1 - self.cost_map[0,coor_r[i,0], coor_r[i,1]]) * 0.01
+            rew += min(obs_rew_f, obs_rew_r)
+        # reach goal rewards
         dt = (15.-self.t) / self.dt
         rew = 0.05*(1-0.99**dt)/(1-0.99) if dist < 0.25 else rew 
         return rew
