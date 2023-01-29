@@ -301,18 +301,21 @@ class NavigationEnv(BaseEnv):
         # goal distance rewards
         dist = np.linalg.norm(state[:,:2]-self.goal)
         rew = self.prev_dist - dist 
-        # obstacle rewards
+        # # obstacle rewards
         pos, yaw = state[:,:2], state[:,2:3]
-        toward, _ = self._get_toward(yaw)
-        f_pos = pos + toward * 0.15
-        r_pos = pos - toward * 0.15
-        coor_f = ((f_pos/self.msize+.5)*self.mlen).astype('long')
-        coor_r = ((r_pos/self.msize+.5)*self.mlen).astype('long')
+        coor = ((pos/self.msize+.5)*self.mlen).astype('long')
         for i in range(self.num_agent):
-            obs_rew_f = (1 - self.cost_map[0,coor_f[i,0], coor_f[i,1]]) * 0.0025
-            obs_rew_r = (1 - self.cost_map[0,coor_r[i,0], coor_r[i,1]]) * 0.0025
-            rew += min(obs_rew_f, obs_rew_r)
-            print(min(obs_rew_f, obs_rew_r))
+            rew += (0.2 -self.cost_map[0,coor[i,0], coor[i,1]]) * 0.05
+
+        # toward, _ = self._get_toward(yaw)
+        # f_pos = pos + toward * 0.15
+        # r_pos = pos - toward * 0.15
+        # coor_f = ((f_pos/self.msize+.5)*self.mlen).astype('long')
+        # coor_r = ((r_pos/self.msize+.5)*self.mlen).astype('long')
+        # for i in range(self.num_agent):
+        #     obs_rew_f = (-self.cost_map[0,coor_f[i,0], coor_f[i,1]]) * 0.025
+        #     obs_rew_r = (-self.cost_map[0,coor_r[i,0], coor_r[i,1]]) * 0.025
+        #     rew += min(obs_rew_f, obs_rew_r)
         #     import imageio
         #     imageio.imwrite('test.png', 255*self.cost_map[0,coor_f[i,0]-100:coor_f[i,0]+100, coor_f[i,1]-100:coor_f[i,1]+100])
         

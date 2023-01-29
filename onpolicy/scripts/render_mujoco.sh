@@ -4,7 +4,7 @@ scenario="Walker2d-v3"
 num_agents=1
 algo="rmappo"
 exp="check"
-seed=13
+seed=11
 
 CUDA_VISIBLE_DEVICES=0 python3 render/render_mujoco.py --env_name ${env} \
 --algorithm_name ${algo} --experiment_name ${exp} --scenario_name ${scenario} \
