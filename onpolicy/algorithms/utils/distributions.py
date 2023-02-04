@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from .util import init
-
+import numpy as np
 """
 Modify standard PyTorch distributions so they to make compatible with this codebase. 
 """
@@ -73,9 +73,9 @@ class DiagGaussian(nn.Module):
         super(DiagGaussian, self).__init__()
 
         self.hidden_size = 64
-        init_method = [nn.init.xavier_uniform_, nn.init.orthogonal_][use_orthogonal]
-        def init_(m): 
-            return init(m, init_method, lambda x: nn.init.constant_(x, 0), gain)
+        # init_method = [nn.init.xavier_uniform_, nn.init.orthogonal_][use_orthogonal]
+        # def init_(m): 
+        #     return init(m, init_method, lambda x: nn.init.constant_(x, 0), gain)
             
         self.fc_mean = nn.Sequential(
             # nn.Linear(num_inputs, num_outputs)
@@ -83,27 +83,33 @@ class DiagGaussian(nn.Module):
             nn.ReLU(),
             nn.Linear(self.hidden_size, self.hidden_size),
             nn.ReLU(),
-            nn.Linear(self.hidden_size, num_outputs)
+            nn.Linear(self.hidden_size, num_outputs),
+            nn.Tanh(),
         )    
         self.fc_std = nn.Sequential(
             nn.Linear(num_inputs, self.hidden_size),
             nn.ReLU(),
             nn.Linear(self.hidden_size, self.hidden_size),
             nn.ReLU(),
-            init_(nn.Linear(self.hidden_size, num_outputs))
+            nn.Linear(self.hidden_size, num_outputs),
         )
-        action_range = (action_space.high-action_space.low)
-        self.action_range = torch.ones(num_outputs) #* action_range
+        action_range = (action_space.high-action_space.low) / 2
+        self.action_range = torch.ones(num_outputs) * action_range
+        action_mid = (action_space.high+action_space.low) / 2
+        self.action_mid = torch.ones(num_outputs) * action_mid
         self.logstd = AddBias(torch.log(self.action_range))
 
     def forward(self, x):
-        action_mean = self.fc_mean(x)
-        action_logstd = self.fc_std(x) # * self.action_range
-        action_std = torch.clip(action_logstd.exp(), 0.1, 2.)
+        self.action_range = self.action_range.to(x.device)
+        self.action_mid = self.action_mid.to(x.device)
+        action_mean = self.fc_mean(x) * self.action_range + self.action_mid
+        action_logstd = self.fc_std(x) 
+        action_std = torch.clamp(action_logstd, -10, 2).exp()
         # zeros = torch.zeros(action_mean.size())
         # if x.is_cuda:
         #     zeros = zeros.cuda()
         # action_logstd = self.logstd(zeros)
+        # action_logstd_bias = self.fc_std(x) # * self.action_range
         # action_stdbias = torch.clip(action_logstd_bias.exp(),0.5,1.5)
         # action_std = action_logstd.exp() * action_stdbias
         return FixedNormal(action_mean, action_std)

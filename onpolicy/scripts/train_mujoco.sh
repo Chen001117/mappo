@@ -15,5 +15,5 @@ do
     --n_training_threads 1 --n_rollout_threads 16 --num_mini_batch 16 --episode_length 256 --use_ReLU \
     --num_env_steps 100000000 --ppo_epoch 10 --entropy_coef 0.0 --use_eval --n_eval_rollout_threads 16 \
     --wandb_name "cwz19" --user_name "cwz19" --data_chunk_length 16 
+    # --model_dir "results/${env}/${scenario}/${algo}/check2/wandb/latest-run/files"
 done
-# --model_dir "results/${env}/${scenario}/${algo}/${exp}/wandb/run-20230109_005400-31sskjsh/files"
