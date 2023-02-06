@@ -43,11 +43,12 @@ class R_Actor(nn.Module):
         else:
             raise NotImplementedError
 
-        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-            input_size = self.hidden_size * (1+self.tuple_input)
-            self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
+        # if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+        #     input_size = self.hidden_size * (1+self.tuple_input)
+        #     self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
 
-        self.act = ACTLayer(action_space, self.hidden_size, self._use_orthogonal, self._gain)
+        input_size = self.hidden_size * (1+self.tuple_input)
+        self.act = ACTLayer(action_space, input_size, self._use_orthogonal, self._gain)
 
         self.to(device)
 
@@ -81,8 +82,8 @@ class R_Actor(nn.Module):
             obs = check(obs).to(**self.tpdv)
             actor_features = self.base(obs)
 
-        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-            actor_features, rnn_states = self.rnn(actor_features, rnn_states, masks)
+        # if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+        #     actor_features, rnn_states = self.rnn(actor_features, rnn_states, masks)
 
         actions, action_log_probs = self.act(actor_features, available_actions, deterministic)
 
@@ -121,8 +122,8 @@ class R_Actor(nn.Module):
             obs = check(obs).to(**self.tpdv)
             actor_features = self.base(obs)
 
-        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-            actor_features, rnn_states = self.rnn(actor_features, rnn_states, masks)
+        # if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+        #     actor_features, rnn_states = self.rnn(actor_features, rnn_states, masks)
 
         action_log_probs, dist_entropy = self.act.evaluate_actions(
             actor_features, action, available_actions,
@@ -165,17 +166,23 @@ class R_Critic(nn.Module):
         else:
             raise NotImplementedError
 
-        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-            input_size = self.hidden_size * (1+self.tuple_input)
-            self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
-
-        def init_(m):
-            return init(m, init_method, lambda x: nn.init.constant_(x, 0))
-
+        # if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+        #     input_size = self.hidden_size * (1+self.tuple_input)
+        #     self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
+        # def init_(m):
+        #     return init(m, init_method, lambda x: nn.init.constant_(x, 0))
+        
+        input_size = self.hidden_size * (1+self.tuple_input)
         if self._use_popart:
-            self.v_out = init_(PopArt(self.hidden_size, 1, device=device))
+            self.v_out = init_(PopArt(input_size, 1, device=device))
         else:
-            self.v_out = init_(nn.Linear(self.hidden_size, 1))
+            self.v_out = nn.Sequential(
+                nn.Linear(input_size, self.hidden_size),
+                nn.ReLU(),
+                nn.Linear(self.hidden_size, self.hidden_size),
+                nn.ReLU(),
+                nn.Linear(self.hidden_size, 1),
+            )
 
         self.to(device)
 
@@ -202,8 +209,8 @@ class R_Critic(nn.Module):
             cent_obs = check(cent_obs).to(**self.tpdv)
             critic_features = self.base(cent_obs)
 
-        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-            critic_features, rnn_states = self.rnn(critic_features, rnn_states, masks)
+        # if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+        #     critic_features, rnn_states = self.rnn(critic_features, rnn_states, masks)
         values = self.v_out(critic_features)
 
         return values, rnn_states

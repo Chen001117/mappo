@@ -97,11 +97,14 @@ class DiagGaussian(nn.Module):
         self.action_range = torch.ones(num_outputs) * action_range
         action_mid = (action_space.high+action_space.low) / 2
         self.action_mid = torch.ones(num_outputs) * action_mid
-        self.logstd = AddBias(torch.log(self.action_range))
+        self.first_time = True
+        # self.logstd = AddBias(torch.log(self.action_range))
 
     def forward(self, x):
-        self.action_range = self.action_range.to(x.device)
-        self.action_mid = self.action_mid.to(x.device)
+        if self.first_time:
+            self.first_time = False
+            self.action_range = self.action_range.to(x.device)
+            self.action_mid = self.action_mid.to(x.device)
         action_mean = self.fc_mean(x) * self.action_range + self.action_mid
         action_logstd = self.fc_std(x) 
         action_std = torch.clamp(action_logstd, -10, 2).exp()
