@@ -15,12 +15,12 @@ class NavigationEnv(BaseEnv):
         self.warm_step = 10 # 
         self.msize = 10. # map size (m)
         self.mlen = 400 # global map length (pixels)
-        self.random_scale = 0.01 # add noise to the observed coordinate (m)
+        self.random_scale = 0. # add noise to the observed coordinate (m)
         self.frame_skip = 4 
         self.num_agent = 1
-        self.num_obs = 15
+        self.num_obs = 0
         self.hist_len = 4
-        self.kp = np.array([[50, 50, 50]])
+        self.kp = np.array([[800, 800, 50]])
         self.kd = np.array([[0.01, 0.01, 0.01]])
         self.first_time = True
         # simulator
@@ -28,12 +28,12 @@ class NavigationEnv(BaseEnv):
         super().__init__(model, **kwargs)
         # observation space 
         self.observation_space = Tuple((
-            Box(low=-np.inf, high=np.inf, shape=(35,), dtype=np.float64), #35
-            Box(low=-np.inf, high=np.inf, shape=(1,self.lmlen,self.lmlen), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(5,), dtype=np.float64), #35
+            Box(low=-np.inf, high=np.inf, shape=(4,self.lmlen,self.lmlen), dtype=np.float64),
         ))
         # action space
-        aspace_low = np.array([-0.6, -0.6, -0.6])
-        aspace_high = np.array([0.6, 0.6, 0.6])
+        aspace_low = np.array([-0.25, -0.05, -0.6])
+        aspace_high = np.array([0.5, 0.05, 0.6])
         self.action_space = Box(
             low=aspace_low, high=aspace_high, shape=(3,), dtype=np.float64
         )
@@ -51,7 +51,7 @@ class NavigationEnv(BaseEnv):
         hist_size = self.action_space.shape[0] + 4 
         self.hist_obs = np.zeros([self.hist_len, self.num_agent, hist_size])
         # init state 
-        regenerate_obstacle = self.first_time or np.random.rand() < 1.
+        regenerate_obstacle = self.first_time or np.random.rand() < 0.1
         regenerate = True
         while regenerate:
             self.prev_output = np.zeros([self.num_agent, self.action_space.shape[0]])
@@ -85,27 +85,28 @@ class NavigationEnv(BaseEnv):
             self.obs_map = self._get_obs_map(init_obs_pos, init_obs_yaw)
             self.cost_map = self._get_cost_map(self.obs_map)
         # update RL_info
+        self.history_img = np.zeros([self.num_agent, *self.observation_space[1].shape])
         obs = self._get_obs()
         info = dict()
         # post process
-        self._post_update(self.last_cmd.copy())
+        self._post_update(self.last_cmd.copy(), obs)
         self.contact_time = 1
         return obs, info
 
     def step(self, cmd):
         # pre process
         command = np.clip(cmd, self.action_space.low, self.action_space.high)
-        # action = self._local_to_global(command)
-        action = command.copy()
+        action = self._local_to_global(command)
+        # action = command.copy()
         torque = self._do_simulation(action, self.frame_skip)
         self.t += self.dt
         # update RL info
         observation = self._get_obs()
         terminated = self._get_done()
-        reward = self._get_reward()
+        reward = self._get_reward(action, terminated)
         info = dict()
         # post process
-        self._post_update(command)
+        self._post_update(command, observation)
         return observation, reward, terminated, False, info
 
     def _get_toward(self, theta):
@@ -229,10 +230,10 @@ class NavigationEnv(BaseEnv):
         d_output = cur_vel - self.prev_output
         torque = self.kp * error - self.kd * (d_output/dt)
         torque = np.clip(torque, self.torque_low, self.torque_high)
-        self.prev_output = torque.copy()
+        self.prev_output = cur_vel.copy()
         return torque
 
-    def _post_update(self, cmd):
+    def _post_update(self, cmd, observation):
         """
         restore the history information
         """
@@ -242,9 +243,11 @@ class NavigationEnv(BaseEnv):
         sin_yaw, cos_yaw = np.sin(yaw), np.cos(yaw)
         self.hist_obs[:-1] = self.hist_obs[1:]
         cmd = cmd.reshape([self.num_agent, -1])
-        self.hist_obs[-1] = np.concatenate([pos, sin_yaw, cos_yaw, cmd], axis=-1)
+        self.hist_obs[-1] = np.concatenate([pos-self.goal, sin_yaw, cos_yaw, cmd], axis=-1)
         self.prev_dist = np.linalg.norm(pos-self.goal)
         self.first_time = False
+        self.history_img[:,1:] = self.history_img[:,:-1]
+        self.history_img[:,0] = observation[1][:,0]
 
     def _get_obs(self):
         
@@ -254,41 +257,49 @@ class NavigationEnv(BaseEnv):
         pos, yaw = state[:,:2], state[:,2:3]
         sin_yaw, cos_yaw = np.sin(yaw), np.cos(yaw)
         time = np.array([[self.t]]).repeat(self.num_agent,1)
-        cur_obs = np.concatenate([pos, sin_yaw, cos_yaw, self.goal, time], axis=-1)
-        hist_obs = self.hist_obs.copy().transpose(1,0,2).reshape([self.num_agent, -1])
-        observation = np.concatenate([cur_obs, hist_obs], axis=-1) 
+        cur_obs = np.concatenate([pos-self.goal, sin_yaw, cos_yaw, time], axis=-1)
+        # hist_obs = self.hist_obs.copy().transpose(1,0,2).reshape([self.num_agent, -1])
+        vec_obs = np.concatenate([cur_obs], axis=-1) #, hist_obs
         # add random
-        observation += (np.random.random(observation.shape)-.5) * self.random_scale
+        vec_obs += (np.random.random(vec_obs.shape)-.5) * self.random_scale
         # img_obs
         coor = ((pos/self.msize+.5)*self.mlen).astype('long')
         x1, x2 = coor[:,0], coor[:,0]+self.lmlen*3
         y1, y2 = coor[:,1], coor[:,1]+self.lmlen*3
-        local_map = []
+        local_maps = []
         for i in range(self.num_agent):
-            m = self.obs_map[:, x1[i]:x2[i], y1[i]:y2[i]]
-            if (np.array(m.shape[1:]) != np.array(self.observation_space[1].shape[1:])*3).any():
-                m = np.zeros([1,self.lmlen*3,self.lmlen*3])
-            m = m[:,0::3,0::3] + m[:,1::3,0::3] + m[:,2::3,0::3] + \
-                m[:,0::3,1::3] + m[:,1::3,1::3] + m[:,2::3,1::3] + \
-                m[:,0::3,2::3] + m[:,1::3,2::3] + m[:,2::3,2::3] 
-            local_map.append((m!=0)*1.)
-        local_map = np.array(local_map)
-        return observation, local_map
+            local_map = []
+            m1 = self.obs_map[0, x1[i]:x2[i], y1[i]:y2[i]]
+            if (np.array(m1.shape) != np.array(self.observation_space[1].shape[1:])*3).any():
+                m1 = np.zeros([self.lmlen*3,self.lmlen*3])
+            m1 = m1[0::3,0::3] + m1[1::3,0::3] + m1[2::3,0::3] + \
+                m1[0::3,1::3] + m1[1::3,1::3] + m1[2::3,1::3] + \
+                m1[0::3,2::3] + m1[1::3,2::3] + m1[2::3,2::3] 
+            local_map.append((m1>1)*1.)
+            # x_axis = np.arange(self.lmlen) + .5 - (self.lmlen-1)//2
+            # y_axis = np.arange(self.lmlen) + .5 - (self.lmlen-1)//2
+            # y_map, x_map = np.meshgrid(y_axis, x_axis)
+            # m2 = x_map*np.cos(yaw[i,0])+y_map*np.sin(yaw[i,0])/np.sqrt(x_map**2+y_map**2)
+            # local_map.append(m2)
+            # import imageio
+            # imageio.imwrite("../envs/mujoco/assets/map.png",m2)
+            local_maps.append(local_map)
+        local_maps = np.array(local_maps).reshape([self.num_agent,1,*self.observation_space[1].shape[1:]])
+        img_obs = np.concatenate([
+            local_maps,
+            self.history_img[:,:-1], 
+        ], axis=1)
+
+        return vec_obs, img_obs
 
     def _local_to_global(self, input_action):
+
+        state = self.sim.data.qpos.flat.copy()[:self.num_agent*4]
+        state = state.reshape([self.num_agent,4])
+        tow, ver = self._get_toward(state[:,2:3])
         input_action = input_action.reshape([self.num_agent,3])
         local_action = input_action[:,:2].copy()
-        local_action = local_action.reshape([self.num_agent,1,2])
-        state = self.sim.data.qpos.flat.copy()[:self.num_agent*3]
-        state = state.reshape([self.num_agent,3])
-        theta = state[:,2] 
-        rotate_mat = [
-            np.cos(theta), np.sin(theta), -np.sin(theta), np.cos(theta),
-        ]
-        rotate_mat = np.stack(rotate_mat, axis=0)
-        rotate_mat = rotate_mat.reshape([self.num_agent,2,2])
-        global_action = local_action @ rotate_mat
-        global_action = global_action.reshape([self.num_agent,2])
+        global_action = tow * local_action[:,:1] + ver * local_action[:,1:]
         output_action = np.concatenate([global_action, input_action[:,2:].copy()], axis=-1)
         return output_action
 
@@ -314,32 +325,84 @@ class NavigationEnv(BaseEnv):
         #     return True
         return False
 
-    def _get_reward(self):
-        rewards = []
-        # pre-process
-        weights = np.array([1., 1.])
+    def _get_reward(self, action, terminated):
         state = self.sim.data.qpos.copy().flatten()[:self.num_agent*4]
         state = state.reshape([self.num_agent, 4])
-        # goal distance rewards
-        dist = np.linalg.norm(state[:,:2]-self.goal)
-        rewards.append(self.prev_dist - dist)
-        # goal stay rewards 
-        if dist < 0.25:
-            rewards.append(0.1) 
-        elif dist < 1.:
-            rewards.append(0.02 + (1.-dist) / 0.75 * 0.08) 
-        else:
-            rewards.append(0.) 
-        # total rew 
-        return np.dot(np.array(rewards), weights)
-        # # # obstacle rewards
-        # # pos, yaw = state[:,:2], state[:,2:3]
-        # # coor = ((pos/self.msize+.5)*self.mlen).astype('long')
-        # # for i in range(self.num_agent):
-        # #     if (coor[i]>=0).all() and (coor[i]<self.mlen).all():
-        # #         rew += 0.01 * np.exp(-self.cost_map[0,coor[i,0], coor[i,1]] * self.contact_time)
-        # #     else:
-        # #         rew += 0.
-        # # for i in range(self.num_agent):
-        # #     rew -= np.linalg.norm(torque[:,:2],-1).mean() * 1e-4
+        pos, yaw = state[:,:2], state[:,2:3]
+        dx = self.goal - pos
+        tow = np.concatenate([np.cos(yaw), np.sin(yaw)], axis=-1)
+        cos = np.sum(dx*tow,axis=-1) / np.linalg.norm(dx, axis=-1)
+        cos = np.clip(cos, -1, 0.7) 
+        return cos
+
+        # rewards = []
+        # # pre-process
+        # weights = np.array([1., 1.])
+        # state = self.sim.data.qpos.copy().flatten()[:self.num_agent*4]
+        # state = state.reshape([self.num_agent, 4])
+        # # goal distance rewards
+        # dist = np.linalg.norm(state[:,:2]-self.goal)
+        # rewards.append(self.prev_dist - dist)
+        # # goal stay rewards 
+        # if dist < 0.25:
+        #     rewards.append(0.1) 
+        # elif dist < 1.:
+        #     rewards.append(0.02 + (1.-dist) / 0.75 * 0.08) 
+        # else:
+        #     rewards.append(0.) 
+        # # total rew 
+        # return np.dot(np.array(rewards), weights)
+
+        # weight
+        # rewards = []
+        # scales = np.array([
+        #         5., # self.s_goal_pos,
+        #         5., # self.s_goal_rot,
+        #         20., #self.s_vel_rew,
+        #         10., #self.s_smooth,
+        #         10., #self.s_collision_penalty
+        # ])
+        # weights = np.array(
+        #     [
+        #         500., # self.w_goal_pos,
+        #         500., # self.w_goal_rot,
+        #         20., #self.w_vel_rew,
+        #         5., #self.w_smooth,
+        #         100., #self.w_collision_penalty
+        #     ]
+        # )
+        # weights = weights / np.sum(weights)
+        # # state
+        # state = self.sim.data.qpos.copy().flatten()[:self.num_agent*4]
+        # state = state.reshape([self.num_agent, 4])
+        # pos, yaw = state[:,:2], state[:,2:3]
+        # state = self.sim.data.qvel.copy().flatten()[:self.num_agent*4]
+        # state = state.reshape([self.num_agent, 4])
+        # vel, rvel = state[:,:2], state[:,2:3]
+        # # goal_pos_rew
+        # dist = np.linalg.norm(state[:,:2]-self.goal).mean()
+        # dist = np.clip(dist, 0.5, np.inf) - 0.5
+        # rewards.append(-dist.mean())
+        # # goal_rot_rew
+        # dx = self.goal - pos
+        # tow = np.concatenate([np.cos(yaw), np.sin(yaw)], axis=-1)
+        # cos = np.sum(dx*tow,-1) / np.linalg.norm(dx, axis=-1)
+        # cos = np.clip(cos, -1, 0.7) - 0.7
+        # rewards.append(cos.mean())
+        # # vel_rew
+        # vel_norm = np.linalg.norm(vel, axis=-1).mean()
+        # vel_rew = 0. if vel_norm>1e-2 else -1e6
+        # rewards.append(vel_rew)
+        # # smooth_rew
+        # lin_vel_err = np.linalg.norm(action[:,:2]-vel,axis=-1).mean()
+        # ang_vel_err = np.linalg.norm(action[:,2:3]-vel,axis=-1).mean()
+        # vel_err = lin_vel_err + 0.5 * ang_vel_err
+        # rewards.append(-vel_err)
+        # # collision_rew
+        # collision_rew = -1e6 if terminated else 0.
+        # rewards.append(collision_rew)
+        # # total rew 
+        # rew = np.array(rewards) * scales
+        # rew = np.dot(np.exp(rew), weights)
+        # return rew
         

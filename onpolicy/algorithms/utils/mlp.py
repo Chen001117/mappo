@@ -17,7 +17,7 @@ class MLPBase(nn.Module):
             nn.Linear(self.hidden_size, self.hidden_size),
             nn.ReLU(),
             nn.Linear(self.hidden_size, self.hidden_size),
-            active_func,
+            # active_func,
         )
 
     def forward(self, x):

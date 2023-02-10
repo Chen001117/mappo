@@ -9,7 +9,7 @@ class CNNBase(nn.Module):
         self.hsize = args.hidden_size
         active_func = [nn.Tanh(), nn.ReLU()][self._use_ReLU]
 
-        channel = obs_shape[0] # 1
+        channel = obs_shape[0] # 2
         input_width = obs_shape[1] # 29
         input_height = obs_shape[2] # 29
         assert input_width==29 and input_height==29
@@ -27,7 +27,7 @@ class CNNBase(nn.Module):
             nn.BatchNorm2d(self.hsize),
             nn.Flatten(),
             nn.Linear(81*self.hsize, self.hsize), 
-            active_func,
+            # active_func,
         )
 
     def forward(self, x):

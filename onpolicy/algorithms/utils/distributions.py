@@ -107,7 +107,7 @@ class DiagGaussian(nn.Module):
             self.action_mid = self.action_mid.to(x.device)
         action_mean = self.fc_mean(x) * self.action_range + self.action_mid
         action_logstd = self.fc_std(x) 
-        action_std = torch.clamp(action_logstd, -10, 2).exp()
+        action_std = torch.clamp(action_logstd, -10, 2).exp() * self.action_range
         # zeros = torch.zeros(action_mean.size())
         # if x.is_cuda:
         #     zeros = zeros.cuda()
