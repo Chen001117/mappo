@@ -43,12 +43,12 @@ class R_Actor(nn.Module):
         else:
             raise NotImplementedError
 
-        # if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-        #     input_size = self.hidden_size * (1+self.tuple_input)
-        #     self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
+        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+            input_size = self.hidden_size * (1+self.tuple_input)
+            self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
 
-        input_size = self.hidden_size #* (1+self.tuple_input)
-        self.act = ACTLayer(action_space, input_size, self._use_orthogonal, self._gain)
+        # input_size = self.hidden_size * (1+self.tuple_input)
+        self.act = ACTLayer(action_space, self.hidden_size, self._use_orthogonal, self._gain)
 
         self.to(device)
 
@@ -75,15 +75,15 @@ class R_Actor(nn.Module):
         if self.tuple_input:
             obs_vec = check(obs[0]).to(**self.tpdv)
             obs_img = check(obs[1]).to(**self.tpdv)
-            actor_features = self.base_vec(obs_vec)
-            # img_features = self.base_img(obs_img)
-            # actor_features = torch.cat([vec_features, img_features], dim=-1)
+            vec_features = self.base_vec(obs_vec)
+            img_features = self.base_img(obs_img)
+            actor_features = torch.cat([vec_features, img_features], dim=-1)
         else:
             obs = check(obs).to(**self.tpdv)
             actor_features = self.base(obs)
 
-        # if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-        #     actor_features, rnn_states = self.rnn(actor_features, rnn_states, masks)
+        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+            actor_features, rnn_states = self.rnn(actor_features, rnn_states, masks)
 
         actions, action_log_probs = self.act(actor_features, available_actions, deterministic)
 
@@ -114,16 +114,16 @@ class R_Actor(nn.Module):
 
         if self.tuple_input:
             obs_vec = check(obs[0]).to(**self.tpdv)
-            # obs_img = check(obs[1]).to(**self.tpdv)
-            actor_features = self.base_vec(obs_vec)
-            # img_features = self.base_img(obs_img)
-            # actor_features = torch.cat([vec_features, img_features], dim=-1)
+            obs_img = check(obs[1]).to(**self.tpdv)
+            vec_features = self.base_vec(obs_vec)
+            img_features = self.base_img(obs_img)
+            actor_features = torch.cat([vec_features, img_features], dim=-1)
         else:
             obs = check(obs).to(**self.tpdv)
             actor_features = self.base(obs)
 
-        # if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-        #     actor_features, rnn_states = self.rnn(actor_features, rnn_states, masks)
+        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+            actor_features, rnn_states = self.rnn(actor_features, rnn_states, masks)
 
         action_log_probs, dist_entropy = self.act.evaluate_actions(
             actor_features, action, available_actions,
@@ -166,18 +166,17 @@ class R_Critic(nn.Module):
         else:
             raise NotImplementedError
 
-        # if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-        #     input_size = self.hidden_size * (1+self.tuple_input)
-        #     self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
+        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+            input_size = self.hidden_size * (1+self.tuple_input)
+            self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
         # def init_(m):
         #     return init(m, init_method, lambda x: nn.init.constant_(x, 0))
         
-        input_size = self.hidden_size #* (1+self.tuple_input)
         if self._use_popart:
-            self.v_out = init_(PopArt(input_size, 1, device=device))
+            self.v_out = init_(PopArt(self.hidden_size, 1, device=device))
         else:
             self.v_out = nn.Sequential(
-                nn.Linear(input_size, self.hidden_size),
+                nn.Linear(self.hidden_size, self.hidden_size),
                 nn.ReLU(),
                 nn.Linear(self.hidden_size, self.hidden_size),
                 nn.ReLU(),
@@ -202,15 +201,15 @@ class R_Critic(nn.Module):
         if self.tuple_input:
             cent_obs_vec = check(cent_obs[0]).to(**self.tpdv)
             cent_obs_img = check(cent_obs[1]).to(**self.tpdv)
-            critic_features = self.base_vec(cent_obs_vec)
-            # img_features = self.base_img(cent_obs_img)
-            # critic_features = torch.cat([vec_features, img_features], dim=-1)
+            vec_features = self.base_vec(cent_obs_vec)
+            img_features = self.base_img(cent_obs_img)
+            critic_features = torch.cat([vec_features, img_features], dim=-1)
         else:
             cent_obs = check(cent_obs).to(**self.tpdv)
             critic_features = self.base(cent_obs)
 
-        # if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-        #     critic_features, rnn_states = self.rnn(critic_features, rnn_states, masks)
+        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+            critic_features, rnn_states = self.rnn(critic_features, rnn_states, masks)
         values = self.v_out(critic_features)
 
         return values, rnn_states

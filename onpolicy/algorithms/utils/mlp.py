@@ -19,8 +19,10 @@ class MLPBase(nn.Module):
             nn.Linear(self.hidden_size, self.hidden_size),
             # active_func,
         )
+        # self.feature_norm = nn.LayerNorm(obs_dim)
 
     def forward(self, x):
+        # x = self.feature_norm(x)
         x = self.mlp(x)
         return x
 

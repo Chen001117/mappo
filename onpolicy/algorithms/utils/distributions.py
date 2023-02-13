@@ -31,7 +31,7 @@ class FixedCategorical(torch.distributions.Categorical):
 # Normal
 class FixedNormal(torch.distributions.Normal):
     def log_probs(self, actions):
-        return super().log_prob(actions) #.sum(-1, keepdim=True)
+        return super().log_prob(actions)#.sum(-1, keepdim=True)
 
     def entropy(self):
         return super().entropy() #.sum(-1)
@@ -107,7 +107,8 @@ class DiagGaussian(nn.Module):
             self.action_mid = self.action_mid.to(x.device)
         action_mean = self.fc_mean(x) * self.action_range + self.action_mid
         action_logstd = self.fc_std(x) 
-        action_std = torch.clamp(action_logstd, -10, 2).exp() * self.action_range
+        action_std = torch.clamp(action_logstd, -10, 2).exp() #* self.action_range
+        # print(action_mean, action_std)
         # zeros = torch.zeros(action_mean.size())
         # if x.is_cuda:
         #     zeros = zeros.cuda()

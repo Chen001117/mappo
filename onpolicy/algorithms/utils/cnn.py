@@ -6,7 +6,8 @@ class CNNBase(nn.Module):
         super(CNNBase, self).__init__()
 
         self._use_ReLU = args.use_ReLU
-        self.hsize = args.hidden_size
+        self.hsize = 16 
+        self.hidden_size = args.hidden_size
         active_func = [nn.Tanh(), nn.ReLU()][self._use_ReLU]
 
         channel = obs_shape[0] # 2
@@ -16,17 +17,20 @@ class CNNBase(nn.Module):
 
         self.cnn = nn.Sequential(
             nn.Conv2d(channel,self.hsize//2,3,1,0),
-            active_func,
-            nn.Conv2d(self.hsize//2,self.hsize//2,3,1,1),
-            active_func,
-            nn.MaxPool2d(3, stride=3),
             nn.BatchNorm2d(self.hsize//2),
-            nn.Conv2d(self.hsize//2,self.hsize,3,1,1),
             active_func,
-            nn.Conv2d(self.hsize,self.hsize,3,1,1),
+            # nn.Conv2d(self.hsize//2,self.hsize//2,3,1,1),
+            # active_func,
+            nn.MaxPool2d(3, stride=3),
+            nn.Conv2d(self.hsize//2,self.hsize,3,1,1),
             nn.BatchNorm2d(self.hsize),
+            active_func,
+            # nn.Conv2d(self.hsize//2,self.hsize,3,1,1),
+            # nn.BatchNorm2d(self.hsize),
             nn.Flatten(),
             nn.Linear(81*self.hsize, self.hsize), 
+            active_func,
+            nn.Linear(self.hsize, self.hidden_size), 
             # active_func,
         )
 
