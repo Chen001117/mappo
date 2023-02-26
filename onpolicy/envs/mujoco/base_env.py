@@ -30,7 +30,6 @@ class BaseEnv(gym.Env):
         self.sim = mujoco_py.MjSim(self.model)
         self.data = self.sim.data
         self._viewers = {}
-        self.frame_skip = 4 
         self.viewer = None
         self.camera_name = "camera"
         self.camera_id = 2

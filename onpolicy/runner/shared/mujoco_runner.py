@@ -18,6 +18,7 @@ class MujocoRunner(Runner):
 
         start = time.time()
         episodes = int(self.num_env_steps) // self.episode_length // self.n_rollout_threads
+        total_infos = None
 
         for episode in range(episodes):
             if self.use_linear_lr_decay:
@@ -31,9 +32,17 @@ class MujocoRunner(Runner):
                 obs, rewards, dones, infos = self.envs.step(actions_env)
 
                 data = obs, rewards, dones, infos, values, actions, action_log_probs, rnn_states, rnn_states_critic
-
+                
                 # insert data into buffer
                 self.insert(data)
+
+                if total_infos is None:
+                    total_infos = dict()
+                    for key in infos[0]:
+                        total_infos[key] = 0.
+                for info in infos:
+                    for key in info:
+                        total_infos[key] += info[key]
 
             # compute return and update network
             self.compute()
@@ -61,13 +70,15 @@ class MujocoRunner(Runner):
                                 fps))
                 train_infos["FPS"] = fps
 
-                if self.env_name == "MuJoCo":
-                    env_infos = dict()
+                for key in total_infos:
+                    total_infos[key] /= (self.log_interval*self.episode_length*self.n_rollout_threads)
+                env_infos = total_infos
+
 
                 train_infos["average_episode_rewards"] = np.mean(self.buffer.rewards) * self.episode_length
                 print("average episode rewards is {}".format(train_infos["average_episode_rewards"]))
                 self.log_train(train_infos, total_num_steps)
-                self.log_env(env_infos, total_num_steps)
+                self.log_train(env_infos, total_num_steps)
 
             # eval
             if episode % self.eval_interval == 0 and self.use_eval:

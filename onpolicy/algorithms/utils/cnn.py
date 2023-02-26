@@ -6,7 +6,6 @@ class CNNBase(nn.Module):
         super(CNNBase, self).__init__()
 
         self._use_ReLU = args.use_ReLU
-        self.hsize = 16 
         self.hidden_size = args.hidden_size
         active_func = [nn.Tanh(), nn.ReLU()][self._use_ReLU]
 
@@ -16,21 +15,17 @@ class CNNBase(nn.Module):
         assert input_width==29 and input_height==29
 
         self.cnn = nn.Sequential(
-            nn.Conv2d(channel,self.hsize//2,3,1,0),
-            nn.BatchNorm2d(self.hsize//2),
+            nn.Conv2d(channel,self.hidden_size//4,3,2,1),
+            nn.BatchNorm2d(self.hidden_size//4),
             active_func,
-            # nn.Conv2d(self.hsize//2,self.hsize//2,3,1,1),
-            # active_func,
-            nn.MaxPool2d(3, stride=3),
-            nn.Conv2d(self.hsize//2,self.hsize,3,1,1),
-            nn.BatchNorm2d(self.hsize),
+            nn.Conv2d(self.hidden_size//4,self.hidden_size//2,3,2,1),
+            nn.BatchNorm2d(self.hidden_size//2),
             active_func,
-            # nn.Conv2d(self.hsize//2,self.hsize,3,1,1),
-            # nn.BatchNorm2d(self.hsize),
-            nn.Flatten(),
-            nn.Linear(81*self.hsize, self.hsize), 
+            nn.Conv2d(self.hidden_size//2,self.hidden_size,3,2,1),
+            nn.BatchNorm2d(self.hidden_size),
             active_func,
-            nn.Linear(self.hsize, self.hidden_size), 
+            nn.Conv2d(self.hidden_size,self.hidden_size,4,1,0),
+            nn.Flatten()
             # active_func,
         )
 
