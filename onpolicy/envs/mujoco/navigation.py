@@ -9,27 +9,24 @@ import time
 class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
         # hyper-para
-        self.max_time = 15
         self.lmlen = 29 # local map length (pixels)
-        assert self.lmlen%2==1, "The length of the local map should be an odd number"
-        self.warm_step = 4 # 
+        self.warm_step = 4 # warm-up: let everything stable  (s)
         self.msize = 10. # map size (m)
         self.mlen = 400 # global map length (pixels)
         self.random_scale = 0.01 # add noise to the observed coordinate (m)
         self.frame_skip = 10 
         self.num_agent = 1
-        self.num_obs = 15
+        self.num_obs = 10
         self.hist_len = 4
         self.init_kp = np.array([[800, 800, 80]])
         self.init_kd = np.array([[0.01, 0.01, 0.01]])
         self.init_ki = np.array([[0.0, 0.0, 10.]])
-        self.first_time = True
         # simulator
         model = get_xml(dog_num=self.num_agent, obs_num=self.num_obs)
         super().__init__(model, **kwargs)
         # observation space 
         self.observation_space = Tuple((
-            Box(low=-np.inf, high=np.inf, shape=(33,), dtype=np.float64), #35
+            Box(low=-np.inf, high=np.inf, shape=(29,), dtype=np.float64), #35
             Box(low=-np.inf, high=np.inf, shape=(4,self.lmlen,self.lmlen), dtype=np.float64),
         ))
         # action space
@@ -41,68 +38,65 @@ class NavigationEnv(BaseEnv):
         # hyper-para
         bounds = self.model.actuator_ctrlrange.copy()
         self.torque_low, self.torque_high = bounds.astype(np.float32).T
-        self.last_fail = False
-        self.total_cnt = 0.
 
     def seed(self, seed):
         super().seed(seed)
         np.random.seed(seed)
 
     def reset(self):
+        # init random tasks
         self.kp  = self.init_kp * (1. + (np.random.random(3)-.5) * 0.1)
         self.ki  = self.init_ki * (1. + (np.random.random(3)-.5) * 0.1)
         self.kd  = self.init_kd * (1. + (np.random.random(3)-.5) * 0.1)
         # init variables
+        self.t = 0.
+        self.max_time = 1e6
         self.last_cmd = np.zeros([self.num_agent, self.action_space.shape[0]])
         self.intergral = np.zeros([self.num_agent, self.action_space.shape[0]])
-        hist_size = self.action_space.shape[0] + 4 
-        self.hist_obs = np.zeros([self.hist_len, self.num_agent, hist_size])
-        # init state
-        if self.last_fail and not self.first_time:
-            need_regenerate = np.random.rand() < 1.
-        else:
-            need_regenerate = True
-        regenerate = True
-        while regenerate:
-            self.contact_time = 1
-            self.prev_output = np.zeros([self.num_agent, self.action_space.shape[0]])
-            if need_regenerate:
-                self.init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
-                self.init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
-            init_obs_z = np.ones([self.num_obs, 1]) * 0.55
-            obs_p = np.concatenate([self.init_obs_pos, self.init_obs_yaw, init_obs_z], axis=-1).flatten()
-            if need_regenerate:
-                self.init_pos = (np.random.random([self.num_agent, 2])-.5) * self.msize
-                self.init_yaw = np.random.random([self.num_agent, 1]) * np.pi * 2.
-            init_z = np.ones([self.num_agent, 1]) * 0.2
-            min_dist = 0.
-            while min_dist < 1.:
-                if need_regenerate:
-                    self.goal = (np.random.random([self.num_agent, 2])-.5) * self.msize 
-                if self.num_obs==0:
-                    break
-                dist = np.linalg.norm(self.init_obs_pos-self.goal, axis=-1)
-                min_dist = np.min(dist)
-            dog_p = np.concatenate([self.init_pos, self.init_yaw, init_z], axis=-1).flatten()
-            qpos = np.concatenate([dog_p, obs_p, self.goal.flatten()])
-            self.set_state(np.array(qpos), np.zeros_like(qpos))
-            for _ in range(self.warm_step):
-                self._do_simulation(self.last_cmd.copy(), self.frame_skip)
-            self.t = 0.
-            regenerate = self._get_done()
-        if need_regenerate:
-            self.obs_map = self._get_obs_map(self.init_obs_pos, self.init_obs_yaw)
-            self.cost_map = self._get_cost_map(self.obs_map)
-            # set max_time
-            dist = np.linalg.norm(self.init_pos-self.goal, axis=-1).mean()
-            self.max_time = np.clip(dist*4., 5., 1e6)
-        # update RL_info
-        self.history_img = np.zeros([self.num_agent, *self.observation_space[1].shape])
-        obs = self._get_obs()
+        self.hist_vec_obs = np.zeros([self.hist_len-1, self.num_agent, 7])
+        self.hist_img_obs = np.zeros([self.hist_len-1, self.num_agent, *self.observation_space[1].shape[-2:]])
+        self.prev_output = np.zeros([self.num_agent, self.action_space.shape[0]])
+        # regenerate env
+        init_load_pos = (np.random.random(2)-.5) * self.msize 
+        init_load_yaw = np.random.random(1) * 2 * np.pi 
+        init_load_z = np.ones(1) * 0.55
+        init_load = np.concatenate([init_load_pos, init_load_yaw, init_load_z], axis=-1).flatten()
+        init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
+        init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
+        init_obs_z = np.ones([self.num_obs, 1]) * 0.55
+        init_obs = np.concatenate([init_obs_pos, init_obs_yaw, init_obs_z], axis=-1).flatten()
+        idx = 4+4*self.num_agent+4*self.num_obs
+        init_wall = self.sim.data.qpos.copy()[idx:idx+12]
+        init_dog_load_len = np.random.random([self.num_agent, 1]) * 0.25 + 0.75
+        init_dog_load_yaw = np.random.random([self.num_agent, 1]) * np.pi * 2
+        init_dog_yaw = np.random.random([self.num_agent, 1]) * np.pi * 2.
+        init_dog_pos = init_load_pos.reshape([1,2])
+        init_dog_pos += self._get_toward(init_dog_load_yaw)[0] * init_dog_load_len
+        init_dog_pos += self._get_toward(init_dog_yaw)[0] * 0.3
+        init_dog_z = np.ones([self.num_agent, 1]) * 0.3
+        init_dog = np.concatenate([init_dog_pos, init_dog_yaw, init_dog_z], axis=-1).flatten()
+        self.goal = (np.random.random(2)-.5) * self.msize
+        qpos = np.concatenate([init_load, init_dog, init_obs, init_wall, self.goal.flatten()])
+        self.set_state(np.array(qpos), np.zeros_like(qpos))
+        if self._get_done()[0]:
+            return self.reset()
+        for _ in range(self.warm_step):
+            self._do_simulation(self.last_cmd.copy(), self.frame_skip)
+        # regenerate if done
+        if self._get_done()[0]:
+            return self.reset()
+        # init variables
+        load_pos = self.sim.data.qpos.copy()[:2]
+        dist = np.linalg.norm(load_pos-self.goal, axis=-1)
+        self.max_time = np.clip(dist*4., 5., 1e6)
+        self.t = 0.
+        self.obs_map = self._get_obs_map(init_obs_pos, init_obs_yaw)
+        # RL_info
+        cur_obs, observation  = self._get_obs()
         info = dict()
         # post process
-        self._post_update(self.last_cmd.copy(), obs)
-        return obs, info
+        self._post_update(self.last_cmd, cur_obs)
+        return observation, info
 
     def step(self, cmd):
         # pre process
@@ -112,12 +106,47 @@ class NavigationEnv(BaseEnv):
         torque = self._do_simulation(action, self.frame_skip)
         self.t += self.dt
         # update RL info
-        observation = self._get_obs()
-        terminated = self._get_done()
-        reward, info = self._get_reward(torque, terminated)
+        cur_obs, observation = self._get_obs()
+        terminated, contact_done = self._get_done()
+        reward, info = self._get_reward(terminated)
         # post process
-        self._post_update(command, observation)
+        self._post_update(command, cur_obs)
         return observation, reward, terminated, False, info
+
+    def _get_done(self): 
+        # contact done
+        for i in range(self.sim.data.ncon):
+            con = self.sim.data.contact[i]
+            obj1 = self.sim.model.geom_id2name(con.geom1)
+            obj2 = self.sim.model.geom_id2name(con.geom2)
+            if obj1=="floor" or obj2=="floor":
+                continue
+            return True, True
+        # out of time
+        if self.t > self.max_time:
+            return True, False 
+        return False, False
+
+    def _get_reward(self, terminated):
+
+        rewards = []
+        # pre-process
+        weights = np.array([1., 0.05, 0.1])
+        weights = weights / weights.sum()
+        state = self.sim.data.qpos.copy().flatten()
+        # goal_distance rewards
+        dist = np.linalg.norm(state[:2]-self.goal)
+        rewards.append(self.prev_dist - dist)
+        # goal reach rewards
+        rewards.append(dist<0.5)
+        # done penalty
+        rewards.append(-terminated*1.)
+        # print(rewards)
+        rew_dict = dict()
+        rew_dict["goal_distance"] = rewards[0]
+        rew_dict["goal_reach"] = rewards[1]
+        rew_dict["con_penalty"] = rewards[2]
+        return np.dot(np.array(rewards), weights), rew_dict
 
     def _get_toward(self, theta):
         # theta : [env_num, 1]
@@ -199,20 +228,6 @@ class NavigationEnv(BaseEnv):
         obs_map[:,:,-hmlen-1:] = 1.
         return obs_map 
 
-    def _get_cost_map(self, obstacle_map):
-        hmlen = (self.lmlen*3-1) // 2
-        cost_map = np.zeros_like(obstacle_map[:,hmlen:-hmlen,hmlen:-hmlen])
-        obs_map = obstacle_map[:,hmlen:-hmlen,hmlen:-hmlen].astype('bool')
-        times = 35
-        for _ in range(times):
-            tmp_map = obs_map.copy().astype('bool')
-            obs_map[:,:-1,:] |= tmp_map[:,1:,:]
-            obs_map[:,1:,:] |= tmp_map[:,:-1,:]
-            obs_map[:,:,:-1] |= tmp_map[:,:,1:]
-            obs_map[:,:,1:] |= tmp_map[:,:,:-1]
-            cost_map += obs_map / times
-        return cost_map
-
     def _do_simulation(self, action, n_frames):
         """ 
         (input) action: the desired velocity of the agent. shape=(num_agent, action_size)
@@ -234,7 +249,7 @@ class NavigationEnv(BaseEnv):
         (input) dt: 
         (output) torque
         """
-        state = self.sim.data.qvel.copy()[:self.num_agent*4]
+        state = self.sim.data.qvel.copy()[4:4+self.num_agent*4]
         cur_vel = state.reshape([self.num_agent, 4])[:,:3]
         error = target_vel - cur_vel
         self.intergral += error * self.ki * dt
@@ -245,71 +260,91 @@ class NavigationEnv(BaseEnv):
         self.prev_output = cur_vel.copy()
         return torque
 
-    def _post_update(self, cmd, observation):
+    def _post_update(self, cmd, cur_obs):
         """
         restore the history information
         """
-        state = self.sim.data.qpos.copy()[:self.num_agent*4]
-        state = state.reshape([self.num_agent, 4])
-        pos, yaw = state[:,:2], state[:,2:3]
-        sin_yaw, cos_yaw = np.sin(yaw), np.cos(yaw)
-        self.hist_obs[:-1] = self.hist_obs[1:]
+        load_pos = self.sim.data.qpos.copy()[0:2].reshape([1,2])
+        load_pos = load_pos - self.goal.reshape([1,2])
+        load_pos = np.repeat(load_pos, 0, self.num_agent)
+        load_yaw = self.sim.data.qpos.copy()[2:3].reshape([1,1])
+        load_yaw = np.repeat(load_yaw, 0, self.num_agent)
+        load_sin = np.sin(load_yaw)
+        load_cos = np.cos(load_yaw)
+        dog_state = self.sim.data.qpos.copy()[4:4+4*self.num_agent]
+        dog_state = dog_state.reshape([self.num_agent, 4])
+        dog_pos = dog_state[:,0:2]
+        dog_pos = dog_pos - self.goal.reshape([1,2])
+        dog_yaw = dog_state[:,2:3]
+        dog_sin = np.sin(dog_yaw)
+        dog_cos = np.cos(dog_yaw)
         cmd = cmd.reshape([self.num_agent, -1])
-        self.hist_obs[-1] = np.concatenate([pos-self.goal, sin_yaw, cos_yaw, cmd], axis=-1)
-        self.prev_dist = np.linalg.norm(pos-self.goal)
-        self.first_time = False
-        self.history_img[:,1:] = self.history_img[:,:-1]
-        self.history_img[:,0] = observation[1][:,0].copy()
-        self.total_cnt += 1
+        cur_vec_obs = np.concatenate([
+            load_pos, load_sin, load_cos, 
+            dog_pos, dog_sin, dog_cos, cmd
+        ], axis=-1)
+        self.hist_vec_obs[:-1] = self.hist_vec_obs[1:]
+        self.hist_vec_obs[-1] = cur_vec_obs
+        self.hist_img_obs[:-1] = self.hist_img_obs[1:]
+        self.hist_img_obs[-1] = cur_obs[1].copy()
+        load_pos = self.sim.data.qpos.copy()[0:2]
+        self.prev_dist = np.linalg.norm(load_pos-self.goal)
 
     def _get_obs(self):
         
         # vec_obs
-        state = self.sim.data.qpos.copy()[:self.num_agent*4]
-        state = state.reshape([self.num_agent, 4])
-        pos, yaw = state[:,:2], state[:,2:3]
-        sin_yaw, cos_yaw = np.sin(yaw), np.cos(yaw)
-        time = np.array([[self.max_time-self.t]]).repeat(self.num_agent,1) # 
-        cur_obs = np.concatenate([pos-self.goal, sin_yaw, cos_yaw], axis=-1)
-        cur_obs += (np.random.random(cur_obs.shape)-.5) * self.random_scale
-        cur_obs = np.concatenate([cur_obs, time], axis=-1)
-        hist_obs = self.hist_obs.copy().transpose(1,0,2).reshape([self.num_agent, -1])
-        vec_obs = np.concatenate([cur_obs, hist_obs], axis=-1) #
+        load_pos = self.sim.data.qpos.copy()[0:2].reshape([1,2])
+        load_pos = load_pos - self.goal.reshape([1,2])
+        load_yaw = self.sim.data.qpos.copy()[2:3].reshape([1,1])
+        load_sin = np.sin(load_yaw)
+        load_cos = np.cos(load_yaw)
+        dog_state = self.sim.data.qpos.copy()[4:4+4*self.num_agent]
+        dog_state = dog_state.reshape([self.num_agent, 4])
+        dog_pos = dog_state[:,0:2]
+        dog_pos = dog_pos - self.goal.reshape([1,2])
+        dog_yaw = dog_state[:,2:3]
+        dog_sin = np.sin(dog_yaw)
+        dog_cos = np.cos(dog_yaw)
+        cur_vec_obs = np.concatenate([
+            load_pos, load_sin, load_cos, 
+            dog_pos, dog_sin, dog_cos
+        ], axis=-1)
+        hist_obs = self.hist_vec_obs.copy()
+        hist_obs = hist_obs.transpose(1,0,2)
+        hist_obs = hist_obs.reshape([self.num_agent, -1])
+        vec_observation = np.concatenate([cur_vec_obs, hist_obs], axis=-1)
         # img_obs
-        coor = ((pos/self.msize+.5)*self.mlen).astype('long')
-        x1, x2 = coor[:,0], coor[:,0]+self.lmlen*3
-        y1, y2 = coor[:,1], coor[:,1]+self.lmlen*3
-        local_maps = []
+        cur_img_obs = []
         for i in range(self.num_agent):
-            local_map = []
-            m1 = self.obs_map[0, x1[i]:x2[i], y1[i]:y2[i]]
-            if (np.array(m1.shape) != np.array(self.observation_space[1].shape[1:])*3).any():
-                m1 = np.zeros([self.lmlen*3,self.lmlen*3])
-            m1 = m1[0::3,0::3] + m1[1::3,0::3] + m1[2::3,0::3] + \
-                m1[0::3,1::3] + m1[1::3,1::3] + m1[2::3,1::3] + \
-                m1[0::3,2::3] + m1[1::3,2::3] + m1[2::3,2::3] 
-            local_map.append((m1>1)*1.)
-            # x_axis = np.arange(self.lmlen) + .5 - (self.lmlen-1)//2
-            # y_axis = np.arange(self.lmlen) + .5 - (self.lmlen-1)//2
-            # y_map, x_map = np.meshgrid(y_axis, x_axis)
-            # m2 = x_map*np.cos(yaw[i,0])+y_map*np.sin(yaw[i,0])/np.sqrt(x_map**2+y_map**2)
-            # local_map.append(m2)
-            # import imageio
-            # imageio.imwrite("../envs/mujoco/assets/map.png",local_map[0])
-            local_maps.append(local_map)
-        local_maps = np.array(local_maps).reshape([self.num_agent,1,*self.observation_space[1].shape[1:]])
-        img_obs = np.concatenate([
-            local_maps,
-            self.history_img[:,:-1], 
-        ], axis=1)
-        # import imageio
-        # imageio.imwrite("../envs/mujoco/assets/map.png",img_obs[0,0])
+            idx = 4 * (i+1)
+            dog_pos = self.sim.data.qpos.copy()[idx:idx+2]
+            coor = ((dog_pos/self.msize+.5)*self.mlen).astype('long')
+            x1, x2 = coor[0], coor[0]+self.lmlen*3
+            y1, y2 = coor[1], coor[1]+self.lmlen*3
+            local_map = self.obs_map[0, x1:x2, y1:y2]
+            zeros_map = np.zeros([self.lmlen*3,self.lmlen*3])
+            if (np.array(local_map.shape) != np.array(zeros_map.shape)).any():
+                local_map = zeros_map
+            else:
+                local_map = local_map[0::3,0::3] + local_map[1::3,0::3] + local_map[2::3,0::3] + \
+                    local_map[0::3,1::3] + local_map[1::3,1::3] + local_map[2::3,1::3] + \
+                    local_map[0::3,2::3] + local_map[1::3,2::3] + local_map[2::3,2::3] 
+            cur_img_obs.append((local_map>0.)*1.)
+        cur_img = np.expand_dims(cur_img_obs, 1)
+        hist_img = self.hist_img_obs.copy()
+        hist_img = hist_img.transpose(1,0,2,3)
+        img_observation = np.concatenate([cur_img, hist_img], axis=1)
 
-        return vec_obs, img_obs
+        # all_obs
+        cur_obs = (cur_vec_obs, cur_img_obs)
+        observation = (vec_observation, img_observation)
+        # import imageio
+        # imageio.imwrite("../envs/mujoco/assets/map.png",cur_img_obs[0])
+        return cur_obs, observation
     
     def _local_to_global(self, input_action):
 
-        state = self.sim.data.qpos.flat.copy()[:self.num_agent*4]
+        state = self.sim.data.qpos.flat.copy()[4:4+self.num_agent*4]
         state = state.reshape([self.num_agent,4])
         tow, ver = self._get_toward(state[:,2:3])
         input_action = input_action.reshape([self.num_agent,3])
@@ -317,172 +352,18 @@ class NavigationEnv(BaseEnv):
         global_action = tow * local_action[:,:1] + ver * local_action[:,1:]
         output_action = np.concatenate([global_action, input_action[:,2:].copy()], axis=-1)
         return output_action
-
-    def _get_done(self): 
-        max_con_time = 1
-        self.last_fail = True
-        self.cont_done = True
-        state = self.sim.data.qpos.copy()[:self.num_agent*4]
-        state = state.reshape([self.num_agent, 4])
-        pos, yaw = state[:,:2], state[:,2:3]  
-        if (abs(pos)>5.).any():
-            self.contact_time += 1
-            if self.contact_time > max_con_time:
-                return True
-        for i in range(self.sim.data.ncon):
-            con = self.sim.data.contact[i]
-            obj1 = self.sim.model.geom_id2name(con.geom1)
-            obj2 = self.sim.model.geom_id2name(con.geom2)
-            if obj1=="floor" or obj2=="floor":
-                continue
-            self.contact_time += 1
-            if self.contact_time > max_con_time:
-                return True
-        self.cont_done = False
-        if self.t > self.max_time:
-            return True
-        self.last_fail = False
-        dist = np.linalg.norm(state[:,:2]-self.goal)
-        # if dist < 0.5:
-        #     return True
-        return False
-
-    def _get_reward(self, torque, terminated):
-
-        # rewards = []
-        # # pre-process
-        # weights = np.array([1.])
-        # state = self.sim.data.qpos.copy().flatten()[:self.num_agent*4]
-        # state = state.reshape([self.num_agent, 4])
-        # dist = np.linalg.norm(state[:,:2]-self.goal)
-        # rewards.append(np.exp(-10. * dist))
-        # # total rew 
-        # return np.dot(np.array(rewards), weights) 
-
-        rewards = []
-        # pre-process
-        w = np.clip(1-self.total_cnt/1e6, 0.1, 1)
-        weights = np.array([1., 1., 0., 0., 0., 0.1])
-        weights = weights / weights.sum()
-        state = self.sim.data.qpos.copy().flatten()[:self.num_agent*4]
-        state = state.reshape([self.num_agent, 4])
-        # goal distance rewards
-        dist = np.linalg.norm(state[:,:2]-self.goal)
-        rewards.append(self.prev_dist - dist)
-        # goal reach rewards
-        if dist < 0.5:
-            # dt = (self.max_time - self.t)//self.dt
-            rewards.append(0.05)#*(1-0.99**dt)/0.01)
-        else:
-            rewards.append(0.)
-        # # goal stay rewards 
-        # if dist < 0.25:
-        #     rewards.append(0.1) 
-        # elif dist < 1.:
-        #     rewards.append(0.02 + (1.-dist) / 0.75 * 0.08) 
-        # else:
-        #     rewards.append(0.) 
-        # goal_rot_rew
-        pos = state[:,:2]
-        yaw = state[:,2:3]
-        dx = self.goal - pos
-        tow = np.concatenate([np.cos(yaw), np.sin(yaw)], axis=-1)
-        cos = np.sum(dx*tow,-1) / np.linalg.norm(dx, axis=-1)
-        cos = np.clip(cos, -1, 0.7)
-        rewards.append(cos.mean())
-        # cost_map_rew
-        coor = ((pos/self.msize+.5)*self.mlen).astype('long')
-        for i in range(self.num_agent):
-            if (coor[i]>=0).all() and (coor[i]<self.mlen).all():
-                r = np.exp(-self.cost_map[0,coor[i,0], coor[i,1]]*5.)-1
-            else:
-                r = 0.
-        rewards.append(r)
-        # dist rew
-        dist = np.linalg.norm(state[:,:2]-self.goal)
-        rewards.append(np.exp(-dist))
-        # done penalty
-        rewards.append(-self.cont_done * 1.)
-        # total rew 
-        # return rewards[-1] * rewards[-2]
-        # print(rewards)
-        rew_dict = dict()
-        rew_dict["goal_distance"] = rewards[0]
-        rew_dict["goal_reach"] = rewards[1]
-        rew_dict["goal_rot"] = rewards[2]
-        rew_dict["cost_map"] = rewards[3]
-        rew_dict["dist_rew"] = rewards[4]
-        rew_dict["con_penalty"] = rewards[5]
-        return np.dot(np.array(rewards), weights), rew_dict
-
-        # rewards = []
-        # # pre-process
-        # weights = np.array([1., 1.])
-        # state = self.sim.data.qpos.copy().flatten()[:self.num_agent*4]
-        # state = state.reshape([self.num_agent, 4])
-        # # goal distance rewards
-        # dist = np.linalg.norm(state[:,:2]-self.goal)
-        # rewards.append(self.prev_dist - dist)
-        # # goal stay rewards 
-        # if dist < 0.25:
-        #     rewards.append(0.1) 
-        # elif dist < 1.:
-        #     rewards.append(0.02 + (1.-dist) / 0.75 * 0.08) 
-        # else:
-        #     rewards.append(0.) 
-        # # total rew 
-        # return np.dot(np.array(rewards), weights)
-
-        # weight
-        # rewards = []
-        # scales = np.array([
-        #         5., # self.s_goal_pos,
-        #         5., # self.s_goal_rot,
-        #         20., #self.s_vel_rew,
-        #         10., #self.s_smooth,
-        #         10., #self.s_collision_penalty
-        # ])
-        # weights = np.array(
-        #     [
-        #         500., # self.w_goal_pos,
-        #         500., # self.w_goal_rot,
-        #         20., #self.w_vel_rew,
-        #         5., #self.w_smooth,
-        #         100., #self.w_collision_penalty
-        #     ]
-        # )
-        # weights = weights / np.sum(weights)
-        # # state
-        # state = self.sim.data.qpos.copy().flatten()[:self.num_agent*4]
-        # state = state.reshape([self.num_agent, 4])
-        # pos, yaw = state[:,:2], state[:,2:3]
-        # state = self.sim.data.qvel.copy().flatten()[:self.num_agent*4]
-        # state = state.reshape([self.num_agent, 4])
-        # vel, rvel = state[:,:2], state[:,2:3]
-        # # goal_pos_rew
-        # dist = np.linalg.norm(state[:,:2]-self.goal).mean()
-        # dist = np.clip(dist, 0.5, np.inf) - 0.5
-        # rewards.append(-dist.mean())
-        # # goal_rot_rew
-        # dx = self.goal - pos
-        # tow = np.concatenate([np.cos(yaw), np.sin(yaw)], axis=-1)
-        # cos = np.sum(dx*tow,-1) / np.linalg.norm(dx, axis=-1)
-        # cos = np.clip(cos, -1, 0.7) - 0.7
-        # rewards.append(cos.mean())
-        # # vel_rew
-        # vel_norm = np.linalg.norm(vel, axis=-1).mean()
-        # vel_rew = 0. if vel_norm>1e-2 else -1e6
-        # rewards.append(vel_rew)
-        # # smooth_rew
-        # lin_vel_err = np.linalg.norm(action[:,:2]-vel,axis=-1).mean()
-        # ang_vel_err = np.linalg.norm(action[:,2:3]-vel,axis=-1).mean()
-        # vel_err = lin_vel_err + 0.5 * ang_vel_err
-        # rewards.append(-vel_err)
-        # # collision_rew
-        # collision_rew = -1e6 if terminated else 0.
-        # rewards.append(collision_rew)
-        # # total rew 
-        # rew = np.array(rewards) * scales
-        # rew = np.dot(np.exp(rew), weights)
-        # return rew
         
+    def _get_cost_map(self, obstacle_map):
+        hmlen = (self.lmlen*3-1) // 2
+        cost_map = np.zeros_like(obstacle_map[:,hmlen:-hmlen,hmlen:-hmlen])
+        obs_map = obstacle_map[:,hmlen:-hmlen,hmlen:-hmlen].astype('bool')
+        times = 35
+        for _ in range(times):
+            tmp_map = obs_map.copy().astype('bool')
+            obs_map[:,:-1,:] |= tmp_map[:,1:,:]
+            obs_map[:,1:,:] |= tmp_map[:,:-1,:]
+            obs_map[:,:,:-1] |= tmp_map[:,:,1:]
+            obs_map[:,:,1:] |= tmp_map[:,:,:-1]
+            cost_map += obs_map / times
+        return cost_map
+    

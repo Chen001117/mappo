@@ -126,4 +126,4 @@ class BaseEnv(gym.Env):
             start = time.time()
             self._get_viewer(mode).render()
             wait_time = max(self.dt-time.time()+start, 0.)
-            time.sleep(wait_time)
+            # time.sleep(wait_time)
