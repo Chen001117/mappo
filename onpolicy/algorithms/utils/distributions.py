@@ -108,7 +108,7 @@ class DiagGaussian(nn.Module):
         action_mean = self.fc_mean(x) * self.action_range + self.action_mid
         action_logstd = self.fc_std(x) 
         action_std = torch.clamp(action_logstd, -10, 2).exp() #* self.action_range
-        # print(action_mean, action_std)
+        print(action_mean, action_std)
         # zeros = torch.zeros(action_mean.size())
         # if x.is_cuda:
         #     zeros = zeros.cuda()

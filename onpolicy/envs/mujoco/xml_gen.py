@@ -20,7 +20,7 @@ def get_xml(dog_num=1, obs_num=1):
       <joint axis="0 1 0" limited="false" name="dog_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="dog_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="dog_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="8." size="0.25 0.25" name="dog" type="cylinder" rgba="0.8 0.4 0. 1" friction="1 0.005 0.001" />
+      <geom mass="8." size="0.325 0.15 0.15" name="dog" type="box" rgba="0.8 0.4 0. 1" friction="1 0.005 0.001" />
       </body>
     """
     # <geom mass="13" size="0.325 0.15 0.15" name="dog" type="box" rgba="0.8 0.4 0. 1" friction="1 0.005 0.0001" />
