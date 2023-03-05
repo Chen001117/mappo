@@ -10,13 +10,13 @@ class NavigationEnv(BaseEnv):
     def __init__(self, **kwargs):
         # hyper-para
         self.max_time = 15
-        self.lmlen = 29 # local map length (pixels)
+        self.lmlen = 55 # local map length (pixels)
         assert self.lmlen%2==1, "The length of the local map should be an odd number"
-        self.warm_step = 4 # 
+        self.frame_skip = 50
+        self.warm_step = 100//self.frame_skip # 
         self.msize = 10. # map size (m)
         self.mlen = 400 # global map length (pixels)
         self.random_scale = 0.01 # add noise to the observed coordinate (m)
-        self.frame_skip = 10 
         self.num_agent = 1
         self.num_obs = 15
         self.hist_len = 4
@@ -95,7 +95,7 @@ class NavigationEnv(BaseEnv):
             self.cost_map = self._get_cost_map(self.obs_map)
             # set max_time
             dist = np.linalg.norm(self.init_pos-self.goal, axis=-1).mean()
-            self.max_time = np.clip(dist*4., 5., 1e6)
+            self.max_time = np.clip(5.+dist*4., 5., 1e6)
         # update RL_info
         self.history_img = np.zeros([self.num_agent, *self.observation_space[1].shape])
         obs = self._get_obs()
@@ -109,12 +109,12 @@ class NavigationEnv(BaseEnv):
         command = np.clip(cmd, self.action_space.low, self.action_space.high)
         action = self._local_to_global(command)
         # action = command.copy()
-        torque = self._do_simulation(action, self.frame_skip)
+        contact = self._do_simulation(action, self.frame_skip)
         self.t += self.dt
         # update RL info
         observation = self._get_obs()
-        terminated = self._get_done()
-        reward, info = self._get_reward(torque, terminated)
+        terminated = self._get_done() if not contact else True
+        reward, info = self._get_reward(terminated)
         # post process
         self._post_update(command, observation)
         return observation, reward, terminated, False, info
@@ -225,7 +225,27 @@ class NavigationEnv(BaseEnv):
             self.sim.data.ctrl[:] = ctrl
             self.sim.step()
             ctrls.append(ctrl)
-        return np.array(ctrls)
+            max_con_time = 1    
+            state = self.sim.data.qpos.copy()[:self.num_agent*4]
+            state = state.reshape([self.num_agent, 4])
+            pos, yaw = state[:,:2], state[:,2:3]  
+            if (abs(pos)>5.).any():
+                self.contact_time += 1
+                if self.contact_time > max_con_time:
+                    self.cont_done = True
+                    return True
+            for i in range(self.sim.data.ncon):
+                con = self.sim.data.contact[i]
+                obj1 = self.sim.model.geom_id2name(con.geom1)
+                obj2 = self.sim.model.geom_id2name(con.geom2)
+                if obj1=="floor" or obj2=="floor":
+                    continue
+                self.contact_time += 1
+                if self.contact_time > max_con_time:
+                    self.cont_done = True
+                    return True
+        ctrls = np.array(ctrls)
+        return False
 
     def _pd_contorl(self, target_vel, dt):
         """
@@ -303,7 +323,7 @@ class NavigationEnv(BaseEnv):
             self.history_img[:,:-1], 
         ], axis=1)
         # import imageio
-        # imageio.imwrite("../envs/mujoco/assets/map.png",img_obs[0,0])
+        # imageio.imwrite("map.png", (img_obs[0,0]*255).astype('uint8'))
 
         return vec_obs, img_obs
     
@@ -342,12 +362,12 @@ class NavigationEnv(BaseEnv):
         if self.t > self.max_time:
             return True
         self.last_fail = False
-        dist = np.linalg.norm(state[:,:2]-self.goal)
+        # dist = np.linalg.norm(state[:,:2]-self.goal)
         # if dist < 0.5:
         #     return True
         return False
 
-    def _get_reward(self, torque, terminated):
+    def _get_reward(self, terminated):
 
         # rewards = []
         # # pre-process
@@ -361,8 +381,7 @@ class NavigationEnv(BaseEnv):
 
         rewards = []
         # pre-process
-        w = np.clip(1-self.total_cnt/1e6, 0.1, 1)
-        weights = np.array([1., 1., 0., 0., 0., 0.1])
+        weights = np.array([1., 1., 0., 0., 0., 0.])
         weights = weights / weights.sum()
         state = self.sim.data.qpos.copy().flatten()[:self.num_agent*4]
         state = state.reshape([self.num_agent, 4])
@@ -372,7 +391,7 @@ class NavigationEnv(BaseEnv):
         # goal reach rewards
         if dist < 0.5:
             # dt = (self.max_time - self.t)//self.dt
-            rewards.append(0.05)#*(1-0.99**dt)/0.01)
+            rewards.append(self.frame_skip/100*0.5)#*(1-0.99**dt)/0.01)
         else:
             rewards.append(0.)
         # # goal stay rewards 

@@ -10,21 +10,21 @@ class CNNBase(nn.Module):
         active_func = [nn.Tanh(), nn.ReLU()][self._use_ReLU]
 
         channel = obs_shape[0] # 2
-        input_width = obs_shape[1] # 29
-        input_height = obs_shape[2] # 29
-        assert input_width==29 and input_height==29
+        input_width = obs_shape[1] # 55 
+        input_height = obs_shape[2] # 55 
+        assert input_width==55 and input_height==55
 
         self.cnn = nn.Sequential(
-            nn.Conv2d(channel,self.hidden_size//4,3,2,1),
+            nn.Conv2d(channel,self.hidden_size//4,5,3,0),
             nn.BatchNorm2d(self.hidden_size//4),
             active_func,
-            nn.Conv2d(self.hidden_size//4,self.hidden_size//2,3,2,1),
+            nn.Conv2d(self.hidden_size//4,self.hidden_size//2,3,2,0),
             nn.BatchNorm2d(self.hidden_size//2),
             active_func,
-            nn.Conv2d(self.hidden_size//2,self.hidden_size,3,2,1),
+            nn.Conv2d(self.hidden_size//2,self.hidden_size,3,2,0),
             nn.BatchNorm2d(self.hidden_size),
             active_func,
-            nn.Conv2d(self.hidden_size,self.hidden_size,4,1,0),
+            nn.AvgPool2d(3, stride=1),
             nn.Flatten()
             # active_func,
         )
