@@ -17,7 +17,7 @@ def get_xml(dog_num=1, obs_num=1):
       <joint axis="0 1 0" limited="false" name="load_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="load_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="load_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="1." size="0.3 0.3 0.3" name="load" type="box" rgba="0.55 0.27 0.07 1." friction="1 0.005 0.001" />
+      <geom mass="0.1" size="0.3 0.3 0.3" name="load" type="box" rgba="0.55 0.27 0.07 1." friction="1 0.005 0.001" />
     </body>
     """
     for i in range(dog_num):
@@ -107,8 +107,8 @@ def get_xml(dog_num=1, obs_num=1):
        strings += \
     """
   <actuator>
-    <motor ctrllimited="true" ctrlrange="-100.0 100.0" joint=dog{:02d}_axisx/>
-    <motor ctrllimited="true" ctrlrange="-100.0 100.0" joint="dog{:02d}_axisy"/>
+    <motor ctrllimited="true" ctrlrange="-500.0 500.0" joint=dog{:02d}_axisx/>
+    <motor ctrllimited="true" ctrlrange="-500.0 500.0" joint="dog{:02d}_axisy"/>
     <motor ctrllimited="true" ctrlrange="-100.0 100.0" joint="dog{:02d}_rootz"/>
   </actuator>
     """.format(i,i,i)

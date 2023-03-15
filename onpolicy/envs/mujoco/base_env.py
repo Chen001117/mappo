@@ -32,7 +32,7 @@ class BaseEnv(gym.Env):
         self._viewers = {}
         self.viewer = None
         self.camera_name = "camera"
-        self.camera_id = 2
+        self.camera_id = None # 2
         
 
     def seed(self, seed):
