@@ -69,13 +69,13 @@ class Runner(object):
         from onpolicy.algorithms.r_mappo.r_mappo import R_MAPPO as TrainAlgo
         from onpolicy.algorithms.r_mappo.algorithm.rMAPPOPolicy import R_MAPPOPolicy as Policy
 
-        share_observation_space = self.envs.share_observation_space[0] if self.use_centralized_V else self.envs.observation_space[0]
+        # share_observation_space = self.envs.share_observation_space[0] if self.use_centralized_V else self.envs.observation_space[0]
 
         # policy network
         self.policy = Policy(
             self.all_args,
             self.envs.observation_space[0],
-            share_observation_space,
+            self.envs.share_observation_space[0],
             self.envs.action_space[0],
             device = self.device
         )
@@ -90,7 +90,7 @@ class Runner(object):
         self.buffer = SharedReplayBuffer(self.all_args,
                                         self.num_agents,
                                         self.envs.observation_space[0],
-                                        share_observation_space,
+                                        self.envs.share_observation_space[0],
                                         self.envs.action_space[0])
 
     def run(self):

@@ -11,7 +11,7 @@ from onpolicy.utils.util import tile_images
 class MARLWrapper(gym.Wrapper):
     def __init__(self, env):
         gym.Wrapper.__init__(self, env)
-        self.share_observation_space = [self.observation_space]
+        self.share_observation_space = [self.share_observation_space]
         self.observation_space = [self.observation_space]
         self.action_space = [self.action_space]
 
@@ -26,13 +26,13 @@ class MARLWrapper(gym.Wrapper):
         #     return np.expand_dims(obs_n, 0)
         
     def step(self, actions):
-        obs_n, r, d, _, info_n = self.env.step(actions[0])
+        obs_n, r, d, _, info_n = self.env.step(actions)
         # if type(o) == tuple:
         #     obs_n = np.expand_dims(o[0], 0), np.expand_dims(o[1], 0)
         # else:
         #     obs_n = np.expand_dims(o, 0)
-        reward_n = np.array([[r]])
-        done_n = np.array([d])
+        reward_n = np.array([[r] for _ in range(self.num_agent)])
+        done_n = np.array([d for _ in range(self.num_agent)])
         return obs_n, reward_n, done_n, info_n
 
 class CloudpickleWrapper(object):
@@ -270,29 +270,36 @@ class TupleSubprocVecEnv(SubprocVecEnv):
         SubprocVecEnv.__init__(self, env_fns, spaces=None, eval=False)
 
     def step_wait(self):
-        obs_vec, obs_img = [], []
+        obs_vec, obs_img, sta_vec, sta_img = [], [], [], []
         dones, infos, rews = [], [], []
         for remote in self.remotes:
             obs, r, d, i = remote.recv()
-            o_vec, o_img = map(np.array, zip(obs))
+            o_vec, o_img, s_vec, s_img = map(np.array, zip(obs))
             obs_vec.append(o_vec)
             obs_img.append(o_img)
+            sta_vec.append(s_vec)
+            sta_img.append(s_img)
             dones.append(d)
             infos.append(i)
             rews.append(r)
         self.waiting = False
-        return (np.concatenate(obs_vec), np.concatenate(obs_img)), np.stack(rews), np.stack(dones), infos
+        observation = (
+            np.concatenate(obs_vec), np.concatenate(obs_img),
+            np.concatenate(sta_vec), np.concatenate(sta_img),
+        )
+        return observation, np.stack(rews), np.stack(dones), infos
 
     def reset(self):
         for remote in self.remotes:
             remote.send(('reset', None))
-        obs_vec = []
-        obs_img = []
+        obs_vec, obs_img, sta_vec, sta_img = [], [], [], []
         for remote in self.remotes:
-            o_vec, o_img = remote.recv()
+            o_vec, o_img, s_vec, s_img = remote.recv()
             obs_vec.append(o_vec)
             obs_img.append(o_img)
-        return np.stack(obs_vec), np.stack(obs_img)
+            sta_vec.append(s_vec)
+            sta_img.append(s_img)
+        return np.stack(obs_vec), np.stack(obs_img), np.stack(sta_vec), np.stack(sta_img)
 
 def shareworker(remote, parent_remote, env_fn_wrapper, rank):
     parent_remote.close()
@@ -487,16 +494,16 @@ class TupleDummyVecEnv(DummyVecEnv):
         DummyVecEnv.__init__(self, env_fns)
 
     def step_wait(self):
-        results = self.envs[0].step(self.actions[0]) 
+        results = self.envs[0].step(self.actions) 
         obs, rews, dones, infos = results
         if np.all(np.array(dones)):
             obs = self.envs[0].reset()
-        obs_vec, obs_img = map(np.array, zip(obs))
+        obs_vec, obs_img, sta_vec, sta_img = map(np.array, zip(obs))
         rews, dones, infos = map(np.array, zip([rews, dones, infos]))
         self.actions = None
-        return (obs_vec, obs_img), rews, dones, infos
+        return (obs_vec, obs_img, sta_vec, sta_img), rews, dones, infos
 
     def reset(self):
         obs = self.envs[0].reset()
-        obs_vec, obs_img = map(np.array, zip(obs))
-        return obs_vec, obs_img
+        obs_vec, obs_img, sta_vec, sta_img = map(np.array, zip(obs))
+        return obs_vec, obs_img, sta_vec, sta_img

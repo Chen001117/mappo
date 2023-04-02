@@ -88,10 +88,10 @@ class MujocoRunner(Runner):
         # reset env
         obs = self.envs.reset()
         if self.tuple_obs:
-            self.buffer.share_obs_vec[0] = obs[0].copy()
-            self.buffer.share_obs_img[1] = obs[1].copy()
             self.buffer.obs_vec[0] = obs[0].copy()
             self.buffer.obs_img[0] = obs[1].copy()
+            self.buffer.share_obs_vec[0] = obs[2].copy()
+            self.buffer.share_obs_img[1] = obs[3].copy()
         else:
             self.buffer.share_obs[0] = obs.copy()
             self.buffer.obs[0] = obs.copy()
@@ -135,13 +135,14 @@ class MujocoRunner(Runner):
 
     def insert(self, data):
         obs, rewards, dones, infos, values, actions, action_log_probs, rnn_states, rnn_states_critic = data
-
+        
         rnn_states[dones == True] = np.zeros(((dones == True).sum(), self.recurrent_N, self.hidden_size), dtype=np.float32)
         rnn_states_critic[dones == True] = np.zeros(((dones == True).sum(), *self.buffer.rnn_states_critic.shape[3:]), dtype=np.float32)
         masks = np.ones((self.n_rollout_threads, self.num_agents, 1), dtype=np.float32)
         masks[dones == True] = np.zeros(((dones == True).sum(), 1), dtype=np.float32)
         if self.tuple_obs:
-            share_obs = (obs[0].copy(), obs[1].copy())
+            share_obs = (obs[2].copy(), obs[3].copy())
+            obs = (obs[0].copy(), obs[1].copy())
         else:
             share_obs = obs.copy()
         self.buffer.insert(share_obs, obs, rnn_states, rnn_states_critic, actions, action_log_probs, values, rewards, masks)
