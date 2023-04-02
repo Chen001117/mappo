@@ -203,8 +203,8 @@ class MujocoRunner(Runner):
             # Obser reward and next obs
             eval_obs, eval_rewards, eval_dones, eval_infos = self.eval_envs.step(eval_actions_env)
             eval_episode_rewards.append(eval_rewards * (1.-eval_finished))
-            img = self.eval_envs.render("rgb_array")[0]
-            imgs.append(img)
+            # img = self.eval_envs.render("rgb_array")[0]
+            # imgs.append(img)
 
             eval_rnn_states[eval_dones == True] = np.zeros(((eval_dones == True).sum(), self.recurrent_N, self.hidden_size), dtype=np.float32)
             eval_masks = np.ones((self.n_eval_rollout_threads, self.num_agents, 1), dtype=np.float32)
@@ -214,12 +214,12 @@ class MujocoRunner(Runner):
             if eval_finished.all():
                 break
             
-            if (eval_dones[0]).all() and not save_video:
-                save_video = True
-                imgs = np.array(imgs).transpose(0,3,1,2)
-                video = wandb.Video(imgs, fps=10, format="gif",caption="result")
-                wandb.log({"video": video}, step=total_num_steps)
-                imgs = []
+            # if (eval_dones[0]).all() and not save_video:
+            #     save_video = True
+            #     imgs = np.array(imgs).transpose(0,3,1,2)
+            #     video = wandb.Video(imgs, fps=10, format="gif",caption="result")
+            #     wandb.log({"video": video}, step=total_num_steps)
+            #     imgs = []
 
 
         eval_episode_rewards = np.array(eval_episode_rewards)

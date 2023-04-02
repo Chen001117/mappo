@@ -78,7 +78,7 @@ class DiagGaussian(nn.Module):
         #     return init(m, init_method, lambda x: nn.init.constant_(x, 0), gain)
             
         self.fc_mean = nn.Sequential(
-            # nn.Linear(num_inputs, num_outputs)
+            # nn.Linear(num_inputs, num_outputs),
             nn.Linear(num_inputs, self.hidden_size),
             nn.ReLU(),
             nn.Linear(self.hidden_size, self.hidden_size),
@@ -107,8 +107,8 @@ class DiagGaussian(nn.Module):
             self.action_mid = self.action_mid.to(x.device)
         action_mean = self.fc_mean(x) * self.action_range + self.action_mid
         action_logstd = self.fc_std(x) 
-        action_std = torch.clamp(action_logstd.exp(), 0.25, 1e6) #* self.action_range
-        # action_std = self.action_range * 0. + 0.25
+        action_std = torch.clamp(action_logstd.exp(), 0.2, 1.) #* self.action_range
+        # action_std = self.action_range * 0. + 0.2
         # action_logstd = self.fc_std(x) 
         # action_std = torch.clamp(action_logstd, -10, 2).exp() #* self.action_range
         # print(action_mean, action_std)

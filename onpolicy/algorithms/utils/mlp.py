@@ -12,11 +12,11 @@ class MLPBase(nn.Module):
         obs_dim = obs_shape[0]
 
         self.mlp = nn.Sequential(
-            nn.Linear(obs_dim, self.hidden_size),
+            nn.Linear(obs_dim, self.hidden_size*2),
             nn.ReLU(),
-            nn.Linear(self.hidden_size, self.hidden_size),
+            nn.Linear(self.hidden_size*2, self.hidden_size*2),
             nn.ReLU(),
-            nn.Linear(self.hidden_size, self.hidden_size),
+            nn.Linear(self.hidden_size*2, self.hidden_size),
             # active_func,
         )
         # self.feature_norm = nn.LayerNorm(obs_dim)
