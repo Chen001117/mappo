@@ -38,8 +38,8 @@ class R_Actor(nn.Module):
             self.base = base(args, obs_space)
         elif obs_space.__class__.__name__ == 'Tuple':
             self.tuple_input = True
-            self.base_vec = MLPBase(args, obs_space[0].shape)
-            self.base_img = CNNBase(args, obs_space[1].shape)
+            self.base_vec = MLPBase(args, obs_space[0].shape, hidden_size=self.hidden_size)
+            self.base_img = CNNBase(args, obs_space[1].shape, hidden_size=self.hidden_size)
         else:
             raise NotImplementedError
 
@@ -49,6 +49,11 @@ class R_Actor(nn.Module):
 
         # input_size = self.hidden_size * (1+self.tuple_input)
         self.act = ACTLayer(action_space, self.hidden_size, self._use_orthogonal, self._gain)
+        
+        print("actor")
+        print("Total number of param in base_vec is ", sum(x.numel() for x in self.base_vec.parameters()))
+        print("Total number of param in base_img is ", sum(x.numel() for x in self.base_img.parameters()))
+        print("Total number of param in rnn is ", sum(x.numel() for x in self.rnn.parameters()))
 
         self.to(device)
 
@@ -143,7 +148,7 @@ class R_Critic(nn.Module):
     """
     def __init__(self, args, cent_obs_space, device=torch.device("cpu")):
         super(R_Critic, self).__init__()
-        self.hidden_size = args.hidden_size
+        self.hidden_size = args.critic_hidden_size 
         self._use_orthogonal = args.use_orthogonal
         self._use_naive_recurrent_policy = args.use_naive_recurrent_policy
         self._use_recurrent_policy = args.use_recurrent_policy
@@ -161,8 +166,8 @@ class R_Critic(nn.Module):
             self.base = base(args, cent_obs_space)
         elif cent_obs_space.__class__.__name__ == 'Tuple':
             self.tuple_input = True
-            self.base_vec = MLPBase(args, cent_obs_space[0].shape)
-            self.base_img = CNNBase(args, cent_obs_space[1].shape)
+            self.base_vec = MLPBase(args, cent_obs_space[0].shape, hidden_size=self.hidden_size)
+            self.base_img = CNNBase(args, cent_obs_space[1].shape, hidden_size=self.hidden_size)
         else:
             raise NotImplementedError
 
@@ -184,6 +189,11 @@ class R_Critic(nn.Module):
             )
 
         self.to(device)
+
+        print("cirtic")
+        print("Total number of param in base_vec is ", sum(x.numel() for x in self.base_vec.parameters()))
+        print("Total number of param in base_img is ", sum(x.numel() for x in self.base_img.parameters()))
+        print("Total number of param in rnn is ", sum(x.numel() for x in self.rnn.parameters()))
 
     def forward(self, cent_obs, rnn_states, masks):
         """

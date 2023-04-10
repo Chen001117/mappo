@@ -126,3 +126,16 @@ class R_MAPPOPolicy:
         """
         actions, _, rnn_states_actor = self.actor(obs, rnn_states_actor, masks, available_actions, deterministic)
         return actions, rnn_states_actor
+
+    def get_value(self, cent_obs, rnn_states_critic, masks):
+        """
+        Compute actions using the given inputs.
+        :param obs (np.ndarray): local agent inputs to the actor.
+        :param rnn_states_actor: (np.ndarray) if actor is RNN, RNN states for actor.
+        :param masks: (np.ndarray) denotes points at which RNN states should be reset.
+        :param available_actions: (np.ndarray) denotes which actions are available to agent
+                                  (if None, all actions available)
+        :param deterministic: (bool) whether the action should be mode of distribution or should be sampled.
+        """
+        values, rnn_states_critic = self.critic(cent_obs, rnn_states_critic, masks)
+        return values, rnn_states_critic

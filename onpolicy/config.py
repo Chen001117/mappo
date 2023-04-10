@@ -283,5 +283,7 @@ def get_config():
 
     # pretrained parameters
     parser.add_argument("--model_dir", type=str, default=None, help="by default None. set the path to pretrained model.")
+    
+    parser.add_argument("--critic_hidden_size", type=int, default=64, help="critic hidden size.")
 
     return parser

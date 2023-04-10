@@ -143,12 +143,10 @@ class Runner(object):
         """Restore policy's networks from a saved model."""
         policy_actor_state_dict = torch.load(str(self.model_dir) + '/actor.pt', map_location=torch.device('cpu'))
         self.policy.actor.load_state_dict(policy_actor_state_dict)
-        if not self.all_args.use_render:
-            policy_critic_state_dict = torch.load(str(self.model_dir) + '/critic.pt')
-            self.policy.critic.load_state_dict(policy_critic_state_dict)
-            if self.trainer._use_valuenorm:
-                policy_vnorm_state_dict = torch.load(str(self.model_dir) + '/vnorm.pt')
-                self.trainer.value_normalizer.load_state_dict(policy_vnorm_state_dict)
+        policy_critic_state_dict = torch.load(str(self.model_dir) + '/critic.pt', map_location=torch.device('cpu'))
+        self.policy.critic.load_state_dict(policy_critic_state_dict)
+        policy_vnorm_state_dict = torch.load(str(self.model_dir) + '/vnorm.pt', map_location=torch.device('cpu'))
+        self.trainer.value_normalizer.load_state_dict(policy_vnorm_state_dict)
  
     def log_train(self, train_infos, total_num_steps):
         """

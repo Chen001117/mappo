@@ -494,7 +494,7 @@ class TupleDummyVecEnv(DummyVecEnv):
         DummyVecEnv.__init__(self, env_fns)
 
     def step_wait(self):
-        results = self.envs[0].step(self.actions) 
+        results = self.envs[0].step(self.actions[0]) 
         obs, rews, dones, infos = results
         if np.all(np.array(dones)):
             obs = self.envs[0].reset()

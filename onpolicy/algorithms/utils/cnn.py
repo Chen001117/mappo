@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 
 class CNNBase(nn.Module):
-    def __init__(self, args, obs_shape):
+    def __init__(self, args, obs_shape, hidden_size=None):
         super(CNNBase, self).__init__()
 
         self._use_ReLU = args.use_ReLU
-        self.hidden_size = args.hidden_size
+        self.hidden_size = args.hidden_size if hidden_size is None else hidden_size
         active_func = [nn.Tanh(), nn.ReLU()][self._use_ReLU]
 
         channel = obs_shape[0] # 1

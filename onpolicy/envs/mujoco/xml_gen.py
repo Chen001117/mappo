@@ -1,4 +1,5 @@
-def get_xml(dog_num=1, obs_num=1):
+def get_xml(dog_num=1, obs_num=1, anchor_id=None):
+    assert len(anchor_id) == dog_num, "length of anchor id should be equal to the dog number"
     strings = \
     """
 <mujoco model="navigation">
@@ -11,15 +12,33 @@ def get_xml(dog_num=1, obs_num=1):
     <geom conaffinity="1" condim="3" name="floor" pos="0 0 0" rgba="0.8 0.9 0.8 1" size="5.2 5.2 5" type="plane" material="MatPlane"/>
     
     <body name="load" pos="0 0 0.35">
-      <site name="load" pos="0.3 0 0"/>
+      <site name="load" pos="0 0 0"/>
       <camera name="camera" mode="trackcom" pos="0 0. 10." xyaxes="1 0 0 0 1 0"/>
       <joint axis="1 0 0" limited="false" name="load_axisx" pos="0 0 0" type="slide"/>
       <joint axis="0 1 0" limited="false" name="load_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="load_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="load_axisz" pos="0 0 0" type="slide"/>
       <geom mass="0.1" size="0.3 0.3 0.3" name="load" type="box" rgba="0.55 0.27 0.07 1." friction="1 0.005 0.001" />
+    """
+    for i in range(dog_num):
+       if anchor_id[i] == 0:
+         x_coor, y_coor = 0.3, 0.
+       elif anchor_id[i] == 1:
+         x_coor, y_coor = 0., 0.3
+       elif anchor_id[i] == 2:
+         x_coor, y_coor = -0.3, 0.
+       elif anchor_id[i] == 3:
+         x_coor, y_coor = 0., -0.3
+       strings += \
+    """
+      <site name="load_dog_{:02d}" pos="{} {} 0"/>
+    """.format(i, x_coor, y_coor)
+    
+    strings += \
+    """
     </body>
     """
+
     for i in range(dog_num):
       strings += \
     """
@@ -95,10 +114,10 @@ def get_xml(dog_num=1, obs_num=1):
       strings += \
   """
     <spatial width="0.03" rgba=".95 .95 .95 1" limited="true" range="0 1."> 
-      <site site="load"/>
+      <site site="load_dog_{:02d}"/>
       <site site="dog{:02d}"/>
     </spatial>
-  """.format(i)
+  """.format(i, i)
     strings += \
     """
   </tendon>
@@ -150,6 +169,13 @@ def get_xml(dog_num=1, obs_num=1):
   """.format(i,i)
       
     for i in range(dog_num):
+      for j in range(dog_num):
+        if i != j:
+          strings += \
+  """
+  <pair geom1="dog{:02d}" geom2="dog{:02d}"/>
+  """.format(i,j)
+        
       strings += \
   """
   <pair geom1="dog{:02d}" geom2="floor"/>

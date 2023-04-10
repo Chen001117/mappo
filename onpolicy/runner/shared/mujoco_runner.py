@@ -12,6 +12,7 @@ class MujocoRunner(Runner):
     """Runner class to perform training, evaluation. and data collection for the MPEs. See parent class for details."""
     def __init__(self, config):
         super(MujocoRunner, self).__init__(config)
+        self.critic_hidden_size = config['all_args'].critic_hidden_size
 
     def run(self):
         self.warmup()   
@@ -245,6 +246,7 @@ class MujocoRunner(Runner):
                 envs.render('human')
 
             rnn_states = np.zeros((self.n_rollout_threads, self.num_agents, self.recurrent_N, self.hidden_size), dtype=np.float32)
+            rnn_states_critic = np.zeros((self.n_rollout_threads, self.num_agents, self.recurrent_N, self.critic_hidden_size), dtype=np.float32)
             masks = np.ones((self.n_rollout_threads, self.num_agents, 1), dtype=np.float32)
             
             episode_rewards = []
@@ -253,6 +255,7 @@ class MujocoRunner(Runner):
                 calc_start = time.time()
                 if type(obs) == tuple:
                     observation = np.concatenate(obs[0]), np.concatenate(obs[1])
+                    state = np.concatenate(obs[2]), np.concatenate(obs[3])
                 else:
                     observation = np.concatenate(obs)
                 self.trainer.prep_rollout()
@@ -260,10 +263,16 @@ class MujocoRunner(Runner):
                     observation,
                     np.concatenate(rnn_states),
                     np.concatenate(masks),
-                    deterministic=True
+                    deterministic=False
+                )
+                value, rnn_states_critic = self.trainer.policy.get_value(
+                    state,
+                    np.concatenate(rnn_states_critic),
+                    np.concatenate(masks)
                 )
                 actions = np.array(np.split(_t2n(action), self.n_rollout_threads))
                 rnn_states = np.array(np.split(_t2n(rnn_states), self.n_rollout_threads))
+                rnn_states_critic = np.array(np.split(_t2n(rnn_states_critic), self.n_rollout_threads))
 
                 if envs.action_space[0].__class__.__name__ == 'Box':
                     actions_env = actions.copy()
@@ -275,7 +284,10 @@ class MujocoRunner(Runner):
                 obs, rewards, dones, infos = envs.step(actions_env)
                 episode_rewards.append(rewards)
 
+                print("V", value, "R", rewards, "O", obs[0][0][0][:2])
+
                 rnn_states[dones == True] = np.zeros(((dones == True).sum(), self.recurrent_N, self.hidden_size), dtype=np.float32)
+                rnn_states_critic[dones == True] = np.zeros(((dones == True).sum(), self.recurrent_N, self.critic_hidden_size), dtype=np.float32)
                 masks = np.ones((self.n_rollout_threads, self.num_agents, 1), dtype=np.float32)
                 masks[dones == True] = np.zeros(((dones == True).sum(), 1), dtype=np.float32)
 
@@ -289,8 +301,8 @@ class MujocoRunner(Runner):
                 else:
                     envs.render('human')
 
-                if dones.all():
-                    break
+                # if dones.all():
+                #     break
 
             print("average episode rewards is: " + str(np.mean(np.sum(np.array(episode_rewards), axis=0))))
 

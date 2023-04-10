@@ -14,22 +14,23 @@ class NavigationEnv(BaseEnv):
         self.lmlen = 57 # local map length (pixels)
         self.warm_step = 4 # warm-up: let everything stable (s)
         self.frame_skip = 25 # frame_skip/100 = decision_freq (Hz)
-        self.num_obs = 1
+        self.num_obs = 10
         self.hist_len = 4
         self.num_agent = num_agents
         self.init_kp = np.array([[2000, 2000, 80]])
         self.init_kd = np.array([[0.02, 0.02, 0.01]])
         self.init_ki = np.array([[0.0, 0.0, 10.]])
         # simulator
-        model = get_xml(dog_num=self.num_agent, obs_num=self.num_obs)
+        self.anchor_id = np.random.randint(0,4,self.num_agent)
+        model = get_xml(dog_num=self.num_agent, obs_num=self.num_obs, anchor_id=self.anchor_id)
         super().__init__(model, **kwargs)
         # observation space 
-        obs_size = 8 + 11 * (self.hist_len-1)
+        obs_size = 12 + 11 * (self.hist_len-1) 
         self.observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(obs_size,), dtype=np.float64), 
             Box(low=-np.inf, high=np.inf, shape=(4,self.lmlen,self.lmlen), dtype=np.float64),
         ))
-        sta_size = 4 + 4*self.num_agent + (4+7*self.num_agent) * (self.hist_len-1)
+        sta_size = 5 + 9*self.num_agent + (4+7*self.num_agent) * (self.hist_len-1)
         self.share_observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(sta_size,), dtype=np.float64), 
             Box(low=-np.inf, high=np.inf, shape=(self.num_agent*4+4,self.lmlen,self.lmlen), dtype=np.float64),
@@ -80,11 +81,18 @@ class NavigationEnv(BaseEnv):
         init_dog_load_yaw = init_load_yaw + (np.random.random([self.num_agent, 1])-.5) * np.pi
         init_dog_yaw = np.random.random([self.num_agent, 1]) * np.pi * 2
         init_dog_pos = self._get_toward(init_dog_load_yaw)[0] * init_dog_load_len
-        init_dog_pos += self._get_toward(init_load_yaw)[0] * 0.3
+        anchor_id = self.anchor_id.reshape([self.num_agent, 1])
+        init_dog_pos += self._get_toward(init_load_yaw)[0] * 0.3 * (anchor_id==0)
+        init_dog_pos += self._get_toward(init_load_yaw)[1] * 0.3 * (anchor_id==1)
+        init_dog_pos += self._get_toward(init_load_yaw)[0] * (-0.3) * (anchor_id==2)
+        init_dog_pos += self._get_toward(init_load_yaw)[1] * (-0.3) * (anchor_id==3)
         init_dog_pos += init_load_pos.reshape([1,2])
         init_dog_z = np.ones([self.num_agent, 1]) * 0.3
         init_dog = np.concatenate([init_dog_pos, init_dog_yaw, init_dog_z], axis=-1).flatten()
-        self.goal = (np.random.random(2)-.5) * (self.msize-2.)
+        obs_dist = 0.
+        while obs_dist < 0.8:
+            self.goal = (np.random.random(2)-.5) * (self.msize-2.)
+            obs_dist = np.linalg.norm(self.goal.reshape([1,2])-self.init_obs_pos, axis=-1).min()
         qpos = np.concatenate([init_load, init_dog, init_obs, init_wall, self.goal.flatten()])
         self.set_state(np.array(qpos), np.zeros_like(qpos))
         for _ in range(self.warm_step):
@@ -96,7 +104,7 @@ class NavigationEnv(BaseEnv):
         self.t = 0.
         load_pos = self.sim.data.qpos.copy()[:2]
         dist = np.linalg.norm(load_pos-self.goal, axis=-1)
-        self.max_time = dist * 3. + 15.
+        self.max_time = dist * 5. + 20.
         self.obs_map = self._get_obs_map(self.init_obs_pos, self.init_obs_yaw)
         # RL_info
         cur_obs, observation = self._get_obs() 
@@ -109,12 +117,20 @@ class NavigationEnv(BaseEnv):
 
         cur_obs = self._get_cur_obs()
         cur_vec_obs, cur_img_obs, cur_vec_sta, cur_img_sta = cur_obs
+        anchor_id = self.anchor_id.reshape([self.num_agent, 1])
+        anchor_vec = np.eye(4)[anchor_id][:,0]
         hist_vec_obs = self.hist_vec_obs.reshape([self.num_agent, -1])
-        vec_obs = np.concatenate([cur_vec_obs, hist_vec_obs], -1)
+        vec_obs = np.concatenate([cur_vec_obs, hist_vec_obs, anchor_vec], -1)
         hist_img_obs = self.hist_img_obs.reshape([self.num_agent, -1, *self.hist_img_obs.shape[-2:]])
         img_obs = np.concatenate([cur_img_obs, hist_img_obs], 1) 
+        vec_sta_id = np.eye(self.num_agent)
+        anchor_vec = np.eye(4)[anchor_id].reshape([1, self.num_agent*4])
+        anchor_vec = np.repeat(anchor_vec, self.num_agent, axis=0)
+        hist_vec_obs = self.hist_vec_obs.reshape([self.num_agent, -1])
         hist_vec_sta = self.hist_vec_sta.reshape([self.num_agent, -1])
-        vec_sta = np.concatenate([cur_vec_sta, hist_vec_sta], -1)
+        times = np.array([[self.max_time-self.t]])
+        times = np.repeat(times, self.num_agent, axis=0)
+        vec_sta = np.concatenate([cur_vec_sta, hist_vec_sta, anchor_vec, vec_sta_id, times], -1)
         hist_img_sta = self.hist_img_sta.reshape([self.num_agent, -1, *self.hist_img_sta.shape[-2:]])
         img_sta = np.concatenate([cur_img_sta, hist_img_sta], 1)
         obs = vec_obs, img_obs, vec_sta, img_sta
@@ -198,6 +214,8 @@ class NavigationEnv(BaseEnv):
         dog_pos = (dog_state[:,0:2]-self.goal.reshape([1,2])) / self.msize
         dog_yaw = dog_state[:,2:3]
         dog_yaw = [np.sin(dog_yaw), np.cos(dog_yaw)]
+        # anchor_id = self.anchor_id.reshape([self.num_agent, 1])
+        # anchor_vec = np.eye(4)[anchor_id][:,0]
         cur_vec_obs = [load_pos, dog_pos] + load_yaw + dog_yaw
         cur_vec_obs = np.concatenate(cur_vec_obs, axis=-1) 
         # print("cur_vec_obs.shape", cur_vec_obs.shape) # [num_agent, vec_shape]
@@ -238,6 +256,16 @@ class NavigationEnv(BaseEnv):
         dog_sin = np.repeat(np.sin(dog_yaw), self.num_agent, axis=0)
         dog_cos = np.repeat(np.cos(dog_yaw), self.num_agent, axis=0)
         dog_yaw = [dog_sin, dog_cos]
+        # anchor_id = self.anchor_id.reshape([self.num_agent, 1])
+        # anchor_vec = np.eye(4)[anchor_id].reshape([1, self.num_agent*4])
+        # anchor_vec = np.repeat(anchor_vec, self.num_agent, axis=0)
+        # cur_load_yaw = self.sim.data.qpos.copy()[2:3].reshape([1,1])
+        # anchor_pos = self._get_toward(cur_load_yaw)[0] * 0.3 * (anchor_id==0)
+        # anchor_pos += self._get_toward(cur_load_yaw)[1] * 0.3 * (anchor_id==1)
+        # anchor_pos += self._get_toward(cur_load_yaw)[0] * (-0.3) * (anchor_id==2)
+        # anchor_pos += self._get_toward(cur_load_yaw)[1] * (-0.3) * (anchor_id==3)
+        # anchor_pos += self.sim.data.qpos.copy()[0:2]
+        # rope_state = (np.linalg.norm(dog_state[:,0:2]-anchor_pos, axis=-1, keepdims=True)>1.)*1.
         cur_vec_sta = [load_pos, dog_pos] + load_yaw + dog_yaw
         cur_vec_sta = np.concatenate(cur_vec_sta, axis=-1)
         # print("cur_vec_sta.shape", cur_vec_sta.shape) # [num_agent, obs_shape]

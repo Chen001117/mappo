@@ -15,4 +15,5 @@ logs
 .nfs*
 *.so
 *.png
+files
 
