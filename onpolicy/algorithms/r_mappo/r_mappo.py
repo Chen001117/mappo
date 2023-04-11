@@ -120,6 +120,25 @@ class R_MAPPO():
             active_masks_batch
         )
 
+        # discriminator
+        task_log_probs, _ = self.policy.discriminator.evaluate_actions(
+            obs_batch, 
+            rnn_states_task_batch, 
+            task_id_batch, 
+            masks_batch, 
+        )
+
+        self.policy.discriminator_optimizer.zero_grad()
+        discri_loss = -task_log_probs.mean() * .5
+        discri_loss.backward()
+
+        if self._use_max_grad_norm:
+            discri_grad_norm = nn.utils.clip_grad_norm_(self.policy.discriminator.parameters(), self.max_grad_norm)
+        else:
+            discri_grad_norm = get_gard_norm(self.policy.discriminator.parameters())
+
+        self.policy.discriminator_optimizer.step()
+
         # actor update
         imp_weights = torch.exp(action_log_probs - old_action_log_probs_batch)
         # weight_masks = torch.ones_like(imp_weights)
@@ -139,8 +158,11 @@ class R_MAPPO():
 
         self.policy.actor_optimizer.zero_grad()
 
-        if update_actor:
+        if update_actor and discri_loss < 0:
             (policy_loss - dist_entropy * self.entropy_coef).backward()
+        else:
+            policy_loss *= 0.
+            policy_loss.backward()
 
         if self._use_max_grad_norm:
             actor_grad_norm = nn.utils.clip_grad_norm_(self.policy.actor.parameters(), self.max_grad_norm)
@@ -153,8 +175,12 @@ class R_MAPPO():
         value_loss = self.cal_value_loss(values, value_preds_batch, return_batch, active_masks_batch)
 
         self.policy.critic_optimizer.zero_grad()
-
-        (value_loss * self.value_loss_coef).backward()
+        
+        if discri_loss < 0:
+            (value_loss * self.value_loss_coef).backward()
+        else: 
+            value_loss *= 0.
+            value_loss.backward()
 
         if self._use_max_grad_norm:
             critic_grad_norm = nn.utils.clip_grad_norm_(self.policy.critic.parameters(), self.max_grad_norm)
@@ -162,26 +188,6 @@ class R_MAPPO():
             critic_grad_norm = get_gard_norm(self.policy.critic.parameters())
 
         self.policy.critic_optimizer.step()
-
-        # discriminator
-        task_log_probs, _ = self.policy.discriminator.evaluate_actions(
-            obs_batch, 
-            rnn_states_task_batch, 
-            task_id_batch, 
-            masks_batch, 
-        )
-
-        self.policy.discriminator_optimizer.zero_grad()
-        print(task_log_probs)
-        discri_loss = -task_log_probs.mean() * 1e-3
-        discri_loss.backward()
-
-        if self._use_max_grad_norm:
-            discri_grad_norm = nn.utils.clip_grad_norm_(self.policy.discriminator.parameters(), self.max_grad_norm)
-        else:
-            discri_grad_norm = get_gard_norm(self.policy.discriminator.parameters())
-
-        self.policy.discriminator_optimizer.step()
 
         return value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights, discri_loss
 

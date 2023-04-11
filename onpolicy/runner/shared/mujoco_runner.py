@@ -47,10 +47,10 @@ class MujocoRunner(Runner):
                 rnn_states_task = np.array(np.split(_t2n(rnn_states_task), self.n_rollout_threads))
                 rnn_states_task[dones == True] = np.zeros(((dones == True).sum(), self.recurrent_N, self.hidden_size), dtype=np.float32)
                 self.buffer.rnn_states_task[step+1] = rnn_states_task.copy()
-                mt_rew = np.clip(mt_rew, -2, 0).mean(axis=-1, keepdims=True) * (-0.02)
+                mt_rew = -np.clip(mt_rew, -2, 0).mean(axis=-1, keepdims=True) - 0.1675
                 for i, info in enumerate(infos):
                     info['mt_rew'] = mt_rew[0].mean()
-                rewards += mt_rew 
+                rewards += mt_rew * 0.
 
                 data = obs, rewards, dones, infos, values, actions, action_log_probs, rnn_states, rnn_states_critic
                 
