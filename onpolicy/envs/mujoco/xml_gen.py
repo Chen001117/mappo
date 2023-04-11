@@ -1,4 +1,4 @@
-def get_xml(dog_num=1, obs_num=1, anchor_id=None):
+def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None):
     assert len(anchor_id) == dog_num, "length of anchor id should be equal to the dog number"
     strings = \
     """
@@ -18,8 +18,9 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None):
       <joint axis="0 1 0" limited="false" name="load_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="load_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="load_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="0.1" size="0.3 0.3 0.3" name="load" type="box" rgba="0.55 0.27 0.07 1." friction="1 0.005 0.001" />
-    """
+      <geom mass="{}" size="0.3 0.3 0.3" name="load" type="box" rgba="0.55 0.27 0.07 1." friction="1 0.005 0.001" />
+    """.format(load_mass)
+
     for i in range(dog_num):
        if anchor_id[i] == 0:
          x_coor, y_coor = 0.3, 0.
@@ -113,11 +114,11 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None):
     for i in range(dog_num):
       strings += \
   """
-    <spatial width="0.03" rgba=".95 .95 .95 1" limited="true" range="0 1."> 
+    <spatial width="0.03" rgba=".95 .95 .95 1" limited="true" range="0 {}"> 
       <site site="load_dog_{:02d}"/>
       <site site="dog{:02d}"/>
     </spatial>
-  """.format(i, i)
+  """.format(cable_len[i], i, i)
     strings += \
     """
   </tendon>

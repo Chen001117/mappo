@@ -21,8 +21,16 @@ class NavigationEnv(BaseEnv):
         self.init_kd = np.array([[0.02, 0.02, 0.01]])
         self.init_ki = np.array([[0.0, 0.0, 10.]])
         # simulator
-        self.anchor_id = np.random.randint(0,4,self.num_agent)
-        model = get_xml(dog_num=self.num_agent, obs_num=self.num_obs, anchor_id=self.anchor_id)
+        self.load_mass = 1. + (np.random.rand()-.5) * 1.
+        self.cable_len = 1. + (np.random.random(self.num_agent)-.5) * .2
+        self.anchor_id = np.random.randint(0, 4, self.num_agent)
+        model = get_xml(
+            dog_num = self.num_agent, 
+            obs_num = self.num_obs, 
+            anchor_id = self.anchor_id,
+            load_mass = self.load_mass,
+            cable_len = self.cable_len,
+        )
         super().__init__(model, **kwargs)
         # observation space 
         obs_size = 12 + 11 * (self.hist_len-1) 
@@ -53,9 +61,9 @@ class NavigationEnv(BaseEnv):
 
     def reset(self):
         # init random tasks
-        self.kp  = self.init_kp * (1. + (np.random.random(3)-.5) * 0.)
-        self.ki  = self.init_ki * (1. + (np.random.random(3)-.5) * 0.)
-        self.kd  = self.init_kd * (1. + (np.random.random(3)-.5) * 0.)
+        self.kp  = self.init_kp * (1. + (np.random.random(3)-.5) * 0.2)
+        self.ki  = self.init_ki * (1. + (np.random.random(3)-.5) * 0.2)
+        self.kd  = self.init_kd * (1. + (np.random.random(3)-.5) * 0.2)
         # init variables
         self.t = 0.
         self.max_time = 1e6
