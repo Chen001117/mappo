@@ -74,6 +74,7 @@ class Runner(object):
         # policy network
         self.policy = Policy(
             self.all_args,
+            self.envs.task_id_space[0],
             self.envs.observation_space[0],
             self.envs.share_observation_space[0],
             self.envs.action_space[0],
@@ -89,6 +90,7 @@ class Runner(object):
         # buffer
         self.buffer = SharedReplayBuffer(self.all_args,
                                         self.num_agents,
+                                        self.envs.task_id_space[0],
                                         self.envs.observation_space[0],
                                         self.envs.share_observation_space[0],
                                         self.envs.action_space[0])

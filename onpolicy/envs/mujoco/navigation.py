@@ -33,6 +33,13 @@ class NavigationEnv(BaseEnv):
         )
         super().__init__(model, **kwargs)
         # observation space 
+        task_id_size = 11
+        self.task_id_space = Box(
+            low=np.array([1e3, 1e3, 4e1, 1e-2, 1e-2, 1e-2, 0, 0, 5, 0, 0]), 
+            high=np.array([4e3, 4e3, 2e2, 4e-2, 4e-2, 2e-2, 0, 0, 2e1, 2, 2]), 
+            shape=(task_id_size,), 
+            dtype=np.float64
+        ) 
         obs_size = 12 + 11 * (self.hist_len-1) 
         self.observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(obs_size,), dtype=np.float64), 
@@ -61,9 +68,9 @@ class NavigationEnv(BaseEnv):
 
     def reset(self):
         # init random tasks
-        self.kp  = self.init_kp * (1. + (np.random.random(3)-.5) * 0.2)
-        self.ki  = self.init_ki * (1. + (np.random.random(3)-.5) * 0.2)
-        self.kd  = self.init_kd * (1. + (np.random.random(3)-.5) * 0.2)
+        self.kp  = self.init_kp * (1. + (np.random.random([1,3])-.5) * 0.2)
+        self.ki  = self.init_ki * (1. + (np.random.random([1,3])-.5) * 0.2)
+        self.kd  = self.init_kd * (1. + (np.random.random([1,3])-.5) * 0.2)
         # init variables
         self.t = 0.
         self.max_time = 1e6
@@ -141,7 +148,10 @@ class NavigationEnv(BaseEnv):
         vec_sta = np.concatenate([cur_vec_sta, hist_vec_sta, anchor_vec, vec_sta_id, times], -1)
         hist_img_sta = self.hist_img_sta.reshape([self.num_agent, -1, *self.hist_img_sta.shape[-2:]])
         img_sta = np.concatenate([cur_img_sta, hist_img_sta], 1)
-        obs = vec_obs, img_obs, vec_sta, img_sta
+        task_id = np.concatenate([self.kp, self.ki, self.kd, [[self.load_mass]]], axis=-1)
+        task_id = np.repeat(task_id, self.num_agent, axis=0)
+        task_id = np.concatenate([task_id, self.cable_len.reshape([self.num_agent, 1])], axis=-1)
+        obs = vec_obs, img_obs, vec_sta, img_sta, task_id
 
         return cur_obs, obs
 

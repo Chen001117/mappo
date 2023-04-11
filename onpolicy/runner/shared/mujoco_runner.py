@@ -28,9 +28,29 @@ class MujocoRunner(Runner):
             for step in range(self.episode_length):
                 # Sample actions
                 values, actions, action_log_probs, rnn_states, rnn_states_critic, actions_env = self.collect(step)
-                    
+
                 # Obser reward and next obs
                 obs, rewards, dones, infos = self.envs.step(actions_env)
+                
+                # mtrl_rewards 
+                mt_rew, rnn_states_task = self.trainer.policy.discriminator.evaluate_actions(
+                    (
+                    np.concatenate(obs[0]),
+                    np.concatenate(obs[1]),
+                    ),
+                    np.concatenate(self.buffer.rnn_states_task[step]),
+                    np.concatenate(obs[4]),
+                    np.concatenate(self.buffer.masks[step]),
+                    return_rnn=True,
+                )
+                mt_rew = np.array(np.split(_t2n(mt_rew), self.n_rollout_threads))
+                rnn_states_task = np.array(np.split(_t2n(rnn_states_task), self.n_rollout_threads))
+                rnn_states_task[dones == True] = np.zeros(((dones == True).sum(), self.recurrent_N, self.hidden_size), dtype=np.float32)
+                self.buffer.rnn_states_task[step+1] = rnn_states_task.copy()
+                mt_rew = np.clip(mt_rew, -2, 0).mean(axis=-1, keepdims=True)
+                for i, info in enumerate(infos):
+                    info['mt_rew'] = mt_rew[0].mean()
+                rewards -= mt_rew * 0.02
 
                 data = obs, rewards, dones, infos, values, actions, action_log_probs, rnn_states, rnn_states_critic
                 
@@ -92,10 +112,12 @@ class MujocoRunner(Runner):
             self.buffer.obs_vec[0] = obs[0].copy()
             self.buffer.obs_img[0] = obs[1].copy()
             self.buffer.share_obs_vec[0] = obs[2].copy()
-            self.buffer.share_obs_img[1] = obs[3].copy()
+            self.buffer.share_obs_img[0] = obs[3].copy()
         else:
             self.buffer.share_obs[0] = obs.copy()
             self.buffer.obs[0] = obs.copy()
+
+        self.buffer.task_id[0] = obs[4].copy()
 
     @torch.no_grad()
     def collect(self, step):
@@ -143,10 +165,11 @@ class MujocoRunner(Runner):
         masks[dones == True] = np.zeros(((dones == True).sum(), 1), dtype=np.float32)
         if self.tuple_obs:
             share_obs = (obs[2].copy(), obs[3].copy())
+            task_id = obs[4].copy()
             obs = (obs[0].copy(), obs[1].copy())
         else:
             share_obs = obs.copy()
-        self.buffer.insert(share_obs, obs, rnn_states, rnn_states_critic, actions, action_log_probs, values, rewards, masks)
+        self.buffer.insert(task_id, share_obs, obs, rnn_states, rnn_states_critic, actions, action_log_probs, values, rewards, masks)
     
     @torch.no_grad()
     def compute(self):

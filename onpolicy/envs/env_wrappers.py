@@ -12,6 +12,7 @@ class MARLWrapper(gym.Wrapper):
     def __init__(self, env):
         gym.Wrapper.__init__(self, env)
         self.share_observation_space = [self.share_observation_space]
+        self.task_id_space = [self.task_id_space]
         self.observation_space = [self.observation_space]
         self.action_space = [self.action_space]
 
@@ -65,9 +66,10 @@ class ShareVecEnv(ABC):
         'render.modes': ['human', 'rgb_array']
     }
 
-    def __init__(self, num_envs, observation_space, share_observation_space, action_space):
+    def __init__(self, num_envs, task_id_space, observation_space, share_observation_space, action_space):
         self.num_envs = num_envs
         self.observation_space = observation_space
+        self.task_id_space = task_id_space
         self.share_observation_space = share_observation_space
         self.action_space = action_space
 
@@ -198,7 +200,7 @@ def worker(remote, parent_remote, env_fn_wrapper, rank=None):
             remote.close()
             break
         elif cmd == 'get_spaces':
-            remote.send((env.observation_space, env.share_observation_space, env.action_space))
+            remote.send((env.task_id_space, env.observation_space, env.share_observation_space, env.action_space))
         else:
             raise NotImplementedError
 
@@ -220,8 +222,8 @@ class SubprocVecEnv(ShareVecEnv):
             remote.close()
 
         self.remotes[0].send(('get_spaces', None))
-        observation_space, share_observation_space, action_space = self.remotes[0].recv()
-        ShareVecEnv.__init__(self, len(env_fns), observation_space, share_observation_space, action_space)
+        task_id_space, observation_space, share_observation_space, action_space = self.remotes[0].recv()
+        ShareVecEnv.__init__(self, len(env_fns), task_id_space, observation_space, share_observation_space, action_space)
 
     def step_async(self, actions):
         for remote, action in zip(self.remotes, actions):
@@ -270,15 +272,16 @@ class TupleSubprocVecEnv(SubprocVecEnv):
         SubprocVecEnv.__init__(self, env_fns, spaces=None, eval=False)
 
     def step_wait(self):
-        obs_vec, obs_img, sta_vec, sta_img = [], [], [], []
+        obs_vec, obs_img, sta_vec, sta_img, task_id = [], [], [], [], []
         dones, infos, rews = [], [], []
         for remote in self.remotes:
             obs, r, d, i = remote.recv()
-            o_vec, o_img, s_vec, s_img = map(np.array, zip(obs))
+            o_vec, o_img, s_vec, s_img, t_id = map(np.array, zip(obs))
             obs_vec.append(o_vec)
             obs_img.append(o_img)
             sta_vec.append(s_vec)
             sta_img.append(s_img)
+            task_id.append(t_id)
             dones.append(d)
             infos.append(i)
             rews.append(r)
@@ -286,20 +289,22 @@ class TupleSubprocVecEnv(SubprocVecEnv):
         observation = (
             np.concatenate(obs_vec), np.concatenate(obs_img),
             np.concatenate(sta_vec), np.concatenate(sta_img),
+            np.concatenate(task_id),
         )
         return observation, np.stack(rews), np.stack(dones), infos
 
     def reset(self):
         for remote in self.remotes:
             remote.send(('reset', None))
-        obs_vec, obs_img, sta_vec, sta_img = [], [], [], []
+        obs_vec, obs_img, sta_vec, sta_img, task_id = [], [], [], [], []
         for remote in self.remotes:
-            o_vec, o_img, s_vec, s_img = remote.recv()
+            o_vec, o_img, s_vec, s_img, t_id = remote.recv()
             obs_vec.append(o_vec)
             obs_img.append(o_img)
             sta_vec.append(s_vec)
             sta_img.append(s_img)
-        return np.stack(obs_vec), np.stack(obs_img), np.stack(sta_vec), np.stack(sta_img)
+            task_id.append(t_id)
+        return np.stack(obs_vec), np.stack(obs_img), np.stack(sta_vec), np.stack(sta_img), np.stack(task_id)
 
 def shareworker(remote, parent_remote, env_fn_wrapper, rank):
     parent_remote.close()
@@ -406,7 +411,14 @@ class DummyVecEnv(ShareVecEnv):
     def __init__(self, env_fns):
         self.envs = [fn(i) for i, fn in enumerate(env_fns)]
         env = self.envs[0]
-        ShareVecEnv.__init__(self, len(env_fns), env.observation_space, env.share_observation_space, env.action_space)
+        ShareVecEnv.__init__(
+            self, 
+            (env_fns), 
+            env.task_id_space, 
+            env.observation_space, 
+            env.share_observation_space, 
+            env.action_space
+        )
         self.actions = None
 
     def step_async(self, actions):
@@ -449,7 +461,7 @@ class ShareDummyVecEnv(ShareVecEnv):
         self.envs = [fn() for fn in env_fns]
         env = self.envs[0]
         ShareVecEnv.__init__(self, len(
-            env_fns), env.observation_space, env.share_observation_space, env.action_space)
+            env_fns), env.task_id_space, env.observation_space, env.share_observation_space, env.action_space)
         self.actions = None
 
     def step_async(self, actions):
@@ -498,12 +510,12 @@ class TupleDummyVecEnv(DummyVecEnv):
         obs, rews, dones, infos = results
         if np.all(np.array(dones)):
             obs = self.envs[0].reset()
-        obs_vec, obs_img, sta_vec, sta_img = map(np.array, zip(obs))
+        obs_vec, obs_img, sta_vec, sta_img, task_id = map(np.array, zip(obs))
         rews, dones, infos = map(np.array, zip([rews, dones, infos]))
         self.actions = None
-        return (obs_vec, obs_img, sta_vec, sta_img), rews, dones, infos
+        return (obs_vec, obs_img, sta_vec, sta_img, task_id), rews, dones, infos
 
     def reset(self):
         obs = self.envs[0].reset()
-        obs_vec, obs_img, sta_vec, sta_img = map(np.array, zip(obs))
-        return obs_vec, obs_img, sta_vec, sta_img
+        obs_vec, obs_img, sta_vec, sta_img, task_id = map(np.array, zip(obs))
+        return obs_vec, obs_img, sta_vec, sta_img, task_id

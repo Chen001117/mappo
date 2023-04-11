@@ -98,7 +98,7 @@ class R_MAPPO():
         :return actor_grad_norm: (torch.Tensor) gradient norm from actor update.
         :return imp_weights: (torch.Tensor) importance sampling weights.
         """
-        share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch, \
+        task_id_batch, share_obs_batch, obs_batch, rnn_states_task_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch, \
         value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, \
         adv_targ, available_actions_batch = sample
 
@@ -163,7 +163,29 @@ class R_MAPPO():
 
         self.policy.critic_optimizer.step()
 
-        return value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights
+        # discriminator
+        action_log_probs, dist_entropy = self.policy.discriminator.evaluate_actions(
+            obs_batch, 
+            rnn_states_task_batch, 
+            task_id_batch, 
+            masks_batch, 
+            available_actions_batch,
+            active_masks_batch
+        )
+
+        self.policy.discriminator_optimizer.zero_grad()
+
+        discri_loss = -action_log_probs.mean()
+        discri_loss.backward()
+
+        if self._use_max_grad_norm:
+            discri_grad_norm = nn.utils.clip_grad_norm_(self.policy.discriminator.parameters(), self.max_grad_norm)
+        else:
+            discri_grad_norm = get_gard_norm(self.policy.discriminator.parameters())
+
+        self.policy.discriminator_optimizer.step()
+
+        return value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights, discri_loss
 
     def train(self, buffer, update_actor=True):
         """
@@ -186,6 +208,7 @@ class R_MAPPO():
         train_info = {}
 
         train_info['value_loss'] = 0
+        train_info['discri_loss'] = 0
         train_info['policy_loss'] = 0
         train_info['dist_entropy'] = 0
         train_info['actor_grad_norm'] = 0
@@ -202,7 +225,7 @@ class R_MAPPO():
 
             for sample in data_generator:
 
-                value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights \
+                value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights, discri_loss \
                     = self.ppo_update(sample, update_actor)
 
                 train_info['value_loss'] += value_loss.item()
@@ -211,6 +234,7 @@ class R_MAPPO():
                 train_info['actor_grad_norm'] += actor_grad_norm
                 train_info['critic_grad_norm'] += critic_grad_norm
                 train_info['ratio'] += imp_weights.mean()
+                train_info['discri_loss'] += discri_loss.item()
 
         num_updates = self.ppo_epoch * self.num_mini_batch
 
