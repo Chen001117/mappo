@@ -35,7 +35,7 @@ class NavigationEnv(BaseEnv):
         # observation space 
         task_id_size = 11
         self.task_id_space = Box(
-            low=np.array([1e3, 1e3, 4e1, 1e-2, 1e-2, 1e-2, 0, 0, 5, 0, 0]), 
+            low=np.array([1e3, 1e3, 4e1, 1e-2, 1e-2, 5e-3, 0, 0, 5, 0, 0]), 
             high=np.array([4e3, 4e3, 2e2, 4e-2, 4e-2, 2e-2, 0, 0, 2e1, 2, 2]), 
             shape=(task_id_size,), 
             dtype=np.float64
