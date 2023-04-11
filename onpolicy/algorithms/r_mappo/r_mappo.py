@@ -164,18 +164,16 @@ class R_MAPPO():
         self.policy.critic_optimizer.step()
 
         # discriminator
-        action_log_probs, _ = self.policy.discriminator.evaluate_actions(
+        task_log_probs, _ = self.policy.discriminator.evaluate_actions(
             obs_batch, 
             rnn_states_task_batch, 
             task_id_batch, 
             masks_batch, 
-            available_actions_batch,
-            active_masks_batch
         )
 
         self.policy.discriminator_optimizer.zero_grad()
-
-        discri_loss = -action_log_probs.mean() * 1e-3
+        print(task_log_probs)
+        discri_loss = -task_log_probs.mean() * 1e-3
         discri_loss.backward()
 
         if self._use_max_grad_norm:

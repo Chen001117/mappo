@@ -17,12 +17,13 @@ class NavigationEnv(BaseEnv):
         self.num_obs = 10
         self.hist_len = 4
         self.num_agent = num_agents
+        self.random_scale = .2
         self.init_kp = np.array([[2000, 2000, 80]])
         self.init_kd = np.array([[0.02, 0.02, 0.01]])
-        self.init_ki = np.array([[0.0, 0.0, 10.]])
+        self.init_ki = np.array([[1e-6, 1e-6, 10.]])
         # simulator
-        self.load_mass = 1. + (np.random.rand()-.5) * 1.
-        self.cable_len = 1. + (np.random.random(self.num_agent)-.5) * .2
+        self.load_mass = 1. * (1. + (np.random.rand()-.5) * self.random_scale)
+        self.cable_len = 1. * (1. + (np.random.random(self.num_agent)-.5) * self.random_scale)
         self.anchor_id = np.random.randint(0, 4, self.num_agent)
         model = get_xml(
             dog_num = self.num_agent, 
@@ -34,11 +35,18 @@ class NavigationEnv(BaseEnv):
         super().__init__(model, **kwargs)
         # observation space 
         task_id_size = 11
+        ref_value = np.concatenate([
+            self.init_kp.flatten(), 
+            self.init_kd.flatten(), 
+            self.init_ki.flatten(), 
+            [1. for _ in range(self.num_agent+1)],
+        ])
+        self.ref_value = ref_value.reshape([1, -1])
         self.task_id_space = Box(
-            low=np.array([1e3, 1e3, 4e1, 1e-2, 1e-2, 5e-3, 0, 0, 5, 0, 0]), 
-            high=np.array([4e3, 4e3, 2e2, 4e-2, 4e-2, 2e-2, 0, 0, 2e1, 2, 2]), 
-            shape=(task_id_size,), 
-            dtype=np.float64
+            low = 1 - self.random_scale / 2, 
+            high = 1 + self.random_scale / 2, 
+            shape = (task_id_size,), 
+            dtype = np.float64
         ) 
         obs_size = 12 + 11 * (self.hist_len-1) 
         self.observation_space = Tuple((
@@ -68,9 +76,9 @@ class NavigationEnv(BaseEnv):
 
     def reset(self):
         # init random tasks
-        self.kp  = self.init_kp * (1. + (np.random.random([1,3])-.5) * 0.2)
-        self.ki  = self.init_ki * (1. + (np.random.random([1,3])-.5) * 0.2)
-        self.kd  = self.init_kd * (1. + (np.random.random([1,3])-.5) * 0.2)
+        self.kp  = self.init_kp * (1. + (np.random.random([1,3])-.5) * self.random_scale)
+        self.ki  = self.init_ki * (1. + (np.random.random([1,3])-.5) * self.random_scale)
+        self.kd  = self.init_kd * (1. + (np.random.random([1,3])-.5) * self.random_scale)
         # init variables
         self.t = 0.
         self.max_time = 1e6
@@ -148,9 +156,10 @@ class NavigationEnv(BaseEnv):
         vec_sta = np.concatenate([cur_vec_sta, hist_vec_sta, anchor_vec, vec_sta_id, times], -1)
         hist_img_sta = self.hist_img_sta.reshape([self.num_agent, -1, *self.hist_img_sta.shape[-2:]])
         img_sta = np.concatenate([cur_img_sta, hist_img_sta], 1)
-        task_id = np.concatenate([self.kp, self.ki, self.kd, [[self.load_mass]]], axis=-1)
+        task_id = np.concatenate([self.kp, self.kd, self.ki, [[self.load_mass]]], axis=-1)
         task_id = np.repeat(task_id, self.num_agent, axis=0)
         task_id = np.concatenate([task_id, self.cable_len.reshape([self.num_agent, 1])], axis=-1)
+        task_id = task_id / self.ref_value
         obs = vec_obs, img_obs, vec_sta, img_sta, task_id
 
         return cur_obs, obs
