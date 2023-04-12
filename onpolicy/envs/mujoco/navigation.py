@@ -17,12 +17,14 @@ class NavigationEnv(BaseEnv):
         self.num_obs = 10
         self.hist_len = 4
         self.num_agent = num_agents
+        self.domain_random_scale = 0.2
+        self.measure_random_scale = 0.01
         self.init_kp = np.array([[2000, 2000, 80]])
         self.init_kd = np.array([[0.02, 0.02, 0.01]])
         self.init_ki = np.array([[0.0, 0.0, 10.]])
         # simulator
-        self.load_mass = 1. + (np.random.rand()-.5) * 1.
-        self.cable_len = 1. + (np.random.random(self.num_agent)-.5) * .2
+        self.load_mass = 1. * (1 + (np.random.rand()-.5) * self.domain_random_scale)
+        self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         self.anchor_id = np.random.randint(0, 4, self.num_agent)
         model = get_xml(
             dog_num = self.num_agent, 
@@ -61,9 +63,9 @@ class NavigationEnv(BaseEnv):
 
     def reset(self):
         # init random tasks
-        self.kp  = self.init_kp * (1. + (np.random.random(3)-.5) * 0.2)
-        self.ki  = self.init_ki * (1. + (np.random.random(3)-.5) * 0.2)
-        self.kd  = self.init_kd * (1. + (np.random.random(3)-.5) * 0.2)
+        self.kp  = self.init_kp * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
+        self.ki  = self.init_ki * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
+        self.kd  = self.init_kd * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
         # init variables
         self.t = 0.
         self.max_time = 1e6
@@ -115,6 +117,7 @@ class NavigationEnv(BaseEnv):
         self.max_time = dist * 5. + 20.
         self.obs_map = self._get_obs_map(self.init_obs_pos, self.init_obs_yaw)
         # RL_info
+        self.cul_rew = 0.
         cur_obs, observation = self._get_obs() 
         info = dict()
         # post process
@@ -161,6 +164,7 @@ class NavigationEnv(BaseEnv):
         # update RL info
         cur_obs, observation = self._get_obs()
         reward, info = self._get_reward(contact)
+        self.cul_rew += reward
         # post process
         self._post_update(command, cur_obs)
         return observation, reward, done, False, info
@@ -199,7 +203,7 @@ class NavigationEnv(BaseEnv):
         duration = self.frame_skip / 100
         rewards.append((dist<0.5) * max_speed * duration)
         # done penalty
-        rewards.append(-contact*1.)
+        rewards.append(-contact*self.cul_rew)
         # print(rewards)
         rew_dict = dict()
         rew_dict["goal_distance"] = rewards[0]
@@ -226,6 +230,7 @@ class NavigationEnv(BaseEnv):
         # anchor_vec = np.eye(4)[anchor_id][:,0]
         cur_vec_obs = [load_pos, dog_pos] + load_yaw + dog_yaw
         cur_vec_obs = np.concatenate(cur_vec_obs, axis=-1) 
+        cur_vec_obs += (np.random.random(cur_vec_obs.shape)-.5) * self.measure_random_scale
         # print("cur_vec_obs.shape", cur_vec_obs.shape) # [num_agent, vec_shape]
         # image: partial observation
         cur_img_obs = []
@@ -276,6 +281,7 @@ class NavigationEnv(BaseEnv):
         # rope_state = (np.linalg.norm(dog_state[:,0:2]-anchor_pos, axis=-1, keepdims=True)>1.)*1.
         cur_vec_sta = [load_pos, dog_pos] + load_yaw + dog_yaw
         cur_vec_sta = np.concatenate(cur_vec_sta, axis=-1)
+        cur_vec_sta += (np.random.random(cur_vec_sta.shape)-.5) * self.measure_random_scale
         # print("cur_vec_sta.shape", cur_vec_sta.shape) # [num_agent, obs_shape]
         # iamge: global state
         load_pos = self.sim.data.qpos.copy()[:2]
