@@ -123,7 +123,7 @@ class R_MAPPO():
         # actor update
         imp_weights = torch.exp(action_log_probs - old_action_log_probs_batch)
         # weight_masks = torch.ones_like(imp_weights)
-        # weight_masks[:,1] *= 0.05
+        # weight_masks[:,:2] *= 0.05
         surr1 = imp_weights * adv_targ
         surr2 = torch.clamp(imp_weights, 1.0 - self.clip_param, 1.0 + self.clip_param) * adv_targ
         # surr1 = surr1 * weight_masks
@@ -162,6 +162,25 @@ class R_MAPPO():
             critic_grad_norm = get_gard_norm(self.policy.critic.parameters())
 
         self.policy.critic_optimizer.step()
+
+        # discri update
+        discri_loss = self.policy.get_values(
+            share_obs_batch, 
+            rnn_states_critic_batch, 
+            masks_batch, 
+        )
+        discri_loss = (discri_loss**2).mean()
+
+        self.policy.discri_optimizer.zero_grad()
+
+        (discri_loss * self.value_loss_coef).backward()
+
+        if self._use_max_grad_norm:
+            discri_grad_norm = nn.utils.clip_grad_norm_(self.policy.discri.parameters(), self.max_grad_norm)
+        else:
+            discri_grad_norm = get_gard_norm(self.policy.discri.parameters())
+
+        self.policy.discri_optimizer.step()
 
         return value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights
 

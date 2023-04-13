@@ -13,7 +13,7 @@ class NavigationEnv(BaseEnv):
         self.msize = 10. # map size (m)
         self.lmlen = 57 # local map length (pixels)
         self.warm_step = 4 # warm-up: let everything stable (s)
-        self.frame_skip = 25 # frame_skip/100 = decision_freq (Hz)
+        self.frame_skip = 25 # 100/frame_skip = decision_freq (Hz)
         self.num_obs = 10
         self.hist_len = 4
         self.num_agent = num_agents
@@ -63,6 +63,7 @@ class NavigationEnv(BaseEnv):
 
     def reset(self):
         # init random tasks
+        np.random.seed(100)
         self.kp  = self.init_kp * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
         self.ki  = self.init_ki * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
         self.kd  = self.init_kd * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
@@ -192,7 +193,7 @@ class NavigationEnv(BaseEnv):
 
         rewards = []
         # pre-process
-        weights = np.array([1., 2., 0.1])
+        weights = np.array([0.25, 1., 0., 0., 0.])
         weights = weights / weights.sum()
         state = self.sim.data.qpos.copy().flatten()
         # goal_distance rewards
@@ -203,12 +204,21 @@ class NavigationEnv(BaseEnv):
         duration = self.frame_skip / 100
         rewards.append((dist<0.5) * max_speed * duration)
         # done penalty
-        rewards.append(-contact*self.cul_rew)
-        # print(rewards)
+        rewards.append(-contact*1.)
+        # dog move rew
+        dist = np.linalg.norm(state[4:6]-self.goal)
+        rewards.append((self.prev_dog_dist-dist)*(dist>0.5))
+        # dog yaw
+        dog_box_vec = self.goal - state[4:6]
+        dog_box_yaw = np.arctan2(dog_box_vec[1], dog_box_vec[0])
+        rewards.append(np.cos(dog_box_yaw-state[6])+1)
+
         rew_dict = dict()
         rew_dict["goal_distance"] = rewards[0]
         rew_dict["goal_reach"] = rewards[1]
         rew_dict["con_penalty"] = rewards[2]
+        rew_dict["dog_move"] = rewards[3]
+        rew_dict["dog_yaw"] = rewards[4]
         rews = np.dot(np.array(rewards), weights)
         return rews, rew_dict
 
@@ -440,6 +450,8 @@ class NavigationEnv(BaseEnv):
         # update last distance 
         load_pos = self.sim.data.qpos.copy()[0:2]
         self.prev_dist = np.linalg.norm(load_pos-self.goal)
+        dog_pos = self.sim.data.qpos.copy()[4:6]
+        self.prev_dog_dist = np.linalg.norm(dog_pos-self.goal)
 
     def _local_to_global(self, input_action):
 

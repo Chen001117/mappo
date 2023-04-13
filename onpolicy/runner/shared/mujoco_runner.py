@@ -28,10 +28,26 @@ class MujocoRunner(Runner):
             for step in range(self.episode_length):
                 # Sample actions
                 values, actions, action_log_probs, rnn_states, rnn_states_critic, actions_env = self.collect(step)
-                    
+                
                 # Obser reward and next obs
                 obs, rewards, dones, infos = self.envs.step(actions_env)
 
+                if self.tuple_obs:
+                    share_obs = (
+                        np.concatenate(self.buffer.share_obs_vec[-1]),
+                        np.concatenate(self.buffer.share_obs_img[-1]),
+                    )
+                else:
+                    share_obs = np.concatenate(self.buffer.share_obs[-1])
+                pred_values, _ = self.trainer.policy.discri(
+                    share_obs,
+                    np.concatenate(self.buffer.rnn_states_critic[-1]),
+                    np.concatenate(self.buffer.masks[-1])
+                )
+                rewards += np.abs(pred_values.detach().numpy())
+                for i in range(len(infos)):
+                    infos[i]['rnd_rew'] = np.abs(pred_values[i].detach().numpy()).mean()
+                
                 data = obs, rewards, dones, infos, values, actions, action_log_probs, rnn_states, rnn_states_critic
                 
                 # insert data into buffer
@@ -74,6 +90,7 @@ class MujocoRunner(Runner):
                 for key in total_infos:
                     total_infos[key] /= (self.log_interval*self.episode_length*self.n_rollout_threads)
                 env_infos = total_infos
+                print("info", env_infos)
 
 
                 train_infos["average_episode_rewards"] = np.mean(self.buffer.rewards) * self.episode_length
@@ -263,7 +280,7 @@ class MujocoRunner(Runner):
                     observation,
                     np.concatenate(rnn_states),
                     np.concatenate(masks),
-                    deterministic=False
+                    deterministic=True
                 )
                 value, rnn_states_critic = self.trainer.policy.get_value(
                     state,

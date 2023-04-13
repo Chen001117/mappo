@@ -146,7 +146,7 @@ class R_Critic(nn.Module):
     :param cent_obs_space: (gym.Space) (centralized) observation space.
     :param device: (torch.device) specifies the device to run on (cpu/gpu).
     """
-    def __init__(self, args, cent_obs_space, device=torch.device("cpu")):
+    def __init__(self, args, cent_obs_space, device=torch.device("cpu"), rnn=True):
         super(R_Critic, self).__init__()
         self.hidden_size = args.critic_hidden_size 
         self._use_orthogonal = args.use_orthogonal
@@ -156,6 +156,7 @@ class R_Critic(nn.Module):
         self._use_popart = args.use_popart
         self.tpdv = dict(dtype=torch.float32, device=device)
         init_method = [nn.init.xavier_uniform_, nn.init.orthogonal_][self._use_orthogonal]
+        self.use_rnn = rnn
 
         if cent_obs_space.__class__.__name__ == 'Box':
             self.tuple_input = False
@@ -171,7 +172,7 @@ class R_Critic(nn.Module):
         else:
             raise NotImplementedError
 
-        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+        if self.use_rnn and (self._use_naive_recurrent_policy or self._use_recurrent_policy):
             input_size = self.hidden_size * (1+self.tuple_input)
             self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
         # def init_(m):
@@ -180,8 +181,9 @@ class R_Critic(nn.Module):
         if self._use_popart:
             self.v_out = init_(PopArt(self.hidden_size, 1, device=device))
         else:
+            input_size = self.hidden_size * (2-self.use_rnn)
             self.v_out = nn.Sequential(
-                nn.Linear(self.hidden_size, self.hidden_size),
+                nn.Linear(input_size, self.hidden_size),
                 nn.ReLU(),
                 nn.Linear(self.hidden_size, self.hidden_size),
                 nn.ReLU(),
@@ -193,7 +195,8 @@ class R_Critic(nn.Module):
         print("cirtic")
         print("Total number of param in base_vec is ", sum(x.numel() for x in self.base_vec.parameters()))
         print("Total number of param in base_img is ", sum(x.numel() for x in self.base_img.parameters()))
-        print("Total number of param in rnn is ", sum(x.numel() for x in self.rnn.parameters()))
+        if self.use_rnn:
+            print("Total number of param in rnn is ", sum(x.numel() for x in self.rnn.parameters()))
 
     def forward(self, cent_obs, rnn_states, masks):
         """
@@ -218,7 +221,7 @@ class R_Critic(nn.Module):
             cent_obs = check(cent_obs).to(**self.tpdv)
             critic_features = self.base(cent_obs)
 
-        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+        if self.use_rnn and (self._use_naive_recurrent_policy or self._use_recurrent_policy):
             critic_features, rnn_states = self.rnn(critic_features, rnn_states, masks)
         values = self.v_out(critic_features)
 

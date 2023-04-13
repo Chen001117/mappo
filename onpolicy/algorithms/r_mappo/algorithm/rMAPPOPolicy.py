@@ -28,11 +28,16 @@ class R_MAPPOPolicy:
 
         self.actor = R_Actor(args, self.obs_space, self.act_space, self.device)
         self.critic = R_Critic(args, self.share_obs_space, self.device)
+        self.discri = R_Critic(args, self.share_obs_space, self.device, rnn=False)
 
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(),
                                                 lr=self.lr, eps=self.opti_eps,
                                                 weight_decay=self.weight_decay)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(),
+                                                 lr=self.critic_lr,
+                                                 eps=self.opti_eps,
+                                                 weight_decay=self.weight_decay)
+        self.discri_optimizer = torch.optim.Adam(self.discri.parameters(),
                                                  lr=self.critic_lr,
                                                  eps=self.opti_eps,
                                                  weight_decay=self.weight_decay)
@@ -45,6 +50,7 @@ class R_MAPPOPolicy:
         """
         update_linear_schedule(self.actor_optimizer, episode, episodes, self.lr)
         update_linear_schedule(self.critic_optimizer, episode, episodes, self.critic_lr)
+        update_linear_schedule(self.discri_optimizer, episode, episodes, self.discri_lr)
 
     def get_actions(self, cent_obs, obs, rnn_states_actor, rnn_states_critic, masks, available_actions=None,
                     deterministic=False):
