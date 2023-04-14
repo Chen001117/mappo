@@ -37,6 +37,8 @@ class MujocoRunner(Runner):
                         np.concatenate(self.buffer.share_obs_vec[-1]),
                         np.concatenate(self.buffer.share_obs_img[-1]),
                     )
+                    share_obs[0][:] *= 0.
+                    share_obs[1][1:] *= 0.
                 else:
                     share_obs = np.concatenate(self.buffer.share_obs[-1])
                 pred_values, _ = self.trainer.policy.discri(
@@ -44,9 +46,10 @@ class MujocoRunner(Runner):
                     np.concatenate(self.buffer.rnn_states_critic[-1]),
                     np.concatenate(self.buffer.masks[-1])
                 )
-                rewards += np.abs(pred_values.detach().numpy())
+                pred_values = np.array(np.split(_t2n(pred_values), self.n_rollout_threads))
+                rewards += np.abs(pred_values) * 1.
                 for i in range(len(infos)):
-                    infos[i]['rnd_rew'] = np.abs(pred_values[i].detach().numpy()).mean()
+                    infos[i]['rnd_rew'] = np.abs(pred_values[i]).mean()
                 
                 data = obs, rewards, dones, infos, values, actions, action_log_probs, rnn_states, rnn_states_critic
                 

@@ -193,7 +193,7 @@ class NavigationEnv(BaseEnv):
 
         rewards = []
         # pre-process
-        weights = np.array([0.25, 1., 0., 0., 0.])
+        weights = np.array([1., 2., 0.1, 0., 0.])
         weights = weights / weights.sum()
         state = self.sim.data.qpos.copy().flatten()
         # goal_distance rewards

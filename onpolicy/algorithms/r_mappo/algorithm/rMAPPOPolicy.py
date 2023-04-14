@@ -38,7 +38,7 @@ class R_MAPPOPolicy:
                                                  eps=self.opti_eps,
                                                  weight_decay=self.weight_decay)
         self.discri_optimizer = torch.optim.Adam(self.discri.parameters(),
-                                                 lr=self.critic_lr,
+                                                 lr=1e-5, #self.critic_lr,
                                                  eps=self.opti_eps,
                                                  weight_decay=self.weight_decay)
 
@@ -90,6 +90,20 @@ class R_MAPPOPolicy:
         :return values: (torch.Tensor) value function predictions.
         """
         values, _ = self.critic(cent_obs, rnn_states_critic, masks)
+        return values
+    
+    def get_discri(self, cent_obs, rnn_states_critic, masks):
+        """
+        Get value function predictions.
+        :param cent_obs (np.ndarray): centralized input to the critic.
+        :param rnn_states_critic: (np.ndarray) if critic is RNN, RNN states for critic.
+        :param masks: (np.ndarray) denotes points at which RNN states should be reset.
+
+        :return values: (torch.Tensor) value function predictions.
+        """
+        cent_obs[0][:] *= 0.
+        cent_obs[1][:,1:] *= 0.
+        values, _ = self.discri(cent_obs, rnn_states_critic, masks)
         return values
 
     def evaluate_actions(self, cent_obs, obs, rnn_states_actor, rnn_states_critic, action, masks,

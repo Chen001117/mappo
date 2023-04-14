@@ -164,7 +164,7 @@ class R_MAPPO():
         self.policy.critic_optimizer.step()
 
         # discri update
-        discri_loss = self.policy.get_values(
+        discri_loss = self.policy.get_discri(
             share_obs_batch, 
             rnn_states_critic_batch, 
             masks_batch, 
