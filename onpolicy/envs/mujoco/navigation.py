@@ -115,7 +115,7 @@ class NavigationEnv(BaseEnv):
         self.t = 0.
         load_pos = self.sim.data.qpos.copy()[:2]
         dist = np.linalg.norm(load_pos-self.goal, axis=-1)
-        self.max_time = dist * 5. + 20.
+        self.max_time = dist * 10. + 30.
         self.obs_map = self._get_obs_map(self.init_obs_pos, self.init_obs_yaw)
         # RL_info
         self.cul_rew = 0.
@@ -193,7 +193,7 @@ class NavigationEnv(BaseEnv):
 
         rewards = []
         # pre-process
-        weights = np.array([1., 2., 0.1, 0., 0.])
+        weights = np.array([0., 2., 0., 0.5, 0.])
         weights = weights / weights.sum()
         state = self.sim.data.qpos.copy().flatten()
         # goal_distance rewards
