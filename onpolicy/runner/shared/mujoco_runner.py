@@ -47,7 +47,7 @@ class MujocoRunner(Runner):
                     np.concatenate(self.buffer.masks[-1])
                 )
                 pred_values = np.array(np.split(_t2n(pred_values), self.n_rollout_threads))
-                rewards += np.abs(pred_values) * 0.
+                rewards += np.abs(pred_values) * .1
                 for i in range(len(infos)):
                     infos[i]['rnd_rew'] = np.abs(pred_values[i]).mean()
                 
