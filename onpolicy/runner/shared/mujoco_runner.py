@@ -296,7 +296,7 @@ class MujocoRunner(Runner):
 
                 if envs.action_space[0].__class__.__name__ == 'Box':
                     actions_env = actions.copy()
-                    # actions_env = np.array([[[-0.3,0.,0.2]]])
+                    # actions_env = np.array([[[0., 0., 0.2]]])
                 else:
                     raise NotImplementedError
 
@@ -304,7 +304,7 @@ class MujocoRunner(Runner):
                 obs, rewards, dones, infos = envs.step(actions_env)
                 episode_rewards.append(rewards)
 
-                print("V", value, "R", rewards, "O", obs[0][0][0][:2])
+                # print("V", value, "R", rewards, "O", obs[0][0][0][:2])
 
                 rnn_states[dones == True] = np.zeros(((dones == True).sum(), self.recurrent_N, self.hidden_size), dtype=np.float32)
                 rnn_states_critic[dones == True] = np.zeros(((dones == True).sum(), self.recurrent_N, self.critic_hidden_size), dtype=np.float32)

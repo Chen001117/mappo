@@ -26,12 +26,12 @@ class MARLWrapper(gym.Wrapper):
         #     return np.expand_dims(obs_n, 0)
         
     def step(self, actions):
-        obs_n, r, d, _, info_n = self.env.step(actions)
+        obs_n, rews, d, _, info_n = self.env.step(actions)
         # if type(o) == tuple:
         #     obs_n = np.expand_dims(o[0], 0), np.expand_dims(o[1], 0)
         # else:
         #     obs_n = np.expand_dims(o, 0)
-        reward_n = np.array([[r] for _ in range(self.num_agent)])
+        reward_n = np.array([[r] for r in rews])
         done_n = np.array([d for _ in range(self.num_agent)])
         return obs_n, reward_n, done_n, info_n
 
