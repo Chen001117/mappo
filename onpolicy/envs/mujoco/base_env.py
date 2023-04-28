@@ -36,7 +36,7 @@ class BaseEnv(gym.Env):
         
 
     def seed(self, seed):
-        super().reset(seed=seed)
+        # super().reset(seed=seed) # TODO: seed, gym version
         np.random.seed(seed)
 
     def set_state(self, qpos, qvel):

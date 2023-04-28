@@ -163,24 +163,24 @@ class R_MAPPO():
 
         self.policy.critic_optimizer.step()
 
-        # discri update
-        discri_loss = self.policy.get_discri(
-            share_obs_batch, 
-            rnn_states_critic_batch, 
-            masks_batch, 
-        )
-        discri_loss = (discri_loss**2).mean()
+        # # discri update
+        # discri_loss = self.policy.get_discri(
+        #     share_obs_batch, 
+        #     rnn_states_critic_batch, 
+        #     masks_batch, 
+        # )
+        # discri_loss = (discri_loss**2).mean()
 
-        self.policy.discri_optimizer.zero_grad()
+        # self.policy.discri_optimizer.zero_grad()
 
-        (discri_loss * self.value_loss_coef).backward()
+        # (discri_loss * self.value_loss_coef).backward()
 
-        if self._use_max_grad_norm:
-            discri_grad_norm = nn.utils.clip_grad_norm_(self.policy.discri.parameters(), self.max_grad_norm)
-        else:
-            discri_grad_norm = get_gard_norm(self.policy.discri.parameters())
+        # if self._use_max_grad_norm:
+        #     discri_grad_norm = nn.utils.clip_grad_norm_(self.policy.discri.parameters(), self.max_grad_norm)
+        # else:
+        #     discri_grad_norm = get_gard_norm(self.policy.discri.parameters())
 
-        self.policy.discri_optimizer.step()
+        # self.policy.discri_optimizer.step()
 
         return value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights
 

@@ -229,13 +229,20 @@ class NavigationEnv(BaseEnv):
                 cos_thetas.append(inner_dot/dist_load/dist_dog)
             else:
                 cos_thetas.append(0.)
+        theta_weights = (np.array(cos_thetas)+1.)/2.
 
         rew_dict = dict()
         rew_dict["goal_distance"] = rewards[0]
         rew_dict["goal_reach"] = rewards[1]
         rew_dict["con_penalty"] = rewards[2]
-        rews = np.dot(np.array(rewards), weights)
-        rews = rews * np.array(cos_thetas)
+        
+        rews = []
+        rewards = np.array(rewards)
+        for i in range(self.num_agent):
+            agent_rewards = rewards.copy()
+            agent_rewards[0] *= theta_weights[i]
+            rews.append(np.dot(agent_rewards, weights))
+        
         return rews, rew_dict
     
     def _cart2polar(self, coor):
@@ -371,9 +378,9 @@ class NavigationEnv(BaseEnv):
         cur_img_sta = np.repeat(cur_img_sta, self.num_agent, axis=0)
         
         # print("cur_img_sta.shape", cur_img_sta.shape) # [num_agent, 1+num_agent, width, height]
-        import imageio
-        img = np.concatenate([cur_img_sta[0,0], cur_img_sta[0,1]])
-        imageio.imwrite("../envs/mujoco/assets/map.png", img)
+        # import imageio
+        # img = np.concatenate([cur_img_sta[0,0], cur_img_sta[0,1]])
+        # imageio.imwrite("../envs/mujoco/assets/map.png", img)
 
         return cur_vec_obs, cur_img_obs, cur_vec_sta, cur_img_sta
     

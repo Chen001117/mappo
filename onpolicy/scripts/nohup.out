@@ -1,0 +1,3867 @@
+env is MuJoCo, scenario is Walker2d-v3, algo is rmappo, exp is check, max seed is 1
+seed is 1:
+wandb: Currently logged in as: cwz19 (use `wandb login --relogin` to force relogin)
+u are choosing to use rmappo, we set use_recurrent_policy to be True
+choose to use gpu...
+wandb: wandb version 0.15.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.10.5
+wandb: Syncing run rmappo_check_seed1
+wandb: ⭐️ View project at https://wandb.ai/cwz19/MuJoCo
+wandb: 🚀 View run at https://wandb.ai/cwz19/MuJoCo/runs/37albatz
+wandb: Run data is saved locally in /home/wchen/mappo/onpolicy/scripts/results/MuJoCo/Walker2d-v3/rmappo/check/wandb/run-20230427_024352-37albatz
+wandb: Run `wandb off` to turn off syncing.
+actor
+Total number of param in base_vec is  31680
+Total number of param in base_img is  63504
+Total number of param in rnn is  37376
+cirtic
+Total number of param in base_vec is  440064
+Total number of param in base_img is  998464
+Total number of param in rnn is  591872
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 0/488281 episodes, total num timesteps 2048/1000000000, FPS 98.
+
+average episode rewards is -0.01061322446912527
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 5/488281 episodes, total num timesteps 12288/1000000000, FPS 99.
+
+average episode rewards is 0.014430399984121323
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 10/488281 episodes, total num timesteps 22528/1000000000, FPS 99.
+
+average episode rewards is 0.008691208437085152
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 15/488281 episodes, total num timesteps 32768/1000000000, FPS 99.
+
+average episode rewards is -0.014668568968772888
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 20/488281 episodes, total num timesteps 43008/1000000000, FPS 100.
+
+average episode rewards is -0.031978655606508255
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 25/488281 episodes, total num timesteps 53248/1000000000, FPS 100.
+
+average episode rewards is -0.008300412446260452
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 30/488281 episodes, total num timesteps 63488/1000000000, FPS 100.
+
+average episode rewards is -0.012209468521177769
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 35/488281 episodes, total num timesteps 73728/1000000000, FPS 100.
+
+average episode rewards is 0.020631972700357437
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 40/488281 episodes, total num timesteps 83968/1000000000, FPS 100.
+
+average episode rewards is -0.03668458014726639
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 45/488281 episodes, total num timesteps 94208/1000000000, FPS 100.
+
+average episode rewards is 0.03196415677666664
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 50/488281 episodes, total num timesteps 104448/1000000000, FPS 100.
+
+average episode rewards is -0.024645090103149414
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 55/488281 episodes, total num timesteps 114688/1000000000, FPS 100.
+
+average episode rewards is -0.001373866107314825
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 60/488281 episodes, total num timesteps 124928/1000000000, FPS 100.
+
+average episode rewards is 0.04836592823266983
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 65/488281 episodes, total num timesteps 135168/1000000000, FPS 100.
+
+average episode rewards is -0.0077643124386668205
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 70/488281 episodes, total num timesteps 145408/1000000000, FPS 100.
+
+average episode rewards is 0.0025149439461529255
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 75/488281 episodes, total num timesteps 155648/1000000000, FPS 100.
+
+average episode rewards is 0.004554562736302614
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 80/488281 episodes, total num timesteps 165888/1000000000, FPS 100.
+
+average episode rewards is 0.060978248715400696
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 85/488281 episodes, total num timesteps 176128/1000000000, FPS 100.
+
+average episode rewards is 0.04380296170711517
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 90/488281 episodes, total num timesteps 186368/1000000000, FPS 101.
+
+average episode rewards is 0.0024010716006159782
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 95/488281 episodes, total num timesteps 196608/1000000000, FPS 101.
+
+average episode rewards is 0.03879684954881668
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 100/488281 episodes, total num timesteps 206848/1000000000, FPS 101.
+
+average episode rewards is 0.07231742888689041
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 105/488281 episodes, total num timesteps 217088/1000000000, FPS 100.
+
+average episode rewards is 0.14467552304267883
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 110/488281 episodes, total num timesteps 227328/1000000000, FPS 100.
+
+average episode rewards is 0.08309817314147949
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 115/488281 episodes, total num timesteps 237568/1000000000, FPS 100.
+
+average episode rewards is 0.09627148509025574
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 120/488281 episodes, total num timesteps 247808/1000000000, FPS 100.
+
+average episode rewards is 0.05567021667957306
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 125/488281 episodes, total num timesteps 258048/1000000000, FPS 100.
+
+average episode rewards is 0.049614258110523224
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 130/488281 episodes, total num timesteps 268288/1000000000, FPS 100.
+
+average episode rewards is 0.07327382266521454
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 135/488281 episodes, total num timesteps 278528/1000000000, FPS 100.
+
+average episode rewards is 0.11953701823949814
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 140/488281 episodes, total num timesteps 288768/1000000000, FPS 100.
+
+average episode rewards is 0.06355831027030945
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 145/488281 episodes, total num timesteps 299008/1000000000, FPS 100.
+
+average episode rewards is 0.1004304513335228
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 150/488281 episodes, total num timesteps 309248/1000000000, FPS 100.
+
+average episode rewards is 0.08710993826389313
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 155/488281 episodes, total num timesteps 319488/1000000000, FPS 100.
+
+average episode rewards is 0.13957571983337402
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 160/488281 episodes, total num timesteps 329728/1000000000, FPS 100.
+
+average episode rewards is 0.07602056860923767
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 165/488281 episodes, total num timesteps 339968/1000000000, FPS 100.
+
+average episode rewards is 0.04620497673749924
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 170/488281 episodes, total num timesteps 350208/1000000000, FPS 100.
+
+average episode rewards is 0.13066302239894867
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 175/488281 episodes, total num timesteps 360448/1000000000, FPS 100.
+
+average episode rewards is 0.13538087904453278
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 180/488281 episodes, total num timesteps 370688/1000000000, FPS 100.
+
+average episode rewards is 0.10127972066402435
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 185/488281 episodes, total num timesteps 380928/1000000000, FPS 100.
+
+average episode rewards is 0.1619512438774109
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 190/488281 episodes, total num timesteps 391168/1000000000, FPS 100.
+
+average episode rewards is 0.06431158632040024
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 195/488281 episodes, total num timesteps 401408/1000000000, FPS 100.
+
+average episode rewards is 0.1641390025615692
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 200/488281 episodes, total num timesteps 411648/1000000000, FPS 100.
+
+average episode rewards is 0.07884582132101059
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 205/488281 episodes, total num timesteps 421888/1000000000, FPS 100.
+
+average episode rewards is 0.16174426674842834
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 210/488281 episodes, total num timesteps 432128/1000000000, FPS 100.
+
+average episode rewards is 0.19514000415802002
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 215/488281 episodes, total num timesteps 442368/1000000000, FPS 100.
+
+average episode rewards is 0.14790195226669312
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 220/488281 episodes, total num timesteps 452608/1000000000, FPS 100.
+
+average episode rewards is 0.15522976219654083
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 225/488281 episodes, total num timesteps 462848/1000000000, FPS 100.
+
+average episode rewards is 0.19477443397045135
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 230/488281 episodes, total num timesteps 473088/1000000000, FPS 100.
+
+average episode rewards is 0.10557064414024353
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 235/488281 episodes, total num timesteps 483328/1000000000, FPS 100.
+
+average episode rewards is 0.16292205452919006
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 240/488281 episodes, total num timesteps 493568/1000000000, FPS 100.
+
+average episode rewards is 0.11245144158601761
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 245/488281 episodes, total num timesteps 503808/1000000000, FPS 100.
+
+average episode rewards is 0.07748974859714508
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 250/488281 episodes, total num timesteps 514048/1000000000, FPS 100.
+
+average episode rewards is 0.13615624606609344
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 255/488281 episodes, total num timesteps 524288/1000000000, FPS 100.
+
+average episode rewards is 0.12123294919729233
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 260/488281 episodes, total num timesteps 534528/1000000000, FPS 100.
+
+average episode rewards is 0.15272969007492065
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 265/488281 episodes, total num timesteps 544768/1000000000, FPS 100.
+
+average episode rewards is 0.14647430181503296
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 270/488281 episodes, total num timesteps 555008/1000000000, FPS 100.
+
+average episode rewards is 0.2009083479642868
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 275/488281 episodes, total num timesteps 565248/1000000000, FPS 100.
+
+average episode rewards is 0.14127181470394135
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 280/488281 episodes, total num timesteps 575488/1000000000, FPS 100.
+
+average episode rewards is 0.15364596247673035
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 285/488281 episodes, total num timesteps 585728/1000000000, FPS 100.
+
+average episode rewards is 0.08800511807203293
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 290/488281 episodes, total num timesteps 595968/1000000000, FPS 100.
+
+average episode rewards is 0.2667398750782013
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 295/488281 episodes, total num timesteps 606208/1000000000, FPS 100.
+
+average episode rewards is 0.13617078959941864
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 300/488281 episodes, total num timesteps 616448/1000000000, FPS 100.
+
+average episode rewards is 0.25490298867225647
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 305/488281 episodes, total num timesteps 626688/1000000000, FPS 100.
+
+average episode rewards is 0.22274838387966156
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 310/488281 episodes, total num timesteps 636928/1000000000, FPS 100.
+
+average episode rewards is 0.10357939451932907
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 315/488281 episodes, total num timesteps 647168/1000000000, FPS 100.
+
+average episode rewards is 0.21349689364433289
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 320/488281 episodes, total num timesteps 657408/1000000000, FPS 100.
+
+average episode rewards is 0.06021742895245552
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 325/488281 episodes, total num timesteps 667648/1000000000, FPS 100.
+
+average episode rewards is 0.062470827251672745
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 330/488281 episodes, total num timesteps 677888/1000000000, FPS 100.
+
+average episode rewards is 0.15473613142967224
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 335/488281 episodes, total num timesteps 688128/1000000000, FPS 100.
+
+average episode rewards is 0.0730089470744133
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 340/488281 episodes, total num timesteps 698368/1000000000, FPS 100.
+
+average episode rewards is 0.16486230492591858
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 345/488281 episodes, total num timesteps 708608/1000000000, FPS 100.
+
+average episode rewards is 0.23583614826202393
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 350/488281 episodes, total num timesteps 718848/1000000000, FPS 100.
+
+average episode rewards is 0.21565398573875427
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 355/488281 episodes, total num timesteps 729088/1000000000, FPS 100.
+
+average episode rewards is 0.13202999532222748
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 360/488281 episodes, total num timesteps 739328/1000000000, FPS 100.
+
+average episode rewards is 0.16440141201019287
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 365/488281 episodes, total num timesteps 749568/1000000000, FPS 100.
+
+average episode rewards is 0.102775439620018
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 370/488281 episodes, total num timesteps 759808/1000000000, FPS 100.
+
+average episode rewards is 0.21566236019134521
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 375/488281 episodes, total num timesteps 770048/1000000000, FPS 100.
+
+average episode rewards is 0.11390963941812515
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 380/488281 episodes, total num timesteps 780288/1000000000, FPS 100.
+
+average episode rewards is 0.27737754583358765
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 385/488281 episodes, total num timesteps 790528/1000000000, FPS 100.
+
+average episode rewards is 0.32161247730255127
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 390/488281 episodes, total num timesteps 800768/1000000000, FPS 100.
+
+average episode rewards is 0.40658116340637207
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 395/488281 episodes, total num timesteps 811008/1000000000, FPS 100.
+
+average episode rewards is 0.4042119085788727
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 400/488281 episodes, total num timesteps 821248/1000000000, FPS 100.
+
+average episode rewards is 0.2946173846721649
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 405/488281 episodes, total num timesteps 831488/1000000000, FPS 100.
+
+average episode rewards is 0.292236328125
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 410/488281 episodes, total num timesteps 841728/1000000000, FPS 100.
+
+average episode rewards is 0.24281196296215057
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 415/488281 episodes, total num timesteps 851968/1000000000, FPS 100.
+
+average episode rewards is 0.5474223494529724
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 420/488281 episodes, total num timesteps 862208/1000000000, FPS 100.
+
+average episode rewards is 0.2633821368217468
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 425/488281 episodes, total num timesteps 872448/1000000000, FPS 100.
+
+average episode rewards is 0.2611803710460663
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 430/488281 episodes, total num timesteps 882688/1000000000, FPS 100.
+
+average episode rewards is 0.5337026119232178
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 435/488281 episodes, total num timesteps 892928/1000000000, FPS 100.
+
+average episode rewards is 0.3511050343513489
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 440/488281 episodes, total num timesteps 903168/1000000000, FPS 100.
+
+average episode rewards is 0.3788377046585083
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 445/488281 episodes, total num timesteps 913408/1000000000, FPS 100.
+
+average episode rewards is 0.27233487367630005
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 450/488281 episodes, total num timesteps 923648/1000000000, FPS 100.
+
+average episode rewards is 0.17797330021858215
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 455/488281 episodes, total num timesteps 933888/1000000000, FPS 100.
+
+average episode rewards is 0.2809508740901947
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 460/488281 episodes, total num timesteps 944128/1000000000, FPS 100.
+
+average episode rewards is 0.3019748330116272
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 465/488281 episodes, total num timesteps 954368/1000000000, FPS 100.
+
+average episode rewards is 0.31665802001953125
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 470/488281 episodes, total num timesteps 964608/1000000000, FPS 100.
+
+average episode rewards is 0.23699605464935303
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 475/488281 episodes, total num timesteps 974848/1000000000, FPS 100.
+
+average episode rewards is 0.18379417061805725
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 480/488281 episodes, total num timesteps 985088/1000000000, FPS 100.
+
+average episode rewards is 0.3347214162349701
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 485/488281 episodes, total num timesteps 995328/1000000000, FPS 100.
+
+average episode rewards is 0.309391587972641
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 490/488281 episodes, total num timesteps 1005568/1000000000, FPS 100.
+
+average episode rewards is 0.13299408555030823
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 495/488281 episodes, total num timesteps 1015808/1000000000, FPS 100.
+
+average episode rewards is 0.3657837510108948
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 500/488281 episodes, total num timesteps 1026048/1000000000, FPS 100.
+
+average episode rewards is 0.2655222415924072
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 505/488281 episodes, total num timesteps 1036288/1000000000, FPS 100.
+
+average episode rewards is 0.45631876587867737
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 510/488281 episodes, total num timesteps 1046528/1000000000, FPS 99.
+
+average episode rewards is 0.4324148893356323
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 515/488281 episodes, total num timesteps 1056768/1000000000, FPS 99.
+
+average episode rewards is 0.2522597014904022
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 520/488281 episodes, total num timesteps 1067008/1000000000, FPS 99.
+
+average episode rewards is 0.2501545548439026
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 525/488281 episodes, total num timesteps 1077248/1000000000, FPS 99.
+
+average episode rewards is 0.15956610441207886
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 530/488281 episodes, total num timesteps 1087488/1000000000, FPS 99.
+
+average episode rewards is 0.3063390851020813
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 535/488281 episodes, total num timesteps 1097728/1000000000, FPS 98.
+
+average episode rewards is 0.31524455547332764
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 540/488281 episodes, total num timesteps 1107968/1000000000, FPS 98.
+
+average episode rewards is 0.44023966789245605
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 545/488281 episodes, total num timesteps 1118208/1000000000, FPS 98.
+
+average episode rewards is 0.37060391902923584
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 550/488281 episodes, total num timesteps 1128448/1000000000, FPS 98.
+
+average episode rewards is 0.3399052619934082
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 555/488281 episodes, total num timesteps 1138688/1000000000, FPS 98.
+
+average episode rewards is 0.4505133628845215
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 560/488281 episodes, total num timesteps 1148928/1000000000, FPS 98.
+
+average episode rewards is 0.18409956991672516
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 565/488281 episodes, total num timesteps 1159168/1000000000, FPS 98.
+
+average episode rewards is 0.5587998032569885
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 570/488281 episodes, total num timesteps 1169408/1000000000, FPS 97.
+
+average episode rewards is 0.4875848591327667
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 575/488281 episodes, total num timesteps 1179648/1000000000, FPS 97.
+
+average episode rewards is 0.2914692163467407
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 580/488281 episodes, total num timesteps 1189888/1000000000, FPS 97.
+
+average episode rewards is 0.33559733629226685
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 585/488281 episodes, total num timesteps 1200128/1000000000, FPS 97.
+
+average episode rewards is 0.4157947301864624
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 590/488281 episodes, total num timesteps 1210368/1000000000, FPS 97.
+
+average episode rewards is 0.4329759478569031
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 595/488281 episodes, total num timesteps 1220608/1000000000, FPS 97.
+
+average episode rewards is 0.34139007329940796
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 600/488281 episodes, total num timesteps 1230848/1000000000, FPS 97.
+
+average episode rewards is 0.4811490774154663
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 605/488281 episodes, total num timesteps 1241088/1000000000, FPS 97.
+
+average episode rewards is 0.5418524742126465
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 610/488281 episodes, total num timesteps 1251328/1000000000, FPS 96.
+
+average episode rewards is 0.3565714359283447
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 615/488281 episodes, total num timesteps 1261568/1000000000, FPS 96.
+
+average episode rewards is 0.362293541431427
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 620/488281 episodes, total num timesteps 1271808/1000000000, FPS 96.
+
+average episode rewards is 0.29693132638931274
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 625/488281 episodes, total num timesteps 1282048/1000000000, FPS 96.
+
+average episode rewards is 0.2496909201145172
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 630/488281 episodes, total num timesteps 1292288/1000000000, FPS 96.
+
+average episode rewards is 0.22093862295150757
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 635/488281 episodes, total num timesteps 1302528/1000000000, FPS 96.
+
+average episode rewards is 0.4367920160293579
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 640/488281 episodes, total num timesteps 1312768/1000000000, FPS 96.
+
+average episode rewards is 0.3719661235809326
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 645/488281 episodes, total num timesteps 1323008/1000000000, FPS 96.
+
+average episode rewards is 0.2550593614578247
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 650/488281 episodes, total num timesteps 1333248/1000000000, FPS 96.
+
+average episode rewards is 0.2945672869682312
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 655/488281 episodes, total num timesteps 1343488/1000000000, FPS 95.
+
+average episode rewards is 0.21327480673789978
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 660/488281 episodes, total num timesteps 1353728/1000000000, FPS 95.
+
+average episode rewards is 0.13132260739803314
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 665/488281 episodes, total num timesteps 1363968/1000000000, FPS 95.
+
+average episode rewards is 0.4227637052536011
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 670/488281 episodes, total num timesteps 1374208/1000000000, FPS 95.
+
+average episode rewards is 0.22611336410045624
+Terminated
+./train_mujoco.sh: 20: --model_dir: not found
+/home/wchen/.local/lib/python3.7/multiprocessing/semaphore_tracker.py:144: UserWarning: semaphore_tracker: There appear to be 6 leaked semaphores to clean up at shutdown
+  len(cache))
+env is MuJoCo, scenario is Walker2d-v3, algo is rmappo, exp is check, max seed is 1
+seed is 1:
+wandb: Currently logged in as: cwz19 (use `wandb login --relogin` to force relogin)
+u are choosing to use rmappo, we set use_recurrent_policy to be True
+choose to use gpu...
+wandb: wandb version 0.15.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.10.5
+wandb: Syncing run rmappo_check_seed1
+wandb: ⭐️ View project at https://wandb.ai/cwz19/MuJoCo
+wandb: 🚀 View run at https://wandb.ai/cwz19/MuJoCo/runs/3apzgrpi
+wandb: Run data is saved locally in /home/wchen/mappo/onpolicy/scripts/results/MuJoCo/Walker2d-v3/rmappo/check/wandb/run-20230427_064431-3apzgrpi
+wandb: Run `wandb off` to turn off syncing.
+actor
+Total number of param in base_vec is  31680
+Total number of param in base_img is  63504
+Total number of param in rnn is  37376
+cirtic
+Total number of param in base_vec is  440064
+Total number of param in base_img is  998464
+Total number of param in rnn is  591872
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:457: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:471: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 0/488281 episodes, total num timesteps 2048/1000000000, FPS 110.
+
+average episode rewards is -0.050275154411792755
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 5/488281 episodes, total num timesteps 12288/1000000000, FPS 108.
+
+average episode rewards is -0.08899890631437302
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 10/488281 episodes, total num timesteps 22528/1000000000, FPS 107.
+
+average episode rewards is 0.05027344450354576
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:458: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 15/488281 episodes, total num timesteps 32768/1000000000, FPS 107.
+
+average episode rewards is 0.0730389729142189
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 20/488281 episodes, total num timesteps 43008/1000000000, FPS 108.
+
+average episode rewards is 0.0003164038062095642
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 25/488281 episodes, total num timesteps 53248/1000000000, FPS 108.
+
+average episode rewards is -0.043210990726947784
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 30/488281 episodes, total num timesteps 63488/1000000000, FPS 108.
+
+average episode rewards is -0.12220868468284607
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 35/488281 episodes, total num timesteps 73728/1000000000, FPS 108.
+
+average episode rewards is 0.09821769595146179
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 40/488281 episodes, total num timesteps 83968/1000000000, FPS 108.
+
+average episode rewards is -0.04959852248430252
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 45/488281 episodes, total num timesteps 94208/1000000000, FPS 108.
+
+average episode rewards is 0.04716165363788605
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 50/488281 episodes, total num timesteps 104448/1000000000, FPS 108.
+
+average episode rewards is 0.11802496761083603
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 55/488281 episodes, total num timesteps 114688/1000000000, FPS 108.
+
+average episode rewards is 0.046230167150497437
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 60/488281 episodes, total num timesteps 124928/1000000000, FPS 108.
+
+average episode rewards is 0.10643573850393295
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 65/488281 episodes, total num timesteps 135168/1000000000, FPS 108.
+
+average episode rewards is 0.7878503203392029
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 70/488281 episodes, total num timesteps 145408/1000000000, FPS 108.
+
+average episode rewards is 0.29794901609420776
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 75/488281 episodes, total num timesteps 155648/1000000000, FPS 108.
+
+average episode rewards is 0.15626220405101776
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 80/488281 episodes, total num timesteps 165888/1000000000, FPS 108.
+
+average episode rewards is 0.754341721534729
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 85/488281 episodes, total num timesteps 176128/1000000000, FPS 108.
+
+average episode rewards is 0.4209210276603699
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 90/488281 episodes, total num timesteps 186368/1000000000, FPS 108.
+
+average episode rewards is 0.27365607023239136
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 95/488281 episodes, total num timesteps 196608/1000000000, FPS 108.
+
+average episode rewards is 0.5359841585159302
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 100/488281 episodes, total num timesteps 206848/1000000000, FPS 109.
+
+average episode rewards is 0.24850071966648102
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 105/488281 episodes, total num timesteps 217088/1000000000, FPS 109.
+
+average episode rewards is 0.1619054079055786
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 110/488281 episodes, total num timesteps 227328/1000000000, FPS 109.
+
+average episode rewards is 0.5816898345947266
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 115/488281 episodes, total num timesteps 237568/1000000000, FPS 109.
+
+average episode rewards is 0.5071338415145874
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 120/488281 episodes, total num timesteps 247808/1000000000, FPS 109.
+
+average episode rewards is 0.12081493437290192
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 125/488281 episodes, total num timesteps 258048/1000000000, FPS 109.
+
+average episode rewards is 0.27584320306777954
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 130/488281 episodes, total num timesteps 268288/1000000000, FPS 109.
+
+average episode rewards is 0.6827882528305054
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 135/488281 episodes, total num timesteps 278528/1000000000, FPS 109.
+
+average episode rewards is 0.3471134901046753
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 140/488281 episodes, total num timesteps 288768/1000000000, FPS 109.
+
+average episode rewards is 0.3088381588459015
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 145/488281 episodes, total num timesteps 299008/1000000000, FPS 109.
+
+average episode rewards is 0.4371715188026428
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 150/488281 episodes, total num timesteps 309248/1000000000, FPS 109.
+
+average episode rewards is 0.17971424758434296
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 155/488281 episodes, total num timesteps 319488/1000000000, FPS 109.
+
+average episode rewards is 0.21664540469646454
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 160/488281 episodes, total num timesteps 329728/1000000000, FPS 109.
+
+average episode rewards is 0.7171807885169983
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 165/488281 episodes, total num timesteps 339968/1000000000, FPS 109.
+
+average episode rewards is 0.8109351992607117
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 170/488281 episodes, total num timesteps 350208/1000000000, FPS 109.
+
+average episode rewards is 0.4660097360610962
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 175/488281 episodes, total num timesteps 360448/1000000000, FPS 109.
+
+average episode rewards is 0.6386698484420776
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 180/488281 episodes, total num timesteps 370688/1000000000, FPS 109.
+
+average episode rewards is 0.6639664173126221
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 185/488281 episodes, total num timesteps 380928/1000000000, FPS 109.
+
+average episode rewards is 0.42775291204452515
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 190/488281 episodes, total num timesteps 391168/1000000000, FPS 109.
+
+average episode rewards is 0.2401501089334488
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 195/488281 episodes, total num timesteps 401408/1000000000, FPS 109.
+
+average episode rewards is 0.2937069535255432
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 200/488281 episodes, total num timesteps 411648/1000000000, FPS 109.
+
+average episode rewards is 0.18327976763248444
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 205/488281 episodes, total num timesteps 421888/1000000000, FPS 109.
+
+average episode rewards is 0.5904394388198853
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 210/488281 episodes, total num timesteps 432128/1000000000, FPS 109.
+
+average episode rewards is 0.4584183692932129
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 215/488281 episodes, total num timesteps 442368/1000000000, FPS 109.
+
+average episode rewards is 1.0473299026489258
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 220/488281 episodes, total num timesteps 452608/1000000000, FPS 109.
+
+average episode rewards is 0.45954960584640503
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 225/488281 episodes, total num timesteps 462848/1000000000, FPS 109.
+
+average episode rewards is 1.0840522050857544
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 230/488281 episodes, total num timesteps 473088/1000000000, FPS 109.
+
+average episode rewards is 0.43188682198524475
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 235/488281 episodes, total num timesteps 483328/1000000000, FPS 109.
+
+average episode rewards is 0.407102108001709
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 240/488281 episodes, total num timesteps 493568/1000000000, FPS 109.
+
+average episode rewards is 0.5073388814926147
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 245/488281 episodes, total num timesteps 503808/1000000000, FPS 109.
+
+average episode rewards is 0.5618664026260376
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 250/488281 episodes, total num timesteps 514048/1000000000, FPS 109.
+
+average episode rewards is 1.2267488241195679
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 255/488281 episodes, total num timesteps 524288/1000000000, FPS 109.
+
+average episode rewards is 0.9432446360588074
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 260/488281 episodes, total num timesteps 534528/1000000000, FPS 109.
+
+average episode rewards is 0.8750088214874268
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 265/488281 episodes, total num timesteps 544768/1000000000, FPS 109.
+
+average episode rewards is 1.1515923738479614
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 270/488281 episodes, total num timesteps 555008/1000000000, FPS 109.
+
+average episode rewards is 1.1821191310882568
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 275/488281 episodes, total num timesteps 565248/1000000000, FPS 109.
+
+average episode rewards is 0.9712759852409363
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 280/488281 episodes, total num timesteps 575488/1000000000, FPS 110.
+
+average episode rewards is 1.6476185321807861
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 285/488281 episodes, total num timesteps 585728/1000000000, FPS 110.
+
+average episode rewards is 1.0408345460891724
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 290/488281 episodes, total num timesteps 595968/1000000000, FPS 110.
+
+average episode rewards is 0.6046727895736694
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 295/488281 episodes, total num timesteps 606208/1000000000, FPS 110.
+
+average episode rewards is 0.4229263961315155
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 300/488281 episodes, total num timesteps 616448/1000000000, FPS 109.
+
+average episode rewards is 0.6035763025283813
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 305/488281 episodes, total num timesteps 626688/1000000000, FPS 109.
+
+average episode rewards is 1.1392725706100464
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 310/488281 episodes, total num timesteps 636928/1000000000, FPS 109.
+
+average episode rewards is 0.853256344795227
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 315/488281 episodes, total num timesteps 647168/1000000000, FPS 109.
+
+average episode rewards is 1.0165408849716187
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 320/488281 episodes, total num timesteps 657408/1000000000, FPS 109.
+
+average episode rewards is 1.0365705490112305
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 325/488281 episodes, total num timesteps 667648/1000000000, FPS 109.
+
+average episode rewards is 1.3543415069580078
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 330/488281 episodes, total num timesteps 677888/1000000000, FPS 109.
+
+average episode rewards is 1.0072425603866577
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 335/488281 episodes, total num timesteps 688128/1000000000, FPS 109.
+
+average episode rewards is 0.5225018262863159
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 340/488281 episodes, total num timesteps 698368/1000000000, FPS 109.
+
+average episode rewards is 0.9192507266998291
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 345/488281 episodes, total num timesteps 708608/1000000000, FPS 109.
+
+average episode rewards is 0.5542219281196594
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 350/488281 episodes, total num timesteps 718848/1000000000, FPS 109.
+
+average episode rewards is 0.611346423625946
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 355/488281 episodes, total num timesteps 729088/1000000000, FPS 109.
+
+average episode rewards is 1.254930019378662
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 360/488281 episodes, total num timesteps 739328/1000000000, FPS 109.
+
+average episode rewards is 0.5442036390304565
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 365/488281 episodes, total num timesteps 749568/1000000000, FPS 109.
+
+average episode rewards is 1.6498401165008545
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 370/488281 episodes, total num timesteps 759808/1000000000, FPS 109.
+
+average episode rewards is 1.3137542009353638
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 375/488281 episodes, total num timesteps 770048/1000000000, FPS 109.
+
+average episode rewards is 1.2870769500732422
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 380/488281 episodes, total num timesteps 780288/1000000000, FPS 108.
+
+average episode rewards is 1.1259291172027588
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 385/488281 episodes, total num timesteps 790528/1000000000, FPS 108.
+
+average episode rewards is 0.8794195055961609
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 390/488281 episodes, total num timesteps 800768/1000000000, FPS 108.
+
+average episode rewards is 1.0120036602020264
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 395/488281 episodes, total num timesteps 811008/1000000000, FPS 108.
+
+average episode rewards is 0.5458898544311523
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 400/488281 episodes, total num timesteps 821248/1000000000, FPS 108.
+
+average episode rewards is 0.9080387353897095
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 405/488281 episodes, total num timesteps 831488/1000000000, FPS 108.
+
+average episode rewards is 0.8835068941116333
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 410/488281 episodes, total num timesteps 841728/1000000000, FPS 108.
+
+average episode rewards is 0.9789981245994568
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 415/488281 episodes, total num timesteps 851968/1000000000, FPS 108.
+
+average episode rewards is 0.7942731380462646
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 420/488281 episodes, total num timesteps 862208/1000000000, FPS 108.
+
+average episode rewards is 1.4130610227584839
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 425/488281 episodes, total num timesteps 872448/1000000000, FPS 108.
+
+average episode rewards is 1.109732985496521
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 430/488281 episodes, total num timesteps 882688/1000000000, FPS 108.
+
+average episode rewards is 1.168485403060913
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 435/488281 episodes, total num timesteps 892928/1000000000, FPS 108.
+
+average episode rewards is 1.2908369302749634
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 440/488281 episodes, total num timesteps 903168/1000000000, FPS 108.
+
+average episode rewards is 0.966345489025116
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 445/488281 episodes, total num timesteps 913408/1000000000, FPS 108.
+
+average episode rewards is 1.5964665412902832
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 450/488281 episodes, total num timesteps 923648/1000000000, FPS 108.
+
+average episode rewards is 1.3823566436767578
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 455/488281 episodes, total num timesteps 933888/1000000000, FPS 108.
+
+average episode rewards is 0.6673998832702637
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 460/488281 episodes, total num timesteps 944128/1000000000, FPS 108.
+
+average episode rewards is 1.7170689105987549
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 465/488281 episodes, total num timesteps 954368/1000000000, FPS 108.
+
+average episode rewards is 1.1854159832000732
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 470/488281 episodes, total num timesteps 964608/1000000000, FPS 108.
+
+average episode rewards is 0.9038784503936768
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 475/488281 episodes, total num timesteps 974848/1000000000, FPS 108.
+
+average episode rewards is 1.1826746463775635
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 480/488281 episodes, total num timesteps 985088/1000000000, FPS 108.
+
+average episode rewards is 0.6241580843925476
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 485/488281 episodes, total num timesteps 995328/1000000000, FPS 108.
+
+average episode rewards is 1.0824763774871826
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 490/488281 episodes, total num timesteps 1005568/1000000000, FPS 107.
+
+average episode rewards is 1.2893285751342773
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 495/488281 episodes, total num timesteps 1015808/1000000000, FPS 107.
+
+average episode rewards is 1.4305412769317627
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 500/488281 episodes, total num timesteps 1026048/1000000000, FPS 107.
+
+average episode rewards is 0.6176285743713379
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 505/488281 episodes, total num timesteps 1036288/1000000000, FPS 107.
+
+average episode rewards is 0.6802679300308228
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 510/488281 episodes, total num timesteps 1046528/1000000000, FPS 107.
+
+average episode rewards is 1.173443078994751
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 515/488281 episodes, total num timesteps 1056768/1000000000, FPS 107.
+
+average episode rewards is 1.2966033220291138
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 520/488281 episodes, total num timesteps 1067008/1000000000, FPS 107.
+
+average episode rewards is 0.809195339679718
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 525/488281 episodes, total num timesteps 1077248/1000000000, FPS 107.
+
+average episode rewards is 1.0956552028656006
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 530/488281 episodes, total num timesteps 1087488/1000000000, FPS 107.
+
+average episode rewards is 0.524105966091156
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 535/488281 episodes, total num timesteps 1097728/1000000000, FPS 107.
+
+average episode rewards is 1.0468183755874634
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 540/488281 episodes, total num timesteps 1107968/1000000000, FPS 107.
+
+average episode rewards is 1.2476309537887573
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 545/488281 episodes, total num timesteps 1118208/1000000000, FPS 107.
+
+average episode rewards is 0.7403824329376221
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 550/488281 episodes, total num timesteps 1128448/1000000000, FPS 107.
+
+average episode rewards is 1.262030839920044
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 555/488281 episodes, total num timesteps 1138688/1000000000, FPS 107.
+
+average episode rewards is 1.3482038974761963
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 560/488281 episodes, total num timesteps 1148928/1000000000, FPS 107.
+
+average episode rewards is 0.9789944887161255
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 565/488281 episodes, total num timesteps 1159168/1000000000, FPS 107.
+
+average episode rewards is 1.5852038860321045
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 570/488281 episodes, total num timesteps 1169408/1000000000, FPS 107.
+
+average episode rewards is 1.2041471004486084
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 575/488281 episodes, total num timesteps 1179648/1000000000, FPS 107.
+
+average episode rewards is 0.7569196224212646
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 580/488281 episodes, total num timesteps 1189888/1000000000, FPS 107.
+
+average episode rewards is 0.9142906665802002
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 585/488281 episodes, total num timesteps 1200128/1000000000, FPS 107.
+
+average episode rewards is 0.9383252263069153
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 590/488281 episodes, total num timesteps 1210368/1000000000, FPS 107.
+
+average episode rewards is 1.4497849941253662
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 595/488281 episodes, total num timesteps 1220608/1000000000, FPS 107.
+
+average episode rewards is 1.7194435596466064
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 600/488281 episodes, total num timesteps 1230848/1000000000, FPS 107.
+
+average episode rewards is 1.4339866638183594
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 605/488281 episodes, total num timesteps 1241088/1000000000, FPS 107.
+
+average episode rewards is 2.0049943923950195
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 610/488281 episodes, total num timesteps 1251328/1000000000, FPS 107.
+
+average episode rewards is 1.277764081954956
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 615/488281 episodes, total num timesteps 1261568/1000000000, FPS 107.
+
+average episode rewards is 1.1059596538543701
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 620/488281 episodes, total num timesteps 1271808/1000000000, FPS 107.
+
+average episode rewards is 1.250646948814392
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 625/488281 episodes, total num timesteps 1282048/1000000000, FPS 107.
+
+average episode rewards is 1.8315353393554688
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 630/488281 episodes, total num timesteps 1292288/1000000000, FPS 107.
+
+average episode rewards is 1.5757920742034912
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 635/488281 episodes, total num timesteps 1302528/1000000000, FPS 107.
+
+average episode rewards is 1.6408812999725342
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 640/488281 episodes, total num timesteps 1312768/1000000000, FPS 107.
+
+average episode rewards is 1.4208624362945557
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 645/488281 episodes, total num timesteps 1323008/1000000000, FPS 107.
+
+average episode rewards is 1.1440857648849487
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 650/488281 episodes, total num timesteps 1333248/1000000000, FPS 107.
+
+average episode rewards is 1.3974368572235107
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 655/488281 episodes, total num timesteps 1343488/1000000000, FPS 107.
+
+average episode rewards is 1.0219281911849976
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 660/488281 episodes, total num timesteps 1353728/1000000000, FPS 107.
+
+average episode rewards is 0.9982792139053345
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 665/488281 episodes, total num timesteps 1363968/1000000000, FPS 107.
+
+average episode rewards is 0.9485750794410706
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 670/488281 episodes, total num timesteps 1374208/1000000000, FPS 107.
+
+average episode rewards is 1.0131111145019531
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 675/488281 episodes, total num timesteps 1384448/1000000000, FPS 107.
+
+average episode rewards is 1.1849119663238525
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 680/488281 episodes, total num timesteps 1394688/1000000000, FPS 106.
+
+average episode rewards is 1.4751982688903809
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 685/488281 episodes, total num timesteps 1404928/1000000000, FPS 106.
+
+average episode rewards is 0.9767811894416809
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 690/488281 episodes, total num timesteps 1415168/1000000000, FPS 106.
+
+average episode rewards is 0.5840610861778259
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 695/488281 episodes, total num timesteps 1425408/1000000000, FPS 106.
+
+average episode rewards is 0.6338068246841431
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 700/488281 episodes, total num timesteps 1435648/1000000000, FPS 106.
+
+average episode rewards is 1.1211166381835938
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 705/488281 episodes, total num timesteps 1445888/1000000000, FPS 106.
+
+average episode rewards is 1.4113588333129883
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 710/488281 episodes, total num timesteps 1456128/1000000000, FPS 106.
+
+average episode rewards is 0.9964416027069092
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 715/488281 episodes, total num timesteps 1466368/1000000000, FPS 106.
+
+average episode rewards is 1.2582027912139893
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 720/488281 episodes, total num timesteps 1476608/1000000000, FPS 106.
+
+average episode rewards is 1.0792486667633057
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 725/488281 episodes, total num timesteps 1486848/1000000000, FPS 106.
+
+average episode rewards is 0.9217057824134827
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 730/488281 episodes, total num timesteps 1497088/1000000000, FPS 106.
+
+average episode rewards is 1.3243904113769531
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 735/488281 episodes, total num timesteps 1507328/1000000000, FPS 106.
+
+average episode rewards is 1.3114749193191528
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 740/488281 episodes, total num timesteps 1517568/1000000000, FPS 106.
+
+average episode rewards is 1.473816156387329
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 745/488281 episodes, total num timesteps 1527808/1000000000, FPS 106.
+
+average episode rewards is 1.0971336364746094
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 750/488281 episodes, total num timesteps 1538048/1000000000, FPS 106.
+
+average episode rewards is 1.9662408828735352
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 755/488281 episodes, total num timesteps 1548288/1000000000, FPS 106.
+
+average episode rewards is 0.71741783618927
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 760/488281 episodes, total num timesteps 1558528/1000000000, FPS 106.
+
+average episode rewards is 1.3820632696151733
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 765/488281 episodes, total num timesteps 1568768/1000000000, FPS 106.
+
+average episode rewards is 1.296236515045166
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 770/488281 episodes, total num timesteps 1579008/1000000000, FPS 106.
+
+average episode rewards is 2.296782970428467
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 775/488281 episodes, total num timesteps 1589248/1000000000, FPS 106.
+
+average episode rewards is 0.8368867039680481
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 780/488281 episodes, total num timesteps 1599488/1000000000, FPS 106.
+
+average episode rewards is 0.703453004360199
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 785/488281 episodes, total num timesteps 1609728/1000000000, FPS 106.
+
+average episode rewards is 1.531320333480835
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 790/488281 episodes, total num timesteps 1619968/1000000000, FPS 106.
+
+average episode rewards is 1.6583149433135986
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 795/488281 episodes, total num timesteps 1630208/1000000000, FPS 106.
+
+average episode rewards is 1.6066009998321533
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 800/488281 episodes, total num timesteps 1640448/1000000000, FPS 106.
+
+average episode rewards is 1.4590603113174438
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 805/488281 episodes, total num timesteps 1650688/1000000000, FPS 106.
+
+average episode rewards is 1.6623352766036987
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 810/488281 episodes, total num timesteps 1660928/1000000000, FPS 106.
+
+average episode rewards is 1.1632907390594482
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 815/488281 episodes, total num timesteps 1671168/1000000000, FPS 106.
+
+average episode rewards is 1.7746996879577637
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 820/488281 episodes, total num timesteps 1681408/1000000000, FPS 106.
+
+average episode rewards is 1.5434799194335938
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 825/488281 episodes, total num timesteps 1691648/1000000000, FPS 106.
+
+average episode rewards is 1.577019453048706
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 830/488281 episodes, total num timesteps 1701888/1000000000, FPS 106.
+
+average episode rewards is 0.8626170754432678
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 835/488281 episodes, total num timesteps 1712128/1000000000, FPS 106.
+
+average episode rewards is 1.0893855094909668
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 840/488281 episodes, total num timesteps 1722368/1000000000, FPS 106.
+
+average episode rewards is 1.0236120223999023
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 845/488281 episodes, total num timesteps 1732608/1000000000, FPS 106.
+
+average episode rewards is 1.0627310276031494
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 850/488281 episodes, total num timesteps 1742848/1000000000, FPS 106.
+
+average episode rewards is 1.4084646701812744
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 855/488281 episodes, total num timesteps 1753088/1000000000, FPS 106.
+
+average episode rewards is 1.1983965635299683
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 860/488281 episodes, total num timesteps 1763328/1000000000, FPS 106.
+
+average episode rewards is 0.9647747278213501
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 865/488281 episodes, total num timesteps 1773568/1000000000, FPS 106.
+
+average episode rewards is 1.2307302951812744
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 870/488281 episodes, total num timesteps 1783808/1000000000, FPS 106.
+
+average episode rewards is 0.9126895666122437
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 875/488281 episodes, total num timesteps 1794048/1000000000, FPS 106.
+
+average episode rewards is 1.2470040321350098
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 880/488281 episodes, total num timesteps 1804288/1000000000, FPS 106.
+
+average episode rewards is 1.3886823654174805
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 885/488281 episodes, total num timesteps 1814528/1000000000, FPS 106.
+
+average episode rewards is 0.9497793912887573
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 890/488281 episodes, total num timesteps 1824768/1000000000, FPS 106.
+
+average episode rewards is 1.9913852214813232
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 895/488281 episodes, total num timesteps 1835008/1000000000, FPS 106.
+
+average episode rewards is 1.109497308731079
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 900/488281 episodes, total num timesteps 1845248/1000000000, FPS 106.
+
+average episode rewards is 1.0464208126068115
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 905/488281 episodes, total num timesteps 1855488/1000000000, FPS 106.
+
+average episode rewards is 1.0427567958831787
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 910/488281 episodes, total num timesteps 1865728/1000000000, FPS 106.
+
+average episode rewards is 0.7194238305091858
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 915/488281 episodes, total num timesteps 1875968/1000000000, FPS 106.
+
+average episode rewards is 1.4268321990966797
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 920/488281 episodes, total num timesteps 1886208/1000000000, FPS 106.
+
+average episode rewards is 1.3160208463668823
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 925/488281 episodes, total num timesteps 1896448/1000000000, FPS 106.
+
+average episode rewards is 0.7085708379745483
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 930/488281 episodes, total num timesteps 1906688/1000000000, FPS 106.
+
+average episode rewards is 1.0326728820800781
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 935/488281 episodes, total num timesteps 1916928/1000000000, FPS 106.
+
+average episode rewards is 0.9671198725700378
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 940/488281 episodes, total num timesteps 1927168/1000000000, FPS 106.
+
+average episode rewards is 0.9964631795883179
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 945/488281 episodes, total num timesteps 1937408/1000000000, FPS 106.
+
+average episode rewards is 1.148594617843628
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 950/488281 episodes, total num timesteps 1947648/1000000000, FPS 106.
+
+average episode rewards is 1.0139672756195068
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 955/488281 episodes, total num timesteps 1957888/1000000000, FPS 106.
+
+average episode rewards is 1.1147937774658203
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 960/488281 episodes, total num timesteps 1968128/1000000000, FPS 106.
+
+average episode rewards is 1.6998525857925415
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 965/488281 episodes, total num timesteps 1978368/1000000000, FPS 106.
+
+average episode rewards is 0.9271460771560669
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 970/488281 episodes, total num timesteps 1988608/1000000000, FPS 106.
+
+average episode rewards is 1.0656102895736694
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 975/488281 episodes, total num timesteps 1998848/1000000000, FPS 106.
+
+average episode rewards is 0.6982501745223999
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 980/488281 episodes, total num timesteps 2009088/1000000000, FPS 106.
+
+average episode rewards is 1.1413967609405518
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 985/488281 episodes, total num timesteps 2019328/1000000000, FPS 106.
+
+average episode rewards is 1.367390751838684
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 990/488281 episodes, total num timesteps 2029568/1000000000, FPS 106.
+
+average episode rewards is 1.159705638885498
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 995/488281 episodes, total num timesteps 2039808/1000000000, FPS 106.
+
+average episode rewards is 0.7062697410583496
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1000/488281 episodes, total num timesteps 2050048/1000000000, FPS 106.
+
+average episode rewards is 0.94297194480896
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1005/488281 episodes, total num timesteps 2060288/1000000000, FPS 106.
+
+average episode rewards is 1.0258657932281494
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1010/488281 episodes, total num timesteps 2070528/1000000000, FPS 106.
+
+average episode rewards is 1.0183444023132324
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1015/488281 episodes, total num timesteps 2080768/1000000000, FPS 106.
+
+average episode rewards is 0.6577457189559937
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1020/488281 episodes, total num timesteps 2091008/1000000000, FPS 106.
+
+average episode rewards is 0.7397202849388123
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1025/488281 episodes, total num timesteps 2101248/1000000000, FPS 106.
+
+average episode rewards is 0.9344437718391418
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1030/488281 episodes, total num timesteps 2111488/1000000000, FPS 106.
+
+average episode rewards is 0.8035467267036438
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1035/488281 episodes, total num timesteps 2121728/1000000000, FPS 106.
+
+average episode rewards is 1.1332528591156006
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1040/488281 episodes, total num timesteps 2131968/1000000000, FPS 106.
+
+average episode rewards is 1.0036687850952148
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1045/488281 episodes, total num timesteps 2142208/1000000000, FPS 106.
+
+average episode rewards is 1.5383245944976807
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1050/488281 episodes, total num timesteps 2152448/1000000000, FPS 107.
+
+average episode rewards is 0.5203319787979126
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1055/488281 episodes, total num timesteps 2162688/1000000000, FPS 107.
+
+average episode rewards is 0.8639568090438843
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1060/488281 episodes, total num timesteps 2172928/1000000000, FPS 107.
+
+average episode rewards is 1.265505313873291
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1065/488281 episodes, total num timesteps 2183168/1000000000, FPS 107.
+
+average episode rewards is 0.8167383670806885
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1070/488281 episodes, total num timesteps 2193408/1000000000, FPS 107.
+
+average episode rewards is 0.9158099889755249
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1075/488281 episodes, total num timesteps 2203648/1000000000, FPS 107.
+
+average episode rewards is 1.649315595626831
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1080/488281 episodes, total num timesteps 2213888/1000000000, FPS 107.
+
+average episode rewards is 1.686157464981079
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1085/488281 episodes, total num timesteps 2224128/1000000000, FPS 106.
+
+average episode rewards is 1.5477076768875122
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1090/488281 episodes, total num timesteps 2234368/1000000000, FPS 106.
+
+average episode rewards is 1.2023876905441284
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1095/488281 episodes, total num timesteps 2244608/1000000000, FPS 106.
+
+average episode rewards is 1.3457517623901367
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1100/488281 episodes, total num timesteps 2254848/1000000000, FPS 106.
+
+average episode rewards is 1.1428182125091553
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1105/488281 episodes, total num timesteps 2265088/1000000000, FPS 106.
+
+average episode rewards is 0.9996914267539978
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1110/488281 episodes, total num timesteps 2275328/1000000000, FPS 106.
+
+average episode rewards is 1.155149221420288
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1115/488281 episodes, total num timesteps 2285568/1000000000, FPS 106.
+
+average episode rewards is 1.1329922676086426
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1120/488281 episodes, total num timesteps 2295808/1000000000, FPS 106.
+
+average episode rewards is 1.2897415161132812
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1125/488281 episodes, total num timesteps 2306048/1000000000, FPS 106.
+
+average episode rewards is 1.4003198146820068
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1130/488281 episodes, total num timesteps 2316288/1000000000, FPS 106.
+
+average episode rewards is 1.818976879119873
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1135/488281 episodes, total num timesteps 2326528/1000000000, FPS 106.
+
+average episode rewards is 1.8883355855941772
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1140/488281 episodes, total num timesteps 2336768/1000000000, FPS 106.
+
+average episode rewards is 1.556870460510254
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1145/488281 episodes, total num timesteps 2347008/1000000000, FPS 106.
+
+average episode rewards is 1.1774578094482422
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1150/488281 episodes, total num timesteps 2357248/1000000000, FPS 106.
+
+average episode rewards is 1.2025411128997803
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1155/488281 episodes, total num timesteps 2367488/1000000000, FPS 106.
+
+average episode rewards is 1.6336357593536377
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1160/488281 episodes, total num timesteps 2377728/1000000000, FPS 106.
+
+average episode rewards is 0.991898238658905
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1165/488281 episodes, total num timesteps 2387968/1000000000, FPS 106.
+
+average episode rewards is 0.9950360655784607
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1170/488281 episodes, total num timesteps 2398208/1000000000, FPS 106.
+
+average episode rewards is 1.6448421478271484
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1175/488281 episodes, total num timesteps 2408448/1000000000, FPS 106.
+
+average episode rewards is 1.4009698629379272
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1180/488281 episodes, total num timesteps 2418688/1000000000, FPS 106.
+
+average episode rewards is 1.387005090713501
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1185/488281 episodes, total num timesteps 2428928/1000000000, FPS 106.
+
+average episode rewards is 2.0527029037475586
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1190/488281 episodes, total num timesteps 2439168/1000000000, FPS 106.
+
+average episode rewards is 0.9774714708328247
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1195/488281 episodes, total num timesteps 2449408/1000000000, FPS 106.
+
+average episode rewards is 1.291489839553833
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1200/488281 episodes, total num timesteps 2459648/1000000000, FPS 106.
+
+average episode rewards is 1.1878268718719482
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1205/488281 episodes, total num timesteps 2469888/1000000000, FPS 106.
+
+average episode rewards is 1.1115500926971436
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1210/488281 episodes, total num timesteps 2480128/1000000000, FPS 106.
+
+average episode rewards is 1.3962795734405518
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1215/488281 episodes, total num timesteps 2490368/1000000000, FPS 106.
+
+average episode rewards is 1.625744342803955
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1220/488281 episodes, total num timesteps 2500608/1000000000, FPS 106.
+
+average episode rewards is 0.8978803753852844
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1225/488281 episodes, total num timesteps 2510848/1000000000, FPS 106.
+
+average episode rewards is 1.6499764919281006
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1230/488281 episodes, total num timesteps 2521088/1000000000, FPS 106.
+
+average episode rewards is 1.4298176765441895
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1235/488281 episodes, total num timesteps 2531328/1000000000, FPS 106.
+
+average episode rewards is 1.7975915670394897
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1240/488281 episodes, total num timesteps 2541568/1000000000, FPS 106.
+
+average episode rewards is 1.6910820007324219
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1245/488281 episodes, total num timesteps 2551808/1000000000, FPS 106.
+
+average episode rewards is 1.1145294904708862
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1250/488281 episodes, total num timesteps 2562048/1000000000, FPS 106.
+
+average episode rewards is 1.371523141860962
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1255/488281 episodes, total num timesteps 2572288/1000000000, FPS 106.
+
+average episode rewards is 1.1643503904342651
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1260/488281 episodes, total num timesteps 2582528/1000000000, FPS 106.
+
+average episode rewards is 1.470011830329895
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1265/488281 episodes, total num timesteps 2592768/1000000000, FPS 106.
+
+average episode rewards is 0.9702799320220947
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1270/488281 episodes, total num timesteps 2603008/1000000000, FPS 106.
+
+average episode rewards is 1.0819542407989502
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1275/488281 episodes, total num timesteps 2613248/1000000000, FPS 106.
+
+average episode rewards is 1.3821022510528564
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1280/488281 episodes, total num timesteps 2623488/1000000000, FPS 106.
+
+average episode rewards is 1.3782243728637695
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1285/488281 episodes, total num timesteps 2633728/1000000000, FPS 106.
+
+average episode rewards is 1.8287742137908936
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1290/488281 episodes, total num timesteps 2643968/1000000000, FPS 106.
+
+average episode rewards is 1.0277186632156372
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1295/488281 episodes, total num timesteps 2654208/1000000000, FPS 106.
+
+average episode rewards is 0.8816006183624268
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1300/488281 episodes, total num timesteps 2664448/1000000000, FPS 106.
+
+average episode rewards is 1.8183605670928955
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1305/488281 episodes, total num timesteps 2674688/1000000000, FPS 106.
+
+average episode rewards is 1.4048128128051758
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1310/488281 episodes, total num timesteps 2684928/1000000000, FPS 106.
+
+average episode rewards is 1.8079090118408203
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1315/488281 episodes, total num timesteps 2695168/1000000000, FPS 106.
+
+average episode rewards is 2.244502067565918
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1320/488281 episodes, total num timesteps 2705408/1000000000, FPS 106.
+
+average episode rewards is 1.3143442869186401
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1325/488281 episodes, total num timesteps 2715648/1000000000, FPS 106.
+
+average episode rewards is 1.3944374322891235
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1330/488281 episodes, total num timesteps 2725888/1000000000, FPS 106.
+
+average episode rewards is 1.5792207717895508
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1335/488281 episodes, total num timesteps 2736128/1000000000, FPS 106.
+
+average episode rewards is 2.0965187549591064
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1340/488281 episodes, total num timesteps 2746368/1000000000, FPS 106.
+
+average episode rewards is 1.5351953506469727
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1345/488281 episodes, total num timesteps 2756608/1000000000, FPS 106.
+
+average episode rewards is 1.1744756698608398
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1350/488281 episodes, total num timesteps 2766848/1000000000, FPS 106.
+
+average episode rewards is 1.1337658166885376
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1355/488281 episodes, total num timesteps 2777088/1000000000, FPS 106.
+
+average episode rewards is 1.2164249420166016
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1360/488281 episodes, total num timesteps 2787328/1000000000, FPS 106.
+
+average episode rewards is 1.7818772792816162
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1365/488281 episodes, total num timesteps 2797568/1000000000, FPS 106.
+
+average episode rewards is 1.0652222633361816
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1370/488281 episodes, total num timesteps 2807808/1000000000, FPS 106.
+
+average episode rewards is 1.4096240997314453
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1375/488281 episodes, total num timesteps 2818048/1000000000, FPS 106.
+
+average episode rewards is 1.436840534210205
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1380/488281 episodes, total num timesteps 2828288/1000000000, FPS 106.
+
+average episode rewards is 1.834808111190796
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1385/488281 episodes, total num timesteps 2838528/1000000000, FPS 106.
+
+average episode rewards is 1.7340763807296753
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1390/488281 episodes, total num timesteps 2848768/1000000000, FPS 106.
+
+average episode rewards is 1.433772325515747
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1395/488281 episodes, total num timesteps 2859008/1000000000, FPS 106.
+
+average episode rewards is 1.3518792390823364
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1400/488281 episodes, total num timesteps 2869248/1000000000, FPS 106.
+
+average episode rewards is 1.1885899305343628
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1405/488281 episodes, total num timesteps 2879488/1000000000, FPS 106.
+
+average episode rewards is 1.8285837173461914
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1410/488281 episodes, total num timesteps 2889728/1000000000, FPS 106.
+
+average episode rewards is 1.6090335845947266
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1415/488281 episodes, total num timesteps 2899968/1000000000, FPS 106.
+
+average episode rewards is 1.4289751052856445
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1420/488281 episodes, total num timesteps 2910208/1000000000, FPS 106.
+
+average episode rewards is 1.8151737451553345
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1425/488281 episodes, total num timesteps 2920448/1000000000, FPS 106.
+
+average episode rewards is 1.3004390001296997
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1430/488281 episodes, total num timesteps 2930688/1000000000, FPS 106.
+
+average episode rewards is 1.5878820419311523
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1435/488281 episodes, total num timesteps 2940928/1000000000, FPS 106.
+
+average episode rewards is 1.0342965126037598
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1440/488281 episodes, total num timesteps 2951168/1000000000, FPS 106.
+
+average episode rewards is 1.2553308010101318
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1445/488281 episodes, total num timesteps 2961408/1000000000, FPS 106.
+
+average episode rewards is 1.5708069801330566
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1450/488281 episodes, total num timesteps 2971648/1000000000, FPS 106.
+
+average episode rewards is 1.9681813716888428
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1455/488281 episodes, total num timesteps 2981888/1000000000, FPS 106.
+
+average episode rewards is 2.365044116973877
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1460/488281 episodes, total num timesteps 2992128/1000000000, FPS 106.
+
+average episode rewards is 1.5984272956848145
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1465/488281 episodes, total num timesteps 3002368/1000000000, FPS 106.
+
+average episode rewards is 1.6673202514648438
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1470/488281 episodes, total num timesteps 3012608/1000000000, FPS 106.
+
+average episode rewards is 1.5183517932891846
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1475/488281 episodes, total num timesteps 3022848/1000000000, FPS 106.
+
+average episode rewards is 2.332927942276001
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1480/488281 episodes, total num timesteps 3033088/1000000000, FPS 106.
+
+average episode rewards is 2.49790620803833
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1485/488281 episodes, total num timesteps 3043328/1000000000, FPS 106.
+
+average episode rewards is 1.527042031288147
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1490/488281 episodes, total num timesteps 3053568/1000000000, FPS 106.
+
+average episode rewards is 2.1141371726989746
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1495/488281 episodes, total num timesteps 3063808/1000000000, FPS 106.
+
+average episode rewards is 1.3430061340332031
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1500/488281 episodes, total num timesteps 3074048/1000000000, FPS 106.
+
+average episode rewards is 1.785494327545166
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1505/488281 episodes, total num timesteps 3084288/1000000000, FPS 106.
+
+average episode rewards is 1.7386116981506348
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1510/488281 episodes, total num timesteps 3094528/1000000000, FPS 106.
+
+average episode rewards is 2.0570132732391357
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1515/488281 episodes, total num timesteps 3104768/1000000000, FPS 106.
+
+average episode rewards is 1.3357892036437988
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1520/488281 episodes, total num timesteps 3115008/1000000000, FPS 106.
+
+average episode rewards is 1.5982725620269775
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1525/488281 episodes, total num timesteps 3125248/1000000000, FPS 106.
+
+average episode rewards is 1.1996126174926758
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1530/488281 episodes, total num timesteps 3135488/1000000000, FPS 106.
+
+average episode rewards is 1.3316550254821777
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1535/488281 episodes, total num timesteps 3145728/1000000000, FPS 106.
+
+average episode rewards is 1.565293550491333
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1540/488281 episodes, total num timesteps 3155968/1000000000, FPS 106.
+
+average episode rewards is 1.3839402198791504
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1545/488281 episodes, total num timesteps 3166208/1000000000, FPS 106.
+
+average episode rewards is 2.0522701740264893
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1550/488281 episodes, total num timesteps 3176448/1000000000, FPS 106.
+
+average episode rewards is 1.43157958984375
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1555/488281 episodes, total num timesteps 3186688/1000000000, FPS 106.
+
+average episode rewards is 1.9273483753204346
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1560/488281 episodes, total num timesteps 3196928/1000000000, FPS 106.
+
+average episode rewards is 1.3267834186553955
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1565/488281 episodes, total num timesteps 3207168/1000000000, FPS 106.
+
+average episode rewards is 1.9096660614013672
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1570/488281 episodes, total num timesteps 3217408/1000000000, FPS 106.
+
+average episode rewards is 1.4123613834381104
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1575/488281 episodes, total num timesteps 3227648/1000000000, FPS 106.
+
+average episode rewards is 1.7817351818084717
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1580/488281 episodes, total num timesteps 3237888/1000000000, FPS 106.
+
+average episode rewards is 1.2523925304412842
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1585/488281 episodes, total num timesteps 3248128/1000000000, FPS 106.
+
+average episode rewards is 1.7577979564666748
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1590/488281 episodes, total num timesteps 3258368/1000000000, FPS 106.
+
+average episode rewards is 1.4672555923461914
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1595/488281 episodes, total num timesteps 3268608/1000000000, FPS 106.
+
+average episode rewards is 1.9725358486175537
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1600/488281 episodes, total num timesteps 3278848/1000000000, FPS 106.
+
+average episode rewards is 1.6308706998825073
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1605/488281 episodes, total num timesteps 3289088/1000000000, FPS 106.
+
+average episode rewards is 1.9646637439727783
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1610/488281 episodes, total num timesteps 3299328/1000000000, FPS 106.
+
+average episode rewards is 0.8966102600097656
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1615/488281 episodes, total num timesteps 3309568/1000000000, FPS 106.
+
+average episode rewards is 2.0667550563812256
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1620/488281 episodes, total num timesteps 3319808/1000000000, FPS 106.
+
+average episode rewards is 1.2846155166625977
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1625/488281 episodes, total num timesteps 3330048/1000000000, FPS 106.
+
+average episode rewards is 1.392162561416626
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1630/488281 episodes, total num timesteps 3340288/1000000000, FPS 106.
+
+average episode rewards is 0.9625869989395142
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1635/488281 episodes, total num timesteps 3350528/1000000000, FPS 106.
+
+average episode rewards is 1.6457133293151855
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1640/488281 episodes, total num timesteps 3360768/1000000000, FPS 106.
+
+average episode rewards is 2.163600444793701
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1645/488281 episodes, total num timesteps 3371008/1000000000, FPS 106.
+
+average episode rewards is 1.793565034866333
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1650/488281 episodes, total num timesteps 3381248/1000000000, FPS 106.
+
+average episode rewards is 1.4226133823394775
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1655/488281 episodes, total num timesteps 3391488/1000000000, FPS 106.
+
+average episode rewards is 0.7401928901672363
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1660/488281 episodes, total num timesteps 3401728/1000000000, FPS 106.
+
+average episode rewards is 1.4588983058929443
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1665/488281 episodes, total num timesteps 3411968/1000000000, FPS 106.
+
+average episode rewards is 1.4995591640472412
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1670/488281 episodes, total num timesteps 3422208/1000000000, FPS 106.
+
+average episode rewards is 1.675079584121704
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1675/488281 episodes, total num timesteps 3432448/1000000000, FPS 106.
+
+average episode rewards is 1.8719996213912964
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1680/488281 episodes, total num timesteps 3442688/1000000000, FPS 106.
+
+average episode rewards is 1.8548192977905273
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1685/488281 episodes, total num timesteps 3452928/1000000000, FPS 106.
+
+average episode rewards is 1.6172925233840942
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1690/488281 episodes, total num timesteps 3463168/1000000000, FPS 106.
+
+average episode rewards is 2.56038761138916
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1695/488281 episodes, total num timesteps 3473408/1000000000, FPS 106.
+
+average episode rewards is 1.7494494915008545
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1700/488281 episodes, total num timesteps 3483648/1000000000, FPS 106.
+
+average episode rewards is 1.7906135320663452
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1705/488281 episodes, total num timesteps 3493888/1000000000, FPS 106.
+
+average episode rewards is 2.458188772201538
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1710/488281 episodes, total num timesteps 3504128/1000000000, FPS 106.
+
+average episode rewards is 1.6250414848327637
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1715/488281 episodes, total num timesteps 3514368/1000000000, FPS 106.
+
+average episode rewards is 1.394197702407837
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1720/488281 episodes, total num timesteps 3524608/1000000000, FPS 106.
+
+average episode rewards is 2.057115077972412
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1725/488281 episodes, total num timesteps 3534848/1000000000, FPS 106.
+
+average episode rewards is 1.570136308670044
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1730/488281 episodes, total num timesteps 3545088/1000000000, FPS 106.
+
+average episode rewards is 1.3390499353408813
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1735/488281 episodes, total num timesteps 3555328/1000000000, FPS 106.
+
+average episode rewards is 2.020681142807007
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1740/488281 episodes, total num timesteps 3565568/1000000000, FPS 106.
+
+average episode rewards is 1.2947840690612793
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1745/488281 episodes, total num timesteps 3575808/1000000000, FPS 106.
+
+average episode rewards is 1.2895917892456055
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1750/488281 episodes, total num timesteps 3586048/1000000000, FPS 106.
+
+average episode rewards is 1.2510485649108887
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1755/488281 episodes, total num timesteps 3596288/1000000000, FPS 106.
+
+average episode rewards is 1.835801601409912
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1760/488281 episodes, total num timesteps 3606528/1000000000, FPS 106.
+
+average episode rewards is 1.3079943656921387
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1765/488281 episodes, total num timesteps 3616768/1000000000, FPS 106.
+
+average episode rewards is 1.584697961807251
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1770/488281 episodes, total num timesteps 3627008/1000000000, FPS 106.
+
+average episode rewards is 2.178468704223633
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1775/488281 episodes, total num timesteps 3637248/1000000000, FPS 106.
+
+average episode rewards is 1.8955721855163574
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1780/488281 episodes, total num timesteps 3647488/1000000000, FPS 106.
+
+average episode rewards is 2.3378419876098633
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1785/488281 episodes, total num timesteps 3657728/1000000000, FPS 106.
+
+average episode rewards is 1.6284844875335693
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1790/488281 episodes, total num timesteps 3667968/1000000000, FPS 106.
+
+average episode rewards is 1.4873478412628174
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1795/488281 episodes, total num timesteps 3678208/1000000000, FPS 106.
+
+average episode rewards is 1.3559057712554932
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1800/488281 episodes, total num timesteps 3688448/1000000000, FPS 106.
+
+average episode rewards is 2.0863072872161865
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1805/488281 episodes, total num timesteps 3698688/1000000000, FPS 106.
+
+average episode rewards is 1.760571002960205
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1810/488281 episodes, total num timesteps 3708928/1000000000, FPS 106.
+
+average episode rewards is 1.4101251363754272
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1815/488281 episodes, total num timesteps 3719168/1000000000, FPS 106.
+
+average episode rewards is 1.728825330734253
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1820/488281 episodes, total num timesteps 3729408/1000000000, FPS 106.
+
+average episode rewards is 2.9419689178466797
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1825/488281 episodes, total num timesteps 3739648/1000000000, FPS 106.
+
+average episode rewards is 1.8885680437088013
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1830/488281 episodes, total num timesteps 3749888/1000000000, FPS 106.
+
+average episode rewards is 1.9137871265411377
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1835/488281 episodes, total num timesteps 3760128/1000000000, FPS 106.
+
+average episode rewards is 2.156961441040039
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1840/488281 episodes, total num timesteps 3770368/1000000000, FPS 106.
+
+average episode rewards is 0.9975109696388245
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1845/488281 episodes, total num timesteps 3780608/1000000000, FPS 106.
+
+average episode rewards is 1.9753309488296509
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1850/488281 episodes, total num timesteps 3790848/1000000000, FPS 106.
+
+average episode rewards is 1.532995343208313
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1855/488281 episodes, total num timesteps 3801088/1000000000, FPS 106.
+
+average episode rewards is 1.2528901100158691
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1860/488281 episodes, total num timesteps 3811328/1000000000, FPS 106.
+
+average episode rewards is 1.5020002126693726
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1865/488281 episodes, total num timesteps 3821568/1000000000, FPS 106.
+
+average episode rewards is 1.3536955118179321
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1870/488281 episodes, total num timesteps 3831808/1000000000, FPS 106.
+
+average episode rewards is 1.9553078413009644
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1875/488281 episodes, total num timesteps 3842048/1000000000, FPS 106.
+
+average episode rewards is 1.7800850868225098
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1880/488281 episodes, total num timesteps 3852288/1000000000, FPS 106.
+
+average episode rewards is 2.2953691482543945
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1885/488281 episodes, total num timesteps 3862528/1000000000, FPS 106.
+
+average episode rewards is 1.3414276838302612
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1890/488281 episodes, total num timesteps 3872768/1000000000, FPS 106.
+
+average episode rewards is 1.4204655885696411
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1895/488281 episodes, total num timesteps 3883008/1000000000, FPS 106.
+
+average episode rewards is 2.3188095092773438
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1900/488281 episodes, total num timesteps 3893248/1000000000, FPS 106.
+
+average episode rewards is 1.4707320928573608
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1905/488281 episodes, total num timesteps 3903488/1000000000, FPS 106.
+
+average episode rewards is 1.004673957824707
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1910/488281 episodes, total num timesteps 3913728/1000000000, FPS 106.
+
+average episode rewards is 1.9453092813491821
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1915/488281 episodes, total num timesteps 3923968/1000000000, FPS 106.
+
+average episode rewards is 1.4639214277267456
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1920/488281 episodes, total num timesteps 3934208/1000000000, FPS 106.
+
+average episode rewards is 1.2711665630340576
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1925/488281 episodes, total num timesteps 3944448/1000000000, FPS 106.
+
+average episode rewards is 2.0848824977874756
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1930/488281 episodes, total num timesteps 3954688/1000000000, FPS 106.
+
+average episode rewards is 1.1824748516082764
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1935/488281 episodes, total num timesteps 3964928/1000000000, FPS 106.
+
+average episode rewards is 1.730119228363037
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1940/488281 episodes, total num timesteps 3975168/1000000000, FPS 106.
+
+average episode rewards is 0.794003963470459
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1945/488281 episodes, total num timesteps 3985408/1000000000, FPS 106.
+
+average episode rewards is 0.802757203578949
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1950/488281 episodes, total num timesteps 3995648/1000000000, FPS 106.
+
+average episode rewards is 1.6991428136825562
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1955/488281 episodes, total num timesteps 4005888/1000000000, FPS 106.
+
+average episode rewards is 1.8471441268920898
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1960/488281 episodes, total num timesteps 4016128/1000000000, FPS 106.
+
+average episode rewards is 2.2133264541625977
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1965/488281 episodes, total num timesteps 4026368/1000000000, FPS 106.
+
+average episode rewards is 1.7582685947418213
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1970/488281 episodes, total num timesteps 4036608/1000000000, FPS 106.
+
+average episode rewards is 1.4779115915298462
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1975/488281 episodes, total num timesteps 4046848/1000000000, FPS 106.
+
+average episode rewards is 1.6044005155563354
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1980/488281 episodes, total num timesteps 4057088/1000000000, FPS 106.
+
+average episode rewards is 1.5410404205322266
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1985/488281 episodes, total num timesteps 4067328/1000000000, FPS 106.
+
+average episode rewards is 1.7696201801300049
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1990/488281 episodes, total num timesteps 4077568/1000000000, FPS 106.
+
+average episode rewards is 1.4168719053268433
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 1995/488281 episodes, total num timesteps 4087808/1000000000, FPS 106.
+
+average episode rewards is 1.9920045137405396
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2000/488281 episodes, total num timesteps 4098048/1000000000, FPS 106.
+
+average episode rewards is 1.3530551195144653
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2005/488281 episodes, total num timesteps 4108288/1000000000, FPS 106.
+
+average episode rewards is 1.710620641708374
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2010/488281 episodes, total num timesteps 4118528/1000000000, FPS 106.
+
+average episode rewards is 2.084440231323242
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2015/488281 episodes, total num timesteps 4128768/1000000000, FPS 106.
+
+average episode rewards is 0.852958083152771
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2020/488281 episodes, total num timesteps 4139008/1000000000, FPS 106.
+
+average episode rewards is 1.3062610626220703
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2025/488281 episodes, total num timesteps 4149248/1000000000, FPS 106.
+
+average episode rewards is 1.4816184043884277
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2030/488281 episodes, total num timesteps 4159488/1000000000, FPS 106.
+
+average episode rewards is 1.2492855787277222
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2035/488281 episodes, total num timesteps 4169728/1000000000, FPS 106.
+
+average episode rewards is 1.789975881576538
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2040/488281 episodes, total num timesteps 4179968/1000000000, FPS 106.
+
+average episode rewards is 1.1826270818710327
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2045/488281 episodes, total num timesteps 4190208/1000000000, FPS 106.
+
+average episode rewards is 1.5411558151245117
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2050/488281 episodes, total num timesteps 4200448/1000000000, FPS 106.
+
+average episode rewards is 1.1626176834106445
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2055/488281 episodes, total num timesteps 4210688/1000000000, FPS 106.
+
+average episode rewards is 1.3162893056869507
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2060/488281 episodes, total num timesteps 4220928/1000000000, FPS 106.
+
+average episode rewards is 0.9298170208930969
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2065/488281 episodes, total num timesteps 4231168/1000000000, FPS 106.
+
+average episode rewards is 0.9956648349761963
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2070/488281 episodes, total num timesteps 4241408/1000000000, FPS 106.
+
+average episode rewards is 1.1360939741134644
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2075/488281 episodes, total num timesteps 4251648/1000000000, FPS 106.
+
+average episode rewards is 1.4229655265808105
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2080/488281 episodes, total num timesteps 4261888/1000000000, FPS 106.
+
+average episode rewards is 2.6798431873321533
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2085/488281 episodes, total num timesteps 4272128/1000000000, FPS 106.
+
+average episode rewards is 1.7979978322982788
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2090/488281 episodes, total num timesteps 4282368/1000000000, FPS 106.
+
+average episode rewards is 1.2601311206817627
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2095/488281 episodes, total num timesteps 4292608/1000000000, FPS 106.
+
+average episode rewards is 1.598097801208496
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2100/488281 episodes, total num timesteps 4302848/1000000000, FPS 106.
+
+average episode rewards is 1.9007518291473389
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2105/488281 episodes, total num timesteps 4313088/1000000000, FPS 106.
+
+average episode rewards is 1.4224212169647217
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2110/488281 episodes, total num timesteps 4323328/1000000000, FPS 106.
+
+average episode rewards is 1.5382277965545654
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2115/488281 episodes, total num timesteps 4333568/1000000000, FPS 106.
+
+average episode rewards is 1.6129995584487915
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2120/488281 episodes, total num timesteps 4343808/1000000000, FPS 106.
+
+average episode rewards is 1.5822975635528564
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2125/488281 episodes, total num timesteps 4354048/1000000000, FPS 106.
+
+average episode rewards is 0.9233232736587524
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2130/488281 episodes, total num timesteps 4364288/1000000000, FPS 106.
+
+average episode rewards is 0.9874029159545898
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2135/488281 episodes, total num timesteps 4374528/1000000000, FPS 106.
+
+average episode rewards is 1.5397371053695679
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2140/488281 episodes, total num timesteps 4384768/1000000000, FPS 106.
+
+average episode rewards is 1.0452227592468262
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2145/488281 episodes, total num timesteps 4395008/1000000000, FPS 106.
+
+average episode rewards is 1.41254723072052
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2150/488281 episodes, total num timesteps 4405248/1000000000, FPS 106.
+
+average episode rewards is 1.4694197177886963
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2155/488281 episodes, total num timesteps 4415488/1000000000, FPS 106.
+
+average episode rewards is 0.9707845449447632
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2160/488281 episodes, total num timesteps 4425728/1000000000, FPS 106.
+
+average episode rewards is 1.3267338275909424
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2165/488281 episodes, total num timesteps 4435968/1000000000, FPS 106.
+
+average episode rewards is 0.434174120426178
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2170/488281 episodes, total num timesteps 4446208/1000000000, FPS 106.
+
+average episode rewards is 0.7764947414398193
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2175/488281 episodes, total num timesteps 4456448/1000000000, FPS 106.
+
+average episode rewards is 1.4567465782165527
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2180/488281 episodes, total num timesteps 4466688/1000000000, FPS 106.
+
+average episode rewards is 1.3135178089141846
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2185/488281 episodes, total num timesteps 4476928/1000000000, FPS 106.
+
+average episode rewards is 1.0276992321014404
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2190/488281 episodes, total num timesteps 4487168/1000000000, FPS 106.
+
+average episode rewards is 1.1266182661056519
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2195/488281 episodes, total num timesteps 4497408/1000000000, FPS 106.
+
+average episode rewards is 0.9892545938491821
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2200/488281 episodes, total num timesteps 4507648/1000000000, FPS 106.
+
+average episode rewards is 1.0288997888565063
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2205/488281 episodes, total num timesteps 4517888/1000000000, FPS 106.
+
+average episode rewards is 1.0319091081619263
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2210/488281 episodes, total num timesteps 4528128/1000000000, FPS 106.
+
+average episode rewards is 1.104570746421814
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2215/488281 episodes, total num timesteps 4538368/1000000000, FPS 106.
+
+average episode rewards is 1.3954815864562988
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2220/488281 episodes, total num timesteps 4548608/1000000000, FPS 106.
+
+average episode rewards is 1.4944419860839844
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2225/488281 episodes, total num timesteps 4558848/1000000000, FPS 106.
+
+average episode rewards is 1.459012508392334
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2230/488281 episodes, total num timesteps 4569088/1000000000, FPS 106.
+
+average episode rewards is 1.1859004497528076
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2235/488281 episodes, total num timesteps 4579328/1000000000, FPS 106.
+
+average episode rewards is 1.4199509620666504
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2240/488281 episodes, total num timesteps 4589568/1000000000, FPS 106.
+
+average episode rewards is 1.3085500001907349
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2245/488281 episodes, total num timesteps 4599808/1000000000, FPS 106.
+
+average episode rewards is 1.2183358669281006
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2250/488281 episodes, total num timesteps 4610048/1000000000, FPS 106.
+
+average episode rewards is 1.986825704574585
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2255/488281 episodes, total num timesteps 4620288/1000000000, FPS 106.
+
+average episode rewards is 2.1806044578552246
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2260/488281 episodes, total num timesteps 4630528/1000000000, FPS 106.
+
+average episode rewards is 1.9714988470077515
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2265/488281 episodes, total num timesteps 4640768/1000000000, FPS 106.
+
+average episode rewards is 1.3053216934204102
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2270/488281 episodes, total num timesteps 4651008/1000000000, FPS 106.
+
+average episode rewards is 1.1126506328582764
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2275/488281 episodes, total num timesteps 4661248/1000000000, FPS 106.
+
+average episode rewards is 0.9805691838264465
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2280/488281 episodes, total num timesteps 4671488/1000000000, FPS 106.
+
+average episode rewards is 1.1221747398376465
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2285/488281 episodes, total num timesteps 4681728/1000000000, FPS 106.
+
+average episode rewards is 1.2799996137619019
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2290/488281 episodes, total num timesteps 4691968/1000000000, FPS 106.
+
+average episode rewards is 1.3298088312149048
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2295/488281 episodes, total num timesteps 4702208/1000000000, FPS 106.
+
+average episode rewards is 1.4738819599151611
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2300/488281 episodes, total num timesteps 4712448/1000000000, FPS 106.
+
+average episode rewards is 1.8415093421936035
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2305/488281 episodes, total num timesteps 4722688/1000000000, FPS 106.
+
+average episode rewards is 1.6051304340362549
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2310/488281 episodes, total num timesteps 4732928/1000000000, FPS 106.
+
+average episode rewards is 1.5332584381103516
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2315/488281 episodes, total num timesteps 4743168/1000000000, FPS 106.
+
+average episode rewards is 1.0882662534713745
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2320/488281 episodes, total num timesteps 4753408/1000000000, FPS 106.
+
+average episode rewards is 1.3050366640090942
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2325/488281 episodes, total num timesteps 4763648/1000000000, FPS 106.
+
+average episode rewards is 1.2312599420547485
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2330/488281 episodes, total num timesteps 4773888/1000000000, FPS 106.
+
+average episode rewards is 0.7404435873031616
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2335/488281 episodes, total num timesteps 4784128/1000000000, FPS 106.
+
+average episode rewards is 1.176377773284912
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2340/488281 episodes, total num timesteps 4794368/1000000000, FPS 106.
+
+average episode rewards is 1.1876871585845947
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2345/488281 episodes, total num timesteps 4804608/1000000000, FPS 106.
+
+average episode rewards is 1.0058043003082275
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2350/488281 episodes, total num timesteps 4814848/1000000000, FPS 106.
+
+average episode rewards is 1.1257033348083496
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2355/488281 episodes, total num timesteps 4825088/1000000000, FPS 106.
+
+average episode rewards is 1.3269336223602295
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2360/488281 episodes, total num timesteps 4835328/1000000000, FPS 106.
+
+average episode rewards is 1.6346474885940552
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2365/488281 episodes, total num timesteps 4845568/1000000000, FPS 106.
+
+average episode rewards is 0.9843245148658752
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2370/488281 episodes, total num timesteps 4855808/1000000000, FPS 106.
+
+average episode rewards is 1.3335834741592407
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2375/488281 episodes, total num timesteps 4866048/1000000000, FPS 106.
+
+average episode rewards is 0.8482205867767334
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2380/488281 episodes, total num timesteps 4876288/1000000000, FPS 106.
+
+average episode rewards is 1.7583422660827637
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2385/488281 episodes, total num timesteps 4886528/1000000000, FPS 106.
+
+average episode rewards is 1.4202756881713867
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2390/488281 episodes, total num timesteps 4896768/1000000000, FPS 106.
+
+average episode rewards is 1.1437312364578247
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2395/488281 episodes, total num timesteps 4907008/1000000000, FPS 106.
+
+average episode rewards is 1.5566389560699463
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2400/488281 episodes, total num timesteps 4917248/1000000000, FPS 106.
+
+average episode rewards is 1.2005740404129028
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2405/488281 episodes, total num timesteps 4927488/1000000000, FPS 106.
+
+average episode rewards is 1.4668474197387695
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2410/488281 episodes, total num timesteps 4937728/1000000000, FPS 106.
+
+average episode rewards is 1.076859712600708
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2415/488281 episodes, total num timesteps 4947968/1000000000, FPS 106.
+
+average episode rewards is 1.6086022853851318
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2420/488281 episodes, total num timesteps 4958208/1000000000, FPS 106.
+
+average episode rewards is 0.8729813098907471
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2425/488281 episodes, total num timesteps 4968448/1000000000, FPS 106.
+
+average episode rewards is 1.4989889860153198
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2430/488281 episodes, total num timesteps 4978688/1000000000, FPS 106.
+
+average episode rewards is 1.0780317783355713
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2435/488281 episodes, total num timesteps 4988928/1000000000, FPS 106.
+
+average episode rewards is 0.8097725510597229
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2440/488281 episodes, total num timesteps 4999168/1000000000, FPS 106.
+
+average episode rewards is 1.3504095077514648
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2445/488281 episodes, total num timesteps 5009408/1000000000, FPS 106.
+
+average episode rewards is 0.9675852060317993
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2450/488281 episodes, total num timesteps 5019648/1000000000, FPS 106.
+
+average episode rewards is 2.0404562950134277
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2455/488281 episodes, total num timesteps 5029888/1000000000, FPS 106.
+
+average episode rewards is 1.4269580841064453
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2460/488281 episodes, total num timesteps 5040128/1000000000, FPS 106.
+
+average episode rewards is 1.4180837869644165
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2465/488281 episodes, total num timesteps 5050368/1000000000, FPS 106.
+
+average episode rewards is 1.7884942293167114
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2470/488281 episodes, total num timesteps 5060608/1000000000, FPS 106.
+
+average episode rewards is 1.6120471954345703
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2475/488281 episodes, total num timesteps 5070848/1000000000, FPS 106.
+
+average episode rewards is 1.0408709049224854
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2480/488281 episodes, total num timesteps 5081088/1000000000, FPS 106.
+
+average episode rewards is 1.0696353912353516
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2485/488281 episodes, total num timesteps 5091328/1000000000, FPS 106.
+
+average episode rewards is 1.290513277053833
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2490/488281 episodes, total num timesteps 5101568/1000000000, FPS 106.
+
+average episode rewards is 0.7806383371353149
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2495/488281 episodes, total num timesteps 5111808/1000000000, FPS 106.
+
+average episode rewards is 1.38247811794281
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2500/488281 episodes, total num timesteps 5122048/1000000000, FPS 106.
+
+average episode rewards is 1.2515826225280762
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2505/488281 episodes, total num timesteps 5132288/1000000000, FPS 106.
+
+average episode rewards is 1.4878332614898682
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2510/488281 episodes, total num timesteps 5142528/1000000000, FPS 106.
+
+average episode rewards is 1.5258750915527344
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2515/488281 episodes, total num timesteps 5152768/1000000000, FPS 106.
+
+average episode rewards is 0.8713110089302063
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2520/488281 episodes, total num timesteps 5163008/1000000000, FPS 106.
+
+average episode rewards is 1.3607115745544434
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2525/488281 episodes, total num timesteps 5173248/1000000000, FPS 106.
+
+average episode rewards is 0.6607210040092468
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2530/488281 episodes, total num timesteps 5183488/1000000000, FPS 106.
+
+average episode rewards is 1.380126714706421
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2535/488281 episodes, total num timesteps 5193728/1000000000, FPS 106.
+
+average episode rewards is 1.4532904624938965
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2540/488281 episodes, total num timesteps 5203968/1000000000, FPS 106.
+
+average episode rewards is 0.8903154134750366
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2545/488281 episodes, total num timesteps 5214208/1000000000, FPS 106.
+
+average episode rewards is 1.0642495155334473
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2550/488281 episodes, total num timesteps 5224448/1000000000, FPS 106.
+
+average episode rewards is 1.445701241493225
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2555/488281 episodes, total num timesteps 5234688/1000000000, FPS 106.
+
+average episode rewards is 1.1286550760269165
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2560/488281 episodes, total num timesteps 5244928/1000000000, FPS 106.
+
+average episode rewards is 1.0604721307754517
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2565/488281 episodes, total num timesteps 5255168/1000000000, FPS 106.
+
+average episode rewards is 1.158235788345337
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2570/488281 episodes, total num timesteps 5265408/1000000000, FPS 106.
+
+average episode rewards is 0.7836254835128784
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2575/488281 episodes, total num timesteps 5275648/1000000000, FPS 106.
+
+average episode rewards is 0.7861300706863403
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2580/488281 episodes, total num timesteps 5285888/1000000000, FPS 106.
+
+average episode rewards is 1.3693984746932983
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2585/488281 episodes, total num timesteps 5296128/1000000000, FPS 106.
+
+average episode rewards is 1.1782994270324707
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2590/488281 episodes, total num timesteps 5306368/1000000000, FPS 106.
+
+average episode rewards is 1.0731689929962158
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2595/488281 episodes, total num timesteps 5316608/1000000000, FPS 106.
+
+average episode rewards is 1.238327980041504
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2600/488281 episodes, total num timesteps 5326848/1000000000, FPS 106.
+
+average episode rewards is 1.1816904544830322
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2605/488281 episodes, total num timesteps 5337088/1000000000, FPS 106.
+
+average episode rewards is 0.8657253980636597
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2610/488281 episodes, total num timesteps 5347328/1000000000, FPS 106.
+
+average episode rewards is 1.114255666732788
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2615/488281 episodes, total num timesteps 5357568/1000000000, FPS 106.
+
+average episode rewards is 1.308105230331421
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2620/488281 episodes, total num timesteps 5367808/1000000000, FPS 106.
+
+average episode rewards is 1.1263304948806763
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2625/488281 episodes, total num timesteps 5378048/1000000000, FPS 106.
+
+average episode rewards is 1.1719870567321777
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2630/488281 episodes, total num timesteps 5388288/1000000000, FPS 106.
+
+average episode rewards is 1.1574819087982178
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2635/488281 episodes, total num timesteps 5398528/1000000000, FPS 106.
+
+average episode rewards is 1.0285453796386719
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2640/488281 episodes, total num timesteps 5408768/1000000000, FPS 106.
+
+average episode rewards is 1.2786253690719604
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2645/488281 episodes, total num timesteps 5419008/1000000000, FPS 106.
+
+average episode rewards is 1.3823801279067993
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2650/488281 episodes, total num timesteps 5429248/1000000000, FPS 106.
+
+average episode rewards is 1.2935175895690918
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2655/488281 episodes, total num timesteps 5439488/1000000000, FPS 106.
+
+average episode rewards is 0.9953845143318176
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2660/488281 episodes, total num timesteps 5449728/1000000000, FPS 106.
+
+average episode rewards is 0.9384900331497192
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2665/488281 episodes, total num timesteps 5459968/1000000000, FPS 106.
+
+average episode rewards is 1.587981939315796
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2670/488281 episodes, total num timesteps 5470208/1000000000, FPS 106.
+
+average episode rewards is 1.2527066469192505
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2675/488281 episodes, total num timesteps 5480448/1000000000, FPS 106.
+
+average episode rewards is 1.4501906633377075
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2680/488281 episodes, total num timesteps 5490688/1000000000, FPS 106.
+
+average episode rewards is 1.3197455406188965
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2685/488281 episodes, total num timesteps 5500928/1000000000, FPS 106.
+
+average episode rewards is 0.8943533897399902
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2690/488281 episodes, total num timesteps 5511168/1000000000, FPS 106.
+
+average episode rewards is 1.288623571395874
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2695/488281 episodes, total num timesteps 5521408/1000000000, FPS 106.
+
+average episode rewards is 1.423224687576294
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2700/488281 episodes, total num timesteps 5531648/1000000000, FPS 106.
+
+average episode rewards is 1.000361442565918
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2705/488281 episodes, total num timesteps 5541888/1000000000, FPS 106.
+
+average episode rewards is 1.1552929878234863
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2710/488281 episodes, total num timesteps 5552128/1000000000, FPS 106.
+
+average episode rewards is 0.8616536855697632
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2715/488281 episodes, total num timesteps 5562368/1000000000, FPS 106.
+
+average episode rewards is 1.1053245067596436
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2720/488281 episodes, total num timesteps 5572608/1000000000, FPS 106.
+
+average episode rewards is 1.7370208501815796
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2725/488281 episodes, total num timesteps 5582848/1000000000, FPS 106.
+
+average episode rewards is 0.5126469731330872
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2730/488281 episodes, total num timesteps 5593088/1000000000, FPS 106.
+
+average episode rewards is 1.1570115089416504
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2735/488281 episodes, total num timesteps 5603328/1000000000, FPS 106.
+
+average episode rewards is 1.0728421211242676
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2740/488281 episodes, total num timesteps 5613568/1000000000, FPS 106.
+
+average episode rewards is 1.0484626293182373
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2745/488281 episodes, total num timesteps 5623808/1000000000, FPS 106.
+
+average episode rewards is 0.7917881011962891
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2750/488281 episodes, total num timesteps 5634048/1000000000, FPS 106.
+
+average episode rewards is 1.3901532888412476
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2755/488281 episodes, total num timesteps 5644288/1000000000, FPS 106.
+
+average episode rewards is 1.1545486450195312
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2760/488281 episodes, total num timesteps 5654528/1000000000, FPS 106.
+
+average episode rewards is 0.6939381957054138
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2765/488281 episodes, total num timesteps 5664768/1000000000, FPS 106.
+
+average episode rewards is 0.8019900918006897
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2770/488281 episodes, total num timesteps 5675008/1000000000, FPS 106.
+
+average episode rewards is 1.2499868869781494
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2775/488281 episodes, total num timesteps 5685248/1000000000, FPS 106.
+
+average episode rewards is 1.5146079063415527
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2780/488281 episodes, total num timesteps 5695488/1000000000, FPS 106.
+
+average episode rewards is 0.8631753921508789
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2785/488281 episodes, total num timesteps 5705728/1000000000, FPS 106.
+
+average episode rewards is 1.1775473356246948
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2790/488281 episodes, total num timesteps 5715968/1000000000, FPS 106.
+
+average episode rewards is 0.5323358774185181
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2795/488281 episodes, total num timesteps 5726208/1000000000, FPS 106.
+
+average episode rewards is 0.7235060334205627
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2800/488281 episodes, total num timesteps 5736448/1000000000, FPS 106.
+
+average episode rewards is 0.7336485385894775
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2805/488281 episodes, total num timesteps 5746688/1000000000, FPS 106.
+
+average episode rewards is 1.084332823753357
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2810/488281 episodes, total num timesteps 5756928/1000000000, FPS 106.
+
+average episode rewards is 0.9326096773147583
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2815/488281 episodes, total num timesteps 5767168/1000000000, FPS 106.
+
+average episode rewards is 1.2843680381774902
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2820/488281 episodes, total num timesteps 5777408/1000000000, FPS 106.
+
+average episode rewards is 1.0605270862579346
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2825/488281 episodes, total num timesteps 5787648/1000000000, FPS 106.
+
+average episode rewards is 0.7649762034416199
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2830/488281 episodes, total num timesteps 5797888/1000000000, FPS 106.
+
+average episode rewards is 0.5360251069068909
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2835/488281 episodes, total num timesteps 5808128/1000000000, FPS 106.
+
+average episode rewards is 0.5548109412193298
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2840/488281 episodes, total num timesteps 5818368/1000000000, FPS 106.
+
+average episode rewards is 1.1393487453460693
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2845/488281 episodes, total num timesteps 5828608/1000000000, FPS 106.
+
+average episode rewards is 1.4225983619689941
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2850/488281 episodes, total num timesteps 5838848/1000000000, FPS 106.
+
+average episode rewards is 0.7453102469444275
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2855/488281 episodes, total num timesteps 5849088/1000000000, FPS 106.
+
+average episode rewards is 0.6833943128585815
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2860/488281 episodes, total num timesteps 5859328/1000000000, FPS 106.
+
+average episode rewards is 1.2146857976913452
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2865/488281 episodes, total num timesteps 5869568/1000000000, FPS 106.
+
+average episode rewards is 1.10273015499115
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2870/488281 episodes, total num timesteps 5879808/1000000000, FPS 106.
+
+average episode rewards is 0.7043502330780029
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2875/488281 episodes, total num timesteps 5890048/1000000000, FPS 106.
+
+average episode rewards is 1.3821370601654053
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2880/488281 episodes, total num timesteps 5900288/1000000000, FPS 106.
+
+average episode rewards is 1.016473650932312
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2885/488281 episodes, total num timesteps 5910528/1000000000, FPS 106.
+
+average episode rewards is 1.2723846435546875
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2890/488281 episodes, total num timesteps 5920768/1000000000, FPS 106.
+
+average episode rewards is 0.8722516298294067
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2895/488281 episodes, total num timesteps 5931008/1000000000, FPS 106.
+
+average episode rewards is 1.2110755443572998
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2900/488281 episodes, total num timesteps 5941248/1000000000, FPS 106.
+
+average episode rewards is 1.0174758434295654
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2905/488281 episodes, total num timesteps 5951488/1000000000, FPS 106.
+
+average episode rewards is 0.7633212804794312
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2910/488281 episodes, total num timesteps 5961728/1000000000, FPS 106.
+
+average episode rewards is 1.2503635883331299
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2915/488281 episodes, total num timesteps 5971968/1000000000, FPS 106.
+
+average episode rewards is 0.8448113203048706
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2920/488281 episodes, total num timesteps 5982208/1000000000, FPS 106.
+
+average episode rewards is 0.8954570293426514
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2925/488281 episodes, total num timesteps 5992448/1000000000, FPS 106.
+
+average episode rewards is 0.9713836312294006
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2930/488281 episodes, total num timesteps 6002688/1000000000, FPS 106.
+
+average episode rewards is 1.1101174354553223
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2935/488281 episodes, total num timesteps 6012928/1000000000, FPS 106.
+
+average episode rewards is 0.39898526668548584
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2940/488281 episodes, total num timesteps 6023168/1000000000, FPS 106.
+
+average episode rewards is 0.7127962112426758
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2945/488281 episodes, total num timesteps 6033408/1000000000, FPS 106.
+
+average episode rewards is 0.7847564816474915
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2950/488281 episodes, total num timesteps 6043648/1000000000, FPS 106.
+
+average episode rewards is 0.6406331062316895
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2955/488281 episodes, total num timesteps 6053888/1000000000, FPS 106.
+
+average episode rewards is 1.0808148384094238
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2960/488281 episodes, total num timesteps 6064128/1000000000, FPS 106.
+
+average episode rewards is 1.2120599746704102
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2965/488281 episodes, total num timesteps 6074368/1000000000, FPS 106.
+
+average episode rewards is 0.993757963180542
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2970/488281 episodes, total num timesteps 6084608/1000000000, FPS 106.
+
+average episode rewards is 1.1340118646621704
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2975/488281 episodes, total num timesteps 6094848/1000000000, FPS 106.
+
+average episode rewards is 1.016615390777588
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2980/488281 episodes, total num timesteps 6105088/1000000000, FPS 106.
+
+average episode rewards is 1.2765905857086182
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2985/488281 episodes, total num timesteps 6115328/1000000000, FPS 106.
+
+average episode rewards is 1.2872202396392822
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2990/488281 episodes, total num timesteps 6125568/1000000000, FPS 106.
+
+average episode rewards is 1.6675575971603394
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 2995/488281 episodes, total num timesteps 6135808/1000000000, FPS 106.
+
+average episode rewards is 0.7054725885391235
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3000/488281 episodes, total num timesteps 6146048/1000000000, FPS 106.
+
+average episode rewards is 0.9328709244728088
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3005/488281 episodes, total num timesteps 6156288/1000000000, FPS 106.
+
+average episode rewards is 1.1520551443099976
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3010/488281 episodes, total num timesteps 6166528/1000000000, FPS 106.
+
+average episode rewards is 0.7190754413604736
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3015/488281 episodes, total num timesteps 6176768/1000000000, FPS 106.
+
+average episode rewards is 0.7506903409957886
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3020/488281 episodes, total num timesteps 6187008/1000000000, FPS 106.
+
+average episode rewards is 1.1661382913589478
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3025/488281 episodes, total num timesteps 6197248/1000000000, FPS 106.
+
+average episode rewards is 0.8310194611549377
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3030/488281 episodes, total num timesteps 6207488/1000000000, FPS 106.
+
+average episode rewards is 1.2938159704208374
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3035/488281 episodes, total num timesteps 6217728/1000000000, FPS 106.
+
+average episode rewards is 0.8328075408935547
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3040/488281 episodes, total num timesteps 6227968/1000000000, FPS 106.
+
+average episode rewards is 1.138120412826538
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3045/488281 episodes, total num timesteps 6238208/1000000000, FPS 106.
+
+average episode rewards is 1.084092140197754
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3050/488281 episodes, total num timesteps 6248448/1000000000, FPS 106.
+
+average episode rewards is 1.1651368141174316
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3055/488281 episodes, total num timesteps 6258688/1000000000, FPS 106.
+
+average episode rewards is 1.3038424253463745
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3060/488281 episodes, total num timesteps 6268928/1000000000, FPS 106.
+
+average episode rewards is 1.805140495300293
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3065/488281 episodes, total num timesteps 6279168/1000000000, FPS 106.
+
+average episode rewards is 0.8002703189849854
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3070/488281 episodes, total num timesteps 6289408/1000000000, FPS 106.
+
+average episode rewards is 0.8096207976341248
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3075/488281 episodes, total num timesteps 6299648/1000000000, FPS 106.
+
+average episode rewards is 1.058548927307129
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3080/488281 episodes, total num timesteps 6309888/1000000000, FPS 106.
+
+average episode rewards is 1.0080633163452148
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3085/488281 episodes, total num timesteps 6320128/1000000000, FPS 106.
+
+average episode rewards is 1.357635498046875
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3090/488281 episodes, total num timesteps 6330368/1000000000, FPS 106.
+
+average episode rewards is 1.4341487884521484
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3095/488281 episodes, total num timesteps 6340608/1000000000, FPS 106.
+
+average episode rewards is 1.045045018196106
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3100/488281 episodes, total num timesteps 6350848/1000000000, FPS 106.
+
+average episode rewards is 1.091829538345337
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3105/488281 episodes, total num timesteps 6361088/1000000000, FPS 106.
+
+average episode rewards is 0.7922056913375854
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 3110/488281 episodes, total num timesteps 6371328/1000000000, FPS 106.
+
+average episode rewards is 1.2386442422866821
+Terminated
+./train_mujoco.sh: 20: --model_dir: not found
+/home/wchen/.local/lib/python3.7/multiprocessing/semaphore_tracker.py:144: UserWarning: semaphore_tracker: There appear to be 6 leaked semaphores to clean up at shutdown
+  len(cache))
+env is MuJoCo, scenario is Walker2d-v3, algo is rmappo, exp is check, max seed is 1
+seed is 1:
+wandb: Currently logged in as: cwz19 (use `wandb login --relogin` to force relogin)
+u are choosing to use rmappo, we set use_recurrent_policy to be True
+choose to use gpu...
+wandb: wandb version 0.15.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.10.5
+wandb: Syncing run rmappo_check_seed1
+wandb: ⭐️ View project at https://wandb.ai/cwz19/MuJoCo
+wandb: 🚀 View run at https://wandb.ai/cwz19/MuJoCo/runs/jwm4qccv
+wandb: Run data is saved locally in /home/wchen/mappo/onpolicy/scripts/results/MuJoCo/Walker2d-v3/rmappo/check/wandb/run-20230427_233046-jwm4qccv
+wandb: Run `wandb off` to turn off syncing.
+actor
+Total number of param in base_vec is  31680
+Total number of param in base_img is  63504
+Total number of param in rnn is  37376
+cirtic
+Total number of param in base_vec is  440064
+Total number of param in base_img is  998464
+Total number of param in rnn is  591872
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:464: RuntimeWarning: divide by zero encountered in true_divide
+  a = (lines[:,0,1] - lines[:,1,1]) / (lines[:,0,0] - lines[:,1,0])
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in add
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:478: RuntimeWarning: invalid value encountered in greater
+  b_map[i] = y_map[i] > a[i] * x_map[i] + b[i]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 0/488281 episodes, total num timesteps 2048/1000000000, FPS 97.
+
+average episode rewards is -0.08964958786964417
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 5/488281 episodes, total num timesteps 12288/1000000000, FPS 99.
+
+average episode rewards is 0.04032741114497185
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+/home/wchen/mappo/onpolicy/envs/mujoco/navigation.py:465: RuntimeWarning: invalid value encountered in multiply
+  b = lines[:,0,1] - a * lines[:,0,0]
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 10/488281 episodes, total num timesteps 22528/1000000000, FPS 99.
+
+average episode rewards is 0.011378563940525055
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 15/488281 episodes, total num timesteps 32768/1000000000, FPS 100.
+
+average episode rewards is 0.0389404371380806
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 20/488281 episodes, total num timesteps 43008/1000000000, FPS 100.
+
+average episode rewards is -0.11119363456964493
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 25/488281 episodes, total num timesteps 53248/1000000000, FPS 100.
+
+average episode rewards is -0.09592735767364502
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 30/488281 episodes, total num timesteps 63488/1000000000, FPS 100.
+
+average episode rewards is 0.06121174991130829
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 35/488281 episodes, total num timesteps 73728/1000000000, FPS 100.
+
+average episode rewards is -0.0006383601576089859
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 40/488281 episodes, total num timesteps 83968/1000000000, FPS 100.
+
+average episode rewards is 0.08803573995828629
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 45/488281 episodes, total num timesteps 94208/1000000000, FPS 100.
+
+average episode rewards is -0.021996332332491875
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 50/488281 episodes, total num timesteps 104448/1000000000, FPS 101.
+
+average episode rewards is -0.0691714882850647
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 55/488281 episodes, total num timesteps 114688/1000000000, FPS 101.
+
+average episode rewards is 0.5001968145370483
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 60/488281 episodes, total num timesteps 124928/1000000000, FPS 101.
+
+average episode rewards is 0.0941452831029892
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 65/488281 episodes, total num timesteps 135168/1000000000, FPS 101.
+
+average episode rewards is 0.4789694547653198
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 70/488281 episodes, total num timesteps 145408/1000000000, FPS 101.
+
+average episode rewards is 0.029791973531246185
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 75/488281 episodes, total num timesteps 155648/1000000000, FPS 101.
+
+average episode rewards is 0.5516344308853149
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 80/488281 episodes, total num timesteps 165888/1000000000, FPS 101.
+
+average episode rewards is 0.1481703221797943
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 85/488281 episodes, total num timesteps 176128/1000000000, FPS 101.
+
+average episode rewards is 1.0093698501586914
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 90/488281 episodes, total num timesteps 186368/1000000000, FPS 101.
+
+average episode rewards is 0.7267159223556519
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 95/488281 episodes, total num timesteps 196608/1000000000, FPS 101.
+
+average episode rewards is 0.0666651502251625
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 100/488281 episodes, total num timesteps 206848/1000000000, FPS 101.
+
+average episode rewards is 0.2523552179336548
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 105/488281 episodes, total num timesteps 217088/1000000000, FPS 101.
+
+average episode rewards is 0.498731791973114
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 110/488281 episodes, total num timesteps 227328/1000000000, FPS 101.
+
+average episode rewards is 0.4772703945636749
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 115/488281 episodes, total num timesteps 237568/1000000000, FPS 101.
+
+average episode rewards is 0.5343976020812988
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 120/488281 episodes, total num timesteps 247808/1000000000, FPS 101.
+
+average episode rewards is 0.7162201404571533
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 125/488281 episodes, total num timesteps 258048/1000000000, FPS 101.
+
+average episode rewards is 0.4285371005535126
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 130/488281 episodes, total num timesteps 268288/1000000000, FPS 101.
+
+average episode rewards is 0.36700165271759033
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 135/488281 episodes, total num timesteps 278528/1000000000, FPS 101.
+
+average episode rewards is 0.1411602795124054
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 140/488281 episodes, total num timesteps 288768/1000000000, FPS 101.
+
+average episode rewards is 0.9463561773300171
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 145/488281 episodes, total num timesteps 299008/1000000000, FPS 101.
+
+average episode rewards is 0.5185728073120117
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 150/488281 episodes, total num timesteps 309248/1000000000, FPS 101.
+
+average episode rewards is 0.5894237756729126
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 155/488281 episodes, total num timesteps 319488/1000000000, FPS 101.
+
+average episode rewards is 0.8061975836753845
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 160/488281 episodes, total num timesteps 329728/1000000000, FPS 101.
+
+average episode rewards is 1.0843995809555054
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 165/488281 episodes, total num timesteps 339968/1000000000, FPS 101.
+
+average episode rewards is 2.533080577850342
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 170/488281 episodes, total num timesteps 350208/1000000000, FPS 102.
+
+average episode rewards is 0.866550087928772
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 175/488281 episodes, total num timesteps 360448/1000000000, FPS 102.
+
+average episode rewards is 0.10710176825523376
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 180/488281 episodes, total num timesteps 370688/1000000000, FPS 102.
+
+average episode rewards is 0.537373423576355
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 185/488281 episodes, total num timesteps 380928/1000000000, FPS 102.
+
+average episode rewards is 1.2987215518951416
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 190/488281 episodes, total num timesteps 391168/1000000000, FPS 102.
+
+average episode rewards is 1.0043638944625854
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 195/488281 episodes, total num timesteps 401408/1000000000, FPS 102.
+
+average episode rewards is 0.659832775592804
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 200/488281 episodes, total num timesteps 411648/1000000000, FPS 102.
+
+average episode rewards is 0.6517617106437683
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 205/488281 episodes, total num timesteps 421888/1000000000, FPS 102.
+
+average episode rewards is 0.6476020812988281
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 210/488281 episodes, total num timesteps 432128/1000000000, FPS 102.
+
+average episode rewards is 0.450363427400589
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 215/488281 episodes, total num timesteps 442368/1000000000, FPS 102.
+
+average episode rewards is 0.10596881061792374
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 220/488281 episodes, total num timesteps 452608/1000000000, FPS 102.
+
+average episode rewards is 1.0209708213806152
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 225/488281 episodes, total num timesteps 462848/1000000000, FPS 102.
+
+average episode rewards is 0.46924692392349243
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 230/488281 episodes, total num timesteps 473088/1000000000, FPS 102.
+
+average episode rewards is 1.0794005393981934
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 235/488281 episodes, total num timesteps 483328/1000000000, FPS 102.
+
+average episode rewards is 1.5562360286712646
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 240/488281 episodes, total num timesteps 493568/1000000000, FPS 102.
+
+average episode rewards is 0.6339215040206909
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 245/488281 episodes, total num timesteps 503808/1000000000, FPS 102.
+
+average episode rewards is 0.6548535823822021
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 250/488281 episodes, total num timesteps 514048/1000000000, FPS 102.
+
+average episode rewards is 0.9085718393325806
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 255/488281 episodes, total num timesteps 524288/1000000000, FPS 102.
+
+average episode rewards is 0.9676450490951538
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 260/488281 episodes, total num timesteps 534528/1000000000, FPS 102.
+
+average episode rewards is 0.9824885725975037
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 265/488281 episodes, total num timesteps 544768/1000000000, FPS 102.
+
+average episode rewards is 0.6250665783882141
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 270/488281 episodes, total num timesteps 555008/1000000000, FPS 102.
+
+average episode rewards is 1.139891266822815
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 275/488281 episodes, total num timesteps 565248/1000000000, FPS 102.
+
+average episode rewards is 1.5611882209777832
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 280/488281 episodes, total num timesteps 575488/1000000000, FPS 102.
+
+average episode rewards is 1.221101999282837
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 285/488281 episodes, total num timesteps 585728/1000000000, FPS 102.
+
+average episode rewards is 0.6260111331939697
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 290/488281 episodes, total num timesteps 595968/1000000000, FPS 102.
+
+average episode rewards is 1.8533953428268433
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 295/488281 episodes, total num timesteps 606208/1000000000, FPS 102.
+
+average episode rewards is 1.533984661102295
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 300/488281 episodes, total num timesteps 616448/1000000000, FPS 102.
+
+average episode rewards is 1.1248414516448975
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 305/488281 episodes, total num timesteps 626688/1000000000, FPS 102.
+
+average episode rewards is 1.4517157077789307
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 310/488281 episodes, total num timesteps 636928/1000000000, FPS 102.
+
+average episode rewards is 1.5736443996429443
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 315/488281 episodes, total num timesteps 647168/1000000000, FPS 102.
+
+average episode rewards is 1.0738120079040527
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 320/488281 episodes, total num timesteps 657408/1000000000, FPS 102.
+
+average episode rewards is 1.6707855463027954
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 325/488281 episodes, total num timesteps 667648/1000000000, FPS 102.
+
+average episode rewards is 0.7926472425460815
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 330/488281 episodes, total num timesteps 677888/1000000000, FPS 102.
+
+average episode rewards is 1.8982040882110596
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 335/488281 episodes, total num timesteps 688128/1000000000, FPS 102.
+
+average episode rewards is 1.6844886541366577
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 340/488281 episodes, total num timesteps 698368/1000000000, FPS 102.
+
+average episode rewards is 1.257904052734375
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 345/488281 episodes, total num timesteps 708608/1000000000, FPS 102.
+
+average episode rewards is 1.2773596048355103
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 350/488281 episodes, total num timesteps 718848/1000000000, FPS 102.
+
+average episode rewards is 1.0642188787460327
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 355/488281 episodes, total num timesteps 729088/1000000000, FPS 102.
+
+average episode rewards is 1.1329264640808105
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 360/488281 episodes, total num timesteps 739328/1000000000, FPS 102.
+
+average episode rewards is 1.2094507217407227
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 365/488281 episodes, total num timesteps 749568/1000000000, FPS 102.
+
+average episode rewards is 0.7930142879486084
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 370/488281 episodes, total num timesteps 759808/1000000000, FPS 102.
+
+average episode rewards is 1.316164493560791
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 375/488281 episodes, total num timesteps 770048/1000000000, FPS 102.
+
+average episode rewards is 1.0067715644836426
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 380/488281 episodes, total num timesteps 780288/1000000000, FPS 102.
+
+average episode rewards is 1.5865672826766968
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 385/488281 episodes, total num timesteps 790528/1000000000, FPS 102.
+
+average episode rewards is 1.0640159845352173
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 390/488281 episodes, total num timesteps 800768/1000000000, FPS 102.
+
+average episode rewards is 1.7017848491668701
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 395/488281 episodes, total num timesteps 811008/1000000000, FPS 102.
+
+average episode rewards is 1.183661937713623
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 400/488281 episodes, total num timesteps 821248/1000000000, FPS 102.
+
+average episode rewards is 0.8969305157661438
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 405/488281 episodes, total num timesteps 831488/1000000000, FPS 102.
+
+average episode rewards is 0.7698321342468262
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 410/488281 episodes, total num timesteps 841728/1000000000, FPS 102.
+
+average episode rewards is 1.7239878177642822
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 415/488281 episodes, total num timesteps 851968/1000000000, FPS 102.
+
+average episode rewards is 2.257073402404785
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 420/488281 episodes, total num timesteps 862208/1000000000, FPS 102.
+
+average episode rewards is 1.8131448030471802
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 425/488281 episodes, total num timesteps 872448/1000000000, FPS 102.
+
+average episode rewards is 2.660454750061035
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 430/488281 episodes, total num timesteps 882688/1000000000, FPS 102.
+
+average episode rewards is 2.5115463733673096
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 435/488281 episodes, total num timesteps 892928/1000000000, FPS 102.
+
+average episode rewards is 1.4375979900360107
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 440/488281 episodes, total num timesteps 903168/1000000000, FPS 102.
+
+average episode rewards is 1.851698398590088
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 445/488281 episodes, total num timesteps 913408/1000000000, FPS 102.
+
+average episode rewards is 1.4728507995605469
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 450/488281 episodes, total num timesteps 923648/1000000000, FPS 102.
+
+average episode rewards is 1.3587737083435059
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 455/488281 episodes, total num timesteps 933888/1000000000, FPS 102.
+
+average episode rewards is 1.3737988471984863
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 460/488281 episodes, total num timesteps 944128/1000000000, FPS 102.
+
+average episode rewards is 1.3741567134857178
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 465/488281 episodes, total num timesteps 954368/1000000000, FPS 102.
+
+average episode rewards is 0.7856091260910034
+
+ Scenario Walker2d-v3 Algo rmappo Exp check updates 470/488281 episodes, total num timesteps 964608/1000000000, FPS 102.
+
+average episode rewards is 0.7231287956237793
