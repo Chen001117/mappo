@@ -28,6 +28,15 @@ class R_MAPPOPolicy:
 
         self.actor = R_Actor(args, self.obs_space, self.act_space, self.device)
         self.critic = R_Critic(args, self.share_obs_space, self.device)
+        
+        import numpy as np
+        from gym.spaces import Box, Tuple
+        share_observation_space = Tuple((
+            Box(low=-np.inf, high=np.inf, shape=(55,), dtype=np.float64), 
+            Box(low=-np.inf, high=np.inf, shape=(16,57,57), dtype=np.float64),
+        ))
+        self.critic2 = R_Critic(args, share_observation_space, self.device)
+        
         # self.discri = R_Critic(args, self.share_obs_space, self.device, rnn=False)
 
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(),

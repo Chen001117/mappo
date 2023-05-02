@@ -31,7 +31,8 @@ class MARLWrapper(gym.Wrapper):
         #     obs_n = np.expand_dims(o[0], 0), np.expand_dims(o[1], 0)
         # else:
         #     obs_n = np.expand_dims(o, 0)
-        reward_n = np.array([[r] for r in rews])
+        reward_n = np.array([[rews] for _ in range(self.num_agent)])
+        # reward_n = np.array([[r] for r in rews])
         done_n = np.array([d for _ in range(self.num_agent)])
         return obs_n, reward_n, done_n, info_n
 

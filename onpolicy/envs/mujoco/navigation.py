@@ -214,34 +214,29 @@ class NavigationEnv(BaseEnv):
         rewards.append((dist<0.5) * max_speed * duration)
         # done penalty
         rewards.append(-contact*1.)
-        # colaborate rew
-        load_pos = state[:2]
-        load_move_vec = load_pos - self.last_load_pos
-        dog_state = state[4:4+self.num_agent*4]
-        dog_pos = dog_state.reshape([self.num_agent, 4])[:,:2]
-        dog_load_vecs = dog_pos - load_pos.reshape([1, 2])
-        cos_thetas = []
-        for dog_load_vec in dog_load_vecs:
-            inner_dot = np.dot(dog_load_vec, load_move_vec)
-            dist_load = np.linalg.norm(load_move_vec)
-            dist_dog = np.linalg.norm(dog_load_vec)
-            if dist_dog>1e-3 and dist_load>1e-3:
-                cos_thetas.append(inner_dot/dist_load/dist_dog)
-            else:
-                cos_thetas.append(0.)
-        theta_weights = (np.array(cos_thetas)+1.)/2.
+        
+        # # colaborate rew
+        # load_pos = state[:2]
+        # load_move_vec = load_pos - self.last_load_pos
+        # dog_state = state[4:4+self.num_agent*4]
+        # dog_pos = dog_state.reshape([self.num_agent, 4])[:,:2]
+        # dog_load_vecs = dog_pos - load_pos.reshape([1, 2])
+        # cos_thetas = []
+        # for dog_load_vec in dog_load_vecs:
+        #     inner_dot = np.dot(dog_load_vec, load_move_vec)
+        #     dist_load = np.linalg.norm(load_move_vec)
+        #     dist_dog = np.linalg.norm(dog_load_vec)
+        #     if dist_dog>1e-3 and dist_load>1e-3:
+        #         cos_thetas.append(inner_dot/dist_load/dist_dog)
+        #     else:
+        #         cos_thetas.append(0.)
+        # theta_weights = (np.array(cos_thetas)+1.)/2.
 
         rew_dict = dict()
         rew_dict["goal_distance"] = rewards[0]
         rew_dict["goal_reach"] = rewards[1]
         rew_dict["con_penalty"] = rewards[2]
-        
-        rews = []
-        rewards = np.array(rewards)
-        for i in range(self.num_agent):
-            agent_rewards = rewards.copy()
-            agent_rewards[0] *= theta_weights[i]
-            rews.append(np.dot(agent_rewards, weights))
+        rews = np.dot(rewards, weights)
         
         return rews, rew_dict
     
@@ -370,7 +365,7 @@ class NavigationEnv(BaseEnv):
             all_dog_pos, all_dog_yaw, dog_len
         )
         cur_img_sta.append(dog_map)
-            
+        
         cur_img_sta = np.stack(cur_img_sta, axis=0)
         cur_img_o = np.concatenate(cur_img_obs, axis=0)
         cur_img_sta = np.concatenate([cur_img_sta, cur_img_o], axis=0)
