@@ -30,7 +30,7 @@ class MujocoRunner(Runner):
                 values, actions, action_log_probs, rnn_states, rnn_states_critic, actions_env = self.collect(step)
                 
                 # Obser reward and next obs
-                obs, rewards, dones, infos = self.envs.step(actions_env)
+                obs, rewards, dones, infos, num_agents = self.envs.step(actions_env)
 
                 # if self.tuple_obs:
                 #     share_obs = (
@@ -51,7 +51,7 @@ class MujocoRunner(Runner):
                 # for i in range(len(infos)):
                 #     infos[i]['rnd_rew'] = np.abs(pred_values[i]).mean()
                 
-                data = obs, rewards, dones, infos, values, actions, action_log_probs, rnn_states, rnn_states_critic
+                data = obs, rewards, dones, infos, values, actions, action_log_probs, rnn_states, rnn_states_critic, num_agents
                 
                 # insert data into buffer
                 self.insert(data)
@@ -106,12 +106,25 @@ class MujocoRunner(Runner):
 
     def warmup(self):
         # reset env
-        obs = self.envs.reset()
+        obs, num_agent = self.envs.reset()
         if self.tuple_obs:
-            self.buffer.obs_vec[0] = obs[0].copy()
-            self.buffer.obs_img[0] = obs[1].copy()
-            self.buffer.share_obs_vec[0] = obs[2].copy()
-            self.buffer.share_obs_img[1] = obs[3].copy()
+            for i in range(len(obs[0])):
+                n_agent, n_obs = obs[0][i].shape
+                self.buffer.obs_vec[0][i] = 0.
+                self.buffer.obs_vec[0][i][:n_agent,:n_obs] = obs[0][i].copy()
+                
+                n_agent, n_obs, _, _ = obs[1][i].shape
+                self.buffer.obs_img[0][i] = 0.
+                self.buffer.obs_img[0][i][:n_agent,:n_obs] = obs[1][i].copy()
+                
+                n_agent, n_obs = obs[2][i].shape
+                self.buffer.share_obs_vec[0][i] = 0.
+                self.buffer.share_obs_vec[0][i][:n_agent,:n_obs] = obs[2][i].copy()
+                
+                n_agent, n_obs, _, _ = obs[3][i].shape
+                self.buffer.share_obs_img[0][i] = 0.
+                self.buffer.share_obs_img[0][i][:n_agent,:n_obs] = obs[3][i].copy()
+            self.buffer.num_agents[0] = num_agent.copy()
         else:
             self.buffer.share_obs[0] = obs.copy()
             self.buffer.obs[0] = obs.copy()
@@ -137,14 +150,15 @@ class MujocoRunner(Runner):
                 obs,
                 np.concatenate(self.buffer.rnn_states[step]),
                 np.concatenate(self.buffer.rnn_states_critic[step]),
-                np.concatenate(self.buffer.masks[step])
+                np.concatenate(self.buffer.masks[step]),
+                np.concatenate(self.buffer.num_agents[step])
             )
         # [self.envs, agents, dim]
-        values = np.array(np.split(_t2n(value), self.n_rollout_threads))
+        values = np.array(np.split(value, self.n_rollout_threads))
         actions = np.array(np.split(_t2n(action), self.n_rollout_threads))
         action_log_probs = np.array(np.split(_t2n(action_log_prob), self.n_rollout_threads))
         rnn_states = np.array(np.split(_t2n(rnn_states), self.n_rollout_threads))
-        rnn_states_critic = np.array(np.split(_t2n(rnn_states_critic), self.n_rollout_threads))
+        rnn_states_critic = np.array(np.split(rnn_states_critic, self.n_rollout_threads))
         # rearrange action
         if self.envs.action_space[0].__class__.__name__ == 'Box':
             actions_env = actions.copy()
@@ -154,8 +168,13 @@ class MujocoRunner(Runner):
         return values, actions, action_log_probs, rnn_states, rnn_states_critic, actions_env
 
     def insert(self, data):
-        obs, rewards, dones, infos, values, actions, action_log_probs, rnn_states, rnn_states_critic = data
+        obs, rewards, dones_env, infos, values, actions, action_log_probs, rnn_states, rnn_states_critic, num_agents = data
         
+        dones = np.zeros([self.n_rollout_threads, self.num_agents])
+        for i in range(len(dones_env)):
+            n_agent = dones_env[i].shape[0]
+            dones[i][:n_agent] = dones_env[i]
+        # dones = np.zeros()
         rnn_states[dones == True] = np.zeros(((dones == True).sum(), self.recurrent_N, self.hidden_size), dtype=np.float32)
         rnn_states_critic[dones == True] = np.zeros(((dones == True).sum(), *self.buffer.rnn_states_critic.shape[3:]), dtype=np.float32)
         masks = np.ones((self.n_rollout_threads, self.num_agents, 1), dtype=np.float32)
@@ -165,7 +184,7 @@ class MujocoRunner(Runner):
             obs = (obs[0].copy(), obs[1].copy())
         else:
             share_obs = obs.copy()
-        self.buffer.insert(share_obs, obs, rnn_states, rnn_states_critic, actions, action_log_probs, values, rewards, masks)
+        self.buffer.insert(share_obs, obs, rnn_states, rnn_states_critic, actions, action_log_probs, values, rewards, masks, num_agents)
     
     @torch.no_grad()
     def compute(self):
@@ -181,9 +200,10 @@ class MujocoRunner(Runner):
         next_values = self.trainer.policy.get_values(
             share_obs,
             np.concatenate(self.buffer.rnn_states_critic[-1]),
-            np.concatenate(self.buffer.masks[-1])
+            np.concatenate(self.buffer.masks[-1]),
+            np.concatenate(self.buffer.num_agents[-1])
         )
-        next_values = np.array(np.split(_t2n(next_values), self.n_rollout_threads))
+        next_values = np.array(np.split(next_values, self.n_rollout_threads))
         self.buffer.compute_returns(next_values, self.trainer.value_normalizer)
 
     @torch.no_grad()

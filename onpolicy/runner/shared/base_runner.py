@@ -134,25 +134,26 @@ class Runner(object):
         """Save policy's actor and critic networks."""
         policy_actor = self.trainer.policy.actor
         torch.save(policy_actor.state_dict(), str(self.save_dir) + "/actor.pt")
-        policy_critic = self.trainer.policy.critic
-        torch.save(policy_critic.state_dict(), str(self.save_dir) + "/critic.pt")
-        if self.trainer._use_valuenorm:
-            policy_vnorm = self.trainer.value_normalizer
-            torch.save(policy_vnorm.state_dict(), str(self.save_dir) + "/vnorm.pt")
+        for i in range(self.num_agents):
+            policy_critic = self.trainer.policy.critic[i]
+            torch.save(policy_critic.state_dict(), str(self.save_dir) + "/critic_{:02d}.pt".format(i))
+            if self.trainer._use_valuenorm:
+                policy_vnorm = self.trainer.value_normalizer[i]
+                torch.save(policy_vnorm.state_dict(), str(self.save_dir) + "/vnorm_{:02d}.pt".format(i))
 
     def restore(self):
         """Restore policy's networks from a saved model."""
         if self.model_dir:
-            policy_actor_state_dict = torch.load(str(self.model_dir) + '/actor.pt') #, map_location=torch.device('cpu'))
+            policy_actor_state_dict = torch.load(str(self.model_dir) + '/actor.pt', map_location=torch.device('cpu'))
             self.policy.actor.load_state_dict(policy_actor_state_dict)
-            policy_critic_state_dict = torch.load(str(self.model_dir) + '/critic.pt') #, map_location=torch.device('cpu'))
+            policy_critic_state_dict = torch.load(str(self.model_dir) + '/critic.pt', map_location=torch.device('cpu'))
             self.policy.critic.load_state_dict(policy_critic_state_dict)
-            policy_vnorm_state_dict = torch.load(str(self.model_dir) + '/vnorm.pt') #, map_location=torch.device('cpu'))
+            policy_vnorm_state_dict = torch.load(str(self.model_dir) + '/vnorm.pt', map_location=torch.device('cpu'))
             self.trainer.value_normalizer.load_state_dict(policy_vnorm_state_dict)
         if self.low_model:
-            policy_critic_state_dict = torch.load(str(self.low_model) + '/critic2.pt') #, map_location=torch.device('cpu'))
+            policy_critic_state_dict = torch.load(str(self.low_model) + '/critic2.pt', map_location=torch.device('cpu'))
             self.policy.critic2.load_state_dict(policy_critic_state_dict)
-            policy_vnorm_state_dict = torch.load(str(self.low_model) + '/vnorm2.pt') #, map_location=torch.device('cpu'))
+            policy_vnorm_state_dict = torch.load(str(self.low_model) + '/vnorm2.pt', map_location=torch.device('cpu'))
             self.trainer.value_normalizer2.load_state_dict(policy_vnorm_state_dict)
         
  

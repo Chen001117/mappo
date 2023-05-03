@@ -167,7 +167,7 @@ class NavigationEnv(BaseEnv):
         info(dict): 
         """
         # pre process
-        command = np.clip(cmd, self.action_space.low, self.action_space.high)
+        command = np.clip(cmd[:self.num_agent], self.action_space.low, self.action_space.high)
         action = self._local_to_global(command)
         # action = command.copy()
         done, contact = self._do_simulation(action, self.frame_skip)

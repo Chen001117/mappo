@@ -204,7 +204,7 @@ def worker(remote, parent_remote, env_fn_wrapper, rank=None):
             raise NotImplementedError
 
 class SubprocVecEnv(ShareVecEnv):
-    def __init__(self, env_fns, spaces=None, eval=False):
+    def __init__(self, env_fns, num_agents, spaces=None, eval=False):
         """
         envs: list of gym environments to run in subprocesses
         """
@@ -220,8 +220,8 @@ class SubprocVecEnv(ShareVecEnv):
         for remote in self.work_remotes:
             remote.close()
 
-        self.remotes[0].send(('get_spaces', None))
-        observation_space, share_observation_space, action_space = self.remotes[0].recv()
+        self.remotes[num_agents-1].send(('get_spaces', None))
+        observation_space, share_observation_space, action_space = self.remotes[num_agents-1].recv()
         ShareVecEnv.__init__(self, len(env_fns), observation_space, share_observation_space, action_space)
 
     def step_async(self, actions):
@@ -267,8 +267,11 @@ class SubprocVecEnv(ShareVecEnv):
             return np.stack(frame) 
 
 class TupleSubprocVecEnv(SubprocVecEnv):
-    def __init__(self, env_fns, spaces=None, eval=False):
-        SubprocVecEnv.__init__(self, env_fns, spaces=None, eval=False)
+    def __init__(self, env_fns, num_agents):
+        SubprocVecEnv.__init__(self, env_fns, num_agents, spaces=None, eval=False)
+        self.num_agents = np.ones([len(env_fns), num_agents, 1]) 
+        for i in range(len(env_fns)):
+            self.num_agents[i] *= (i % num_agents + 1)
 
     def step_wait(self):
         obs_vec, obs_img, sta_vec, sta_img = [], [], [], []
@@ -276,19 +279,20 @@ class TupleSubprocVecEnv(SubprocVecEnv):
         for remote in self.remotes:
             obs, r, d, i = remote.recv()
             o_vec, o_img, s_vec, s_img = map(np.array, zip(obs))
-            obs_vec.append(o_vec)
-            obs_img.append(o_img)
-            sta_vec.append(s_vec)
-            sta_img.append(s_img)
+            obs_vec.append(o_vec[0])
+            obs_img.append(o_img[0])
+            sta_vec.append(s_vec[0])
+            sta_img.append(s_img[0])
             dones.append(d)
             infos.append(i)
             rews.append(r)
         self.waiting = False
-        observation = (
-            np.concatenate(obs_vec), np.concatenate(obs_img),
-            np.concatenate(sta_vec), np.concatenate(sta_img),
-        )
-        return observation, np.stack(rews), np.stack(dones), infos
+        # observation = (
+        #     np.concatenate(obs_vec), np.concatenate(obs_img),
+        #     np.concatenate(sta_vec), np.concatenate(sta_img),
+        # )
+        observation = obs_vec, obs_img, sta_vec, sta_img
+        return observation, rews, dones, infos, self.num_agents
 
     def reset(self):
         for remote in self.remotes:
@@ -300,7 +304,9 @@ class TupleSubprocVecEnv(SubprocVecEnv):
             obs_img.append(o_img)
             sta_vec.append(s_vec)
             sta_img.append(s_img)
-        return np.stack(obs_vec), np.stack(obs_img), np.stack(sta_vec), np.stack(sta_img)
+        # obs = np.stack(obs_vec), np.stack(obs_img), np.stack(sta_vec), np.stack(sta_img)
+        obs = obs_vec, obs_img, sta_vec, sta_img
+        return obs, self.num_agents
 
 def shareworker(remote, parent_remote, env_fn_wrapper, rank):
     parent_remote.close()
@@ -497,8 +503,9 @@ class ShareDummyVecEnv(ShareVecEnv):
             raise NotImplementedError
 
 class TupleDummyVecEnv(DummyVecEnv):
-    def __init__(self, env_fns):
+    def __init__(self, env_fns, num_agents):
         DummyVecEnv.__init__(self, env_fns)
+        self.num_agents = np.ones([1, num_agents, 1]) * num_agents
 
     def step_wait(self):
         results = self.envs[0].step(self.actions[0]) 
@@ -508,9 +515,9 @@ class TupleDummyVecEnv(DummyVecEnv):
         obs_vec, obs_img, sta_vec, sta_img = map(np.array, zip(obs))
         rews, dones, infos = map(np.array, zip([rews, dones, infos]))
         self.actions = None
-        return (obs_vec, obs_img, sta_vec, sta_img), rews, dones, infos
+        return (obs_vec, obs_img, sta_vec, sta_img), rews, dones, infos, self.num_agents
 
     def reset(self):
         obs = self.envs[0].reset()
         obs_vec, obs_img, sta_vec, sta_img = map(np.array, zip(obs))
-        return obs_vec, obs_img, sta_vec, sta_img
+        return (obs_vec, obs_img, sta_vec, sta_img), self.num_agents

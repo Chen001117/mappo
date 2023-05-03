@@ -9,7 +9,7 @@ from pathlib import Path
 import torch
 import gym
 from onpolicy.config import get_config
-from onpolicy.envs.env_wrappers import TupleSubprocVecEnv, SubprocVecEnv, DummyVecEnv, MARLWrapper
+from onpolicy.envs.env_wrappers import TupleDummyVecEnv, TupleSubprocVecEnv, DummyVecEnv, MARLWrapper
 # from onpolicy.envs.mujoco.walker2d_v3 import Walker2dEnv as MujocoEnv
 from onpolicy.envs.mujoco.navigation import NavigationEnv as MujocoEnv
 
@@ -19,7 +19,7 @@ def make_train_env(all_args):
     def get_env_fn(rank):
         def init_env(rank):
             if all_args.env_name == "MuJoCo":
-                env = MujocoEnv(all_args.num_agents) #all_args.seed+rank*1000) #gym.make(all_args.scenario_name) #(all_args)
+                env = MujocoEnv(rank%all_args.num_agents+1) #all_args.seed+rank*1000) #gym.make(all_args.scenario_name) #(all_args)
                 env = MARLWrapper(env)
             else:
                 print("Can not support the " +
@@ -29,10 +29,10 @@ def make_train_env(all_args):
             return env
         return init_env
     if all_args.n_rollout_threads == 1:
-        return DummyVecEnv([get_env_fn(0)])
+        return TupleDummyVecEnv([get_env_fn(0)], all_args.num_agents)
     else:
         # return SubprocVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)])
-        return TupleSubprocVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)])
+        return TupleSubprocVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)], all_args.num_agents)
 
 
 def make_eval_env(all_args):

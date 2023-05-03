@@ -25,7 +25,8 @@ class R_MAPPO():
         self.value_loss_coef = args.value_loss_coef
         self.entropy_coef = args.entropy_coef
         self.max_grad_norm = args.max_grad_norm       
-        self.huber_delta = args.huber_delta
+        self.huber_delta = args.huber_delta    
+        self.num_agents = args.num_agents
 
         self._use_recurrent_policy = args.use_recurrent_policy
         self._use_naive_recurrent = args.use_naive_recurrent_policy
@@ -42,12 +43,14 @@ class R_MAPPO():
         if self._use_popart:
             self.value_normalizer = self.policy.critic.v_out
         elif self._use_valuenorm:
-            self.value_normalizer = ValueNorm(1).to(self.device)
-            self.value_normalizer2 = ValueNorm(1).to(self.device)
+            self.value_normalizer = []
+            for _ in range(self.num_agents):
+                value_norm = ValueNorm(1).to(self.device)
+                self.value_normalizer.append(value_norm)
         else:
             self.value_normalizer = None
 
-    def cal_value_loss(self, values, value_preds_batch, return_batch, active_masks_batch):
+    def cal_value_loss(self, values, value_preds_batch, return_batch, active_masks_batch, num_agents):
         """
         Calculate value function loss.
         :param values: (torch.Tensor) value function predictions.
@@ -57,12 +60,15 @@ class R_MAPPO():
 
         :return value_loss: (torch.Tensor) value function loss.
         """
-        value_pred_clipped = value_preds_batch + (values - value_preds_batch).clamp(-self.clip_param,
-                                                                                        self.clip_param)
+        value_pred_clipped = value_preds_batch + (values - value_preds_batch).clamp(-self.clip_param, self.clip_param)
         if self._use_popart or self._use_valuenorm:
-            self.value_normalizer.update(return_batch)
-            error_clipped = self.value_normalizer.normalize(return_batch) - value_pred_clipped
-            error_original = self.value_normalizer.normalize(return_batch) - values
+            error_clipped = torch.zeros_like(return_batch)
+            error_original = torch.zeros_like(return_batch)
+            for i in range(self.num_agents):
+                agent_id = num_agents[:,0] == (i+1)
+                self.value_normalizer[i].update(return_batch[agent_id])
+                error_clipped[agent_id] = self.value_normalizer[i].normalize(return_batch[agent_id]) - value_pred_clipped[agent_id]
+                error_original[agent_id] = self.value_normalizer[i].normalize(return_batch[agent_id]) - values[agent_id]
         else:
             error_clipped = return_batch - value_pred_clipped
             error_original = return_batch - values
@@ -101,7 +107,7 @@ class R_MAPPO():
         """
         share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch, \
         value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, \
-        adv_targ, available_actions_batch = sample
+        adv_targ, available_actions_batch, num_agents, num_agents_rnn = sample
 
         old_action_log_probs_batch = check(old_action_log_probs_batch).to(**self.tpdv)
         adv_targ = check(adv_targ).to(**self.tpdv)
@@ -117,8 +123,10 @@ class R_MAPPO():
             rnn_states_critic_batch, 
             actions_batch, 
             masks_batch, 
+            num_agents,
+            num_agents_rnn,
             available_actions_batch,
-            active_masks_batch
+            active_masks_batch,
         )
 
         # actor update
@@ -151,38 +159,22 @@ class R_MAPPO():
         self.policy.actor_optimizer.step()
 
         # critic update
-        value_loss = self.cal_value_loss(values, value_preds_batch, return_batch, active_masks_batch)
+        value_loss = self.cal_value_loss(values, value_preds_batch, return_batch, active_masks_batch, num_agents)
 
-        self.policy.critic_optimizer.zero_grad()
+        for critic_optimizer in self.policy.critic_optimizer:
+            critic_optimizer.zero_grad()
 
         (value_loss * self.value_loss_coef).backward()
 
-        if self._use_max_grad_norm:
-            critic_grad_norm = nn.utils.clip_grad_norm_(self.policy.critic.parameters(), self.max_grad_norm)
-        else:
-            critic_grad_norm = get_gard_norm(self.policy.critic.parameters())
+        for critic in self.policy.critic:
+            if self._use_max_grad_norm:
+                critic_grad_norm = nn.utils.clip_grad_norm_(critic.parameters(), self.max_grad_norm)
+            else:
+                critic_grad_norm = get_gard_norm(critic.parameters())
 
-        self.policy.critic_optimizer.step()
-
-        # # discri update
-        # discri_loss = self.policy.get_discri(
-        #     share_obs_batch, 
-        #     rnn_states_critic_batch, 
-        #     masks_batch, 
-        # )
-        # discri_loss = (discri_loss**2).mean()
-
-        # self.policy.discri_optimizer.zero_grad()
-
-        # (discri_loss * self.value_loss_coef).backward()
-
-        # if self._use_max_grad_norm:
-        #     discri_grad_norm = nn.utils.clip_grad_norm_(self.policy.discri.parameters(), self.max_grad_norm)
-        # else:
-        #     discri_grad_norm = get_gard_norm(self.policy.discri.parameters())
-
-        # self.policy.discri_optimizer.step()
-
+        for critic_optimizer in self.policy.critic_optimizer:
+            critic_optimizer.step()
+        
         return value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights
 
     def train(self, buffer, update_actor=True):
@@ -194,95 +186,102 @@ class R_MAPPO():
         :return train_info: (dict) contains information regarding training update (e.g. loss, grad norms, etc).
         """
         
-        low_obs_vec = buffer.share_obs_vec[:-1].copy()
-        low_obs_img = buffer.share_obs_img[:-1].copy() # [len, n_env, n_agent, c, w ,h] 
+        # low_obs_vec = buffer.share_obs_vec[:-1].copy()
+        # low_obs_img = buffer.share_obs_img[:-1].copy() # [len, n_env, n_agent, c, w ,h] 
         
-        e_len, n_env, n_agent, _ = low_obs_vec.shape
+        # e_len, n_env, n_agent, _ = low_obs_vec.shape
         
-        cur_vec_sta = low_obs_vec[:,:,:,0:15] # [len, n_env, n_agent, n_size] 
-        hist_vec_sta = low_obs_vec[:,:,:,15:78] # [len, n_env, n_agent, n_size] 
-        anchor_vec = low_obs_vec[:,:,:,78:86] # [len, n_env, n_agent, n_size] 
-        agent_id = low_obs_vec[:,:,:,86:88] # [len, n_env, n_agent, n_size] 
-        time = low_obs_vec[:,:,:,88:89] # [len, n_env, n_agent, n_size] 
+        # cur_vec_sta = low_obs_vec[:,:,:,0:15] # [len, n_env, n_agent, n_size] 
+        # hist_vec_sta = low_obs_vec[:,:,:,15:78] # [len, n_env, n_agent, n_size] 
+        # anchor_vec = low_obs_vec[:,:,:,78:86] # [len, n_env, n_agent, n_size] 
+        # agent_id = low_obs_vec[:,:,:,86:88] # [len, n_env, n_agent, n_size] 
+        # time = low_obs_vec[:,:,:,88:89] # [len, n_env, n_agent, n_size] 
         
-        def get_01(obs):
-            o0 =  np.concatenate([
-                obs[:,:,:,0:3], obs[:,:,:,3:6], 
-                obs[:,:,:,9:11], obs[:,:,:,11:13]
-            ], axis=-1)
-            o1 =  np.concatenate([
-                obs[:,:,:,0:3], obs[:,:,:,6:9], 
-                obs[:,:,:,9:11], obs[:,:,:,13:15]
-            ], axis=-1)
-            return o0, o1
+        # def get_01(obs):
+        #     o0 =  np.concatenate([
+        #         obs[:,:,:,0:3], obs[:,:,:,3:6], 
+        #         obs[:,:,:,9:11], obs[:,:,:,11:13]
+        #     ], axis=-1)
+        #     o1 =  np.concatenate([
+        #         obs[:,:,:,0:3], obs[:,:,:,6:9], 
+        #         obs[:,:,:,9:11], obs[:,:,:,13:15]
+        #     ], axis=-1)
+        #     return o0, o1
     
-        def get_hist_01(obs):
-            obs = obs.reshape([e_len, n_env, n_agent, 3, 21])
-            o0s, o1s = [], []
-            for i in range(3):
-                o0, o1 = get_01(obs[:,:,:,i,:15])
-                c0 = obs[:,:,:,i,15:18]
-                c1 = obs[:,:,:,i,18:21]
-                o0s.append(o0)
-                o0s.append(c0)
-                o1s.append(o1)
-                o1s.append(c1)
-            return np.concatenate(o0s,-1), np.concatenate(o1s, -1)
+        # def get_hist_01(obs):
+        #     obs = obs.reshape([e_len, n_env, n_agent, 3, 21])
+        #     o0s, o1s = [], []
+        #     for i in range(3):
+        #         o0, o1 = get_01(obs[:,:,:,i,:15])
+        #         c0 = obs[:,:,:,i,15:18]
+        #         c1 = obs[:,:,:,i,18:21]
+        #         o0s.append(o0)
+        #         o0s.append(c0)
+        #         o1s.append(o1)
+        #         o1s.append(c1)
+        #     return np.concatenate(o0s,-1), np.concatenate(o1s, -1)
         
-        cur_vec_sta_0, cur_vec_sta_1 = get_01(cur_vec_sta)
-        hist_vec_sta_0, hist_vec_sta_1 = get_hist_01(hist_vec_sta)
-        anchor_vec_0, anchor_vec_1 = anchor_vec[:,:,:,:4], anchor_vec[:,:,:,4:]
-        agent_id_0, agent_id_1 = np.ones([e_len, n_env, n_agent, 1]), np.ones([e_len, n_env, n_agent, 1])
-        sta_0 = np.concatenate([
-            cur_vec_sta_0, hist_vec_sta_0, anchor_vec_0, agent_id_0, time
-        ], axis=-1)
-        sta_1 = np.concatenate([
-            cur_vec_sta_1, hist_vec_sta_1, anchor_vec_1, agent_id_1, time
-        ], axis=-1)
-        low_obs_vec = np.concatenate([sta_1[:,:,1:2], sta_0[:,:,0:1]], 2)
-        # print("OBS", low_obs_vec.shape)
+        # cur_vec_sta_0, cur_vec_sta_1 = get_01(cur_vec_sta)
+        # hist_vec_sta_0, hist_vec_sta_1 = get_hist_01(hist_vec_sta)
+        # anchor_vec_0, anchor_vec_1 = anchor_vec[:,:,:,:4], anchor_vec[:,:,:,4:]
+        # agent_id_0, agent_id_1 = np.ones([e_len, n_env, n_agent, 1]), np.ones([e_len, n_env, n_agent, 1])
+        # sta_0 = np.concatenate([
+        #     cur_vec_sta_0, hist_vec_sta_0, anchor_vec_0, agent_id_0, time
+        # ], axis=-1)
+        # sta_1 = np.concatenate([
+        #     cur_vec_sta_1, hist_vec_sta_1, anchor_vec_1, agent_id_1, time
+        # ], axis=-1)
+        # low_obs_vec = np.concatenate([sta_1[:,:,1:2], sta_0[:,:,0:1]], 2)
+        # # print("OBS", low_obs_vec.shape)
         
-        low_obs_img_0 = np.concatenate([
-            low_obs_img[:,:,:,0:2], low_obs_img[:,:,:,2:4], 
-            low_obs_img[:,:,:,6:8], low_obs_img[:,:,:,8:10],
-            low_obs_img[:,:,:,12:14], low_obs_img[:,:,:,14:16],
-            low_obs_img[:,:,:,18:20], low_obs_img[:,:,:,20:22],
-        ], axis=3)
-        for i in range(8):
-            low_obs_img_0[:,:,:,i*2+1] *= 0.
-        low_obs_img_1 = np.concatenate([
-            low_obs_img[:,:,:,0:2], low_obs_img[:,:,:,4:6], 
-            low_obs_img[:,:,:,6:8], low_obs_img[:,:,:,10:12],
-            low_obs_img[:,:,:,12:14], low_obs_img[:,:,:,16:18],
-            low_obs_img[:,:,:,18:20], low_obs_img[:,:,:,22:24],
-        ], axis=3)
-        for i in range(8):
-            low_obs_img_1[:,:,:,i*2+1] *= 0.
-        low_obs_img = np.concatenate([low_obs_img_1[:,:,1:2], low_obs_img_0[:,:,0:1]], 2)
-        # print("IMG", low_obs_img.shape)
+        # low_obs_img_0 = np.concatenate([
+        #     low_obs_img[:,:,:,0:2], low_obs_img[:,:,:,2:4], 
+        #     low_obs_img[:,:,:,6:8], low_obs_img[:,:,:,8:10],
+        #     low_obs_img[:,:,:,12:14], low_obs_img[:,:,:,14:16],
+        #     low_obs_img[:,:,:,18:20], low_obs_img[:,:,:,20:22],
+        # ], axis=3)
+        # for i in range(8):
+        #     low_obs_img_0[:,:,:,i*2+1] *= 0.
+        # low_obs_img_1 = np.concatenate([
+        #     low_obs_img[:,:,:,0:2], low_obs_img[:,:,:,4:6], 
+        #     low_obs_img[:,:,:,6:8], low_obs_img[:,:,:,10:12],
+        #     low_obs_img[:,:,:,12:14], low_obs_img[:,:,:,16:18],
+        #     low_obs_img[:,:,:,18:20], low_obs_img[:,:,:,22:24],
+        # ], axis=3)
+        # for i in range(8):
+        #     low_obs_img_1[:,:,:,i*2+1] *= 0.
+        # low_obs_img = np.concatenate([low_obs_img_1[:,:,1:2], low_obs_img_0[:,:,0:1]], 2)
+        # # print("IMG", low_obs_img.shape)
 
-        rnn = np.zeros([n_env*n_agent, 1, 256])
-        advantages = []
-        for i in range(e_len):
-            obs = (
-                np.concatenate(low_obs_vec[i], 0),
-                np.concatenate(low_obs_img[i], 0),
-            )
-            mask = np.concatenate(buffer.masks[i,:,:,:1].copy(), 0)
-            rnn[mask[:,0]==True] = np.zeros([(mask==True).sum(), 1, 256])
-            value, rnn = self.policy.critic2(obs, rnn, mask)
-            rnn = rnn.cpu().detach().numpy()
-            value = self.value_normalizer2.denormalize(value.cpu().detach().numpy())
-            adv = buffer.returns[i].copy() - value.reshape([n_env, n_agent, 1])
-            advantages.append(adv)
-        colab_advs = np.array(advantages)   
-        colab_advs = np.clip(np.exp(colab_advs), 0., 2.)
+        # rnn = np.zeros([n_env*n_agent, 1, 256])
+        # advantages = []
+        # for i in range(e_len):
+        #     obs = (
+        #         np.concatenate(low_obs_vec[i], 0),
+        #         np.concatenate(low_obs_img[i], 0),
+        #     )
+        #     mask = np.concatenate(buffer.masks[i,:,:,:1].copy(), 0)
+        #     rnn[mask[:,0]==True] = np.zeros([(mask==True).sum(), 1, 256])
+        #     value, rnn = self.policy.critic2(obs, rnn, mask)
+        #     rnn = rnn.cpu().detach().numpy()
+        #     value = self.value_normalizer2.denormalize(value.cpu().detach().numpy())
+        #     adv = buffer.returns[i].copy() - value.reshape([n_env, n_agent, 1])
+        #     advantages.append(adv)
+        # colab_advs = np.array(advantages)   
+        # colab_advs = np.clip(np.exp(colab_advs), 0., 2.)
         
         train_info = {}
         if self._use_popart or self._use_valuenorm:
-            advantages = buffer.returns[:-1].copy() - self.value_normalizer.denormalize(buffer.value_preds[:-1].copy()) 
-            advantages *= colab_advs
-            train_info['colab_advs'] = colab_advs.mean()
+            advantages = np.zeros_like(np.concatenate(buffer.returns[:-1], axis=0))
+            for i in range(self.num_agents):
+                agent_id = buffer.num_agents[:-1,:,0,0] == (i+1)
+                agent_id = np.concatenate(agent_id, axis=0)
+                returns = np.concatenate(buffer.returns[:-1].copy(), axis=0)[agent_id]
+                values = np.concatenate(buffer.value_preds[:-1].copy(), axis=0)[agent_id]
+                advantages[agent_id] = returns - self.value_normalizer[i].denormalize(values) 
+            advantages = advantages.reshape(buffer.returns[:-1].shape)
+            # advantages *= colab_advs
+            # train_info['colab_advs'] = colab_advs.mean()
         # else:
         #     advantages = buffer.returns[:-1] - buffer.value_preds[:-1]
         advantages_copy = advantages.copy()
@@ -320,7 +319,7 @@ class R_MAPPO():
                 train_info['ratio'] += imp_weights.mean()
 
         num_updates = self.ppo_epoch * self.num_mini_batch
-        train_info['colab_advs'] *= num_updates
+        # train_info['colab_advs'] *= num_updates
 
         for k in train_info.keys():
             train_info[k] /= num_updates
@@ -329,8 +328,10 @@ class R_MAPPO():
 
     def prep_training(self):
         self.policy.actor.train()
-        self.policy.critic.train()
+        for critic in self.policy.critic:
+            critic.train()
 
     def prep_rollout(self):
         self.policy.actor.eval()
-        self.policy.critic.eval()
+        for critic in self.policy.critic:
+            critic.eval()
