@@ -100,20 +100,6 @@ class R_MAPPOPolicy:
         """
         values, _ = self.critic(cent_obs, rnn_states_critic, masks)
         return values
-    
-    def get_discri(self, cent_obs, rnn_states_critic, masks):
-        """
-        Get value function predictions.
-        :param cent_obs (np.ndarray): centralized input to the critic.
-        :param rnn_states_critic: (np.ndarray) if critic is RNN, RNN states for critic.
-        :param masks: (np.ndarray) denotes points at which RNN states should be reset.
-
-        :return values: (torch.Tensor) value function predictions.
-        """
-        cent_obs[0][:] *= 0.
-        cent_obs[1][:,1:] *= 0.
-        values, _ = self.discri(cent_obs, rnn_states_critic, masks)
-        return values
 
     def evaluate_actions(self, cent_obs, obs, rnn_states_actor, rnn_states_critic, action, masks,
                          available_actions=None, active_masks=None):
@@ -133,14 +119,15 @@ class R_MAPPOPolicy:
         :return action_log_probs: (torch.Tensor) log probabilities of the input actions.
         :return dist_entropy: (torch.Tensor) action distribution entropy for the given inputs.
         """
-        action_log_probs, dist_entropy = self.actor.evaluate_actions(obs,
-                                                                     rnn_states_actor,
-                                                                     action,
-                                                                     masks,
-                                                                     available_actions,
-                                                                     active_masks)
-
-        values, _ = self.critic(cent_obs, rnn_states_critic, masks)
+        
+        action_log_probs, dist_entropy = self.actor.evaluate_actions(
+            obs, rnn_states_actor, action, masks, available_actions, active_masks
+        )
+        values1, _ = self.critic(cent_obs, rnn_states_critic, masks)
+        cent_obs[0][:,-2:-1] = 1 - cent_obs[0][:,-2:-1]
+        values2, _ = self.critic(cent_obs, rnn_states_critic, masks)
+        values = (values1 + values2) / 2
+        
         return values, action_log_probs, dist_entropy
 
     def act(self, obs, rnn_states_actor, masks, available_actions=None, deterministic=False):
