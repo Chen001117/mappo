@@ -139,11 +139,11 @@ class ACTLayer(nn.Module):
         elif self.continuous:
             action_logits = self.action_out(x)
             action_log_probs = action_logits.log_probs(action)
-            dist_entropy = action_logits.entropy().mean()
-            # if active_masks is not None:
-            #     dist_entropy = (action_logits.entropy()*active_masks.squeeze(-1)).sum()/active_masks.sum()
-            # else:
-            #     dist_entropy = action_logits.entropy().mean()
+            # dist_entropy = action_logits.entropy().mean()
+            if active_masks is not None:
+                dist_entropy = (action_logits.entropy()*active_masks).sum()/active_masks.sum()
+            else:
+                dist_entropy = action_logits.entropy().mean()
 
         else:
             action_logits = self.action_out(x, available_actions)

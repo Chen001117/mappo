@@ -184,7 +184,13 @@ class MujocoRunner(Runner):
             obs = (obs[0].copy(), obs[1].copy())
         else:
             share_obs = obs.copy()
-        self.buffer.insert(share_obs, obs, rnn_states, rnn_states_critic, actions, action_log_probs, values, rewards, masks, num_agents)
+            
+        active_masks = np.ones_like(num_agents)
+        for i in range(1, self.num_agents+1):
+            agent_id = (num_agents==i).all(-1).all(-1)
+            active_masks[agent_id,i:] = 0.
+            
+        self.buffer.insert(share_obs, obs, rnn_states, rnn_states_critic, actions, action_log_probs, values, rewards, masks, num_agents, active_masks=active_masks)
     
     @torch.no_grad()
     def compute(self):

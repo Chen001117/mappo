@@ -60,6 +60,7 @@ class ValueNorm(nn.Module):
         input_vector = input_vector.to(self.running_mean.device)  # not elegant, but works in most cases
 
         mean, var = self.running_mean_var()
+        
         out = (input_vector - mean[(None,) * self.norm_axes]) / torch.sqrt(var)[(None,) * self.norm_axes]
         
         return out

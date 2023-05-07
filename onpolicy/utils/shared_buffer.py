@@ -214,7 +214,7 @@ class SharedReplayBuffer(object):
         else:
             if self._use_gae:
                 self.value_preds[-1] = next_value
-                gae = 0
+                gae = [0. for _ in range(self.max_num_agents)]
                 for step in reversed(range(self.rewards.shape[0])):
                     for i in range(self.max_num_agents):
                         agent_id = self.num_agents[step,:,0,0]==(i+1)
@@ -224,8 +224,8 @@ class SharedReplayBuffer(object):
                             mask_tp1 = self.masks[step + 1][agent_id]
                             reward_t = self.rewards[step][agent_id]
                             delta = reward_t + self.gamma * value_tp1 * mask_tp1 - value_t 
-                            gae = delta + self.gamma * self.gae_lambda * mask_tp1 * gae
-                            self.returns[step][agent_id] = gae + value_t
+                            gae[i] = delta + self.gamma * self.gae_lambda * mask_tp1 * gae[i]
+                            self.returns[step][agent_id] = gae[i] + value_t
                         else:
                             delta = self.rewards[step] + self.gamma * self.value_preds[step + 1] * self.masks[step + 1] - \
                                     self.value_preds[step]

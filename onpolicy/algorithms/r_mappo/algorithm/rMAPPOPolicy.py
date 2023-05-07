@@ -109,8 +109,8 @@ class R_MAPPOPolicy:
                 rnn_states_critic[agent_id], 
                 masks[agent_id]
             )
-            values[agent_id] = val
-            rnns[agent_id] = rnn
+            values[agent_id] = val.detach().cpu().numpy()
+            rnns[agent_id] = rnn.detach().cpu().numpy()
         
         return values, actions, action_log_probs, rnn_states_actor, rnns
 
@@ -125,7 +125,6 @@ class R_MAPPOPolicy:
         """
         
         values = np.zeros([*num_agents.shape[:-1], 1])
-        rnns = np.zeros_like(rnn_states_critic)
         for i in range(self.num_agents):
             agent_id = num_agents[:,0]==(i+1)
             vec_sta = cent_obs[0][agent_id][:,:self.sta_vec_size[i]]
@@ -135,8 +134,7 @@ class R_MAPPOPolicy:
                 rnn_states_critic[agent_id], 
                 masks[agent_id]
             )
-            values[agent_id] = val
-            rnns[agent_id] = rnn
+            values[agent_id] = val.detach().cpu().numpy()
         
         return values
 
@@ -158,8 +156,6 @@ class R_MAPPOPolicy:
         :return action_log_probs: (torch.Tensor) log probabilities of the input actions.
         :return dist_entropy: (torch.Tensor) action distribution entropy for the given inputs.
         """
-        active_masks = (obs[0]!=0).any(-1) & (obs[1]!=0).any(-1).any(-1).any(-1)
-        active_masks = active_masks.reshape([-1, 1])
         
         action_log_probs, dist_entropy = self.actor.evaluate_actions(
             obs, rnn_states_actor, action, masks, available_actions, active_masks
@@ -176,8 +172,9 @@ class R_MAPPOPolicy:
                 rnn_states_critic[agent_id_rnn], 
                 masks[agent_id]
             )
+            if i==0:
+                values = values.to(val.device)
             values[agent_id] = val
-        values[~active_masks[:,0]] = 0.
         
         return values, action_log_probs, dist_entropy
 
