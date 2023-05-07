@@ -43,7 +43,6 @@ class R_MAPPO():
             self.value_normalizer = self.policy.critic.v_out
         elif self._use_valuenorm:
             self.value_normalizer = ValueNorm(1).to(self.device)
-            self.value_normalizer2 = ValueNorm(1).to(self.device)
         else:
             self.value_normalizer = None
 
@@ -123,13 +122,8 @@ class R_MAPPO():
 
         # actor update
         imp_weights = torch.exp(action_log_probs - old_action_log_probs_batch)
-        # weight_masks = torch.ones_like(imp_weights)
-        # weight_masks[:,:2] *= 0.05
         surr1 = imp_weights * adv_targ
         surr2 = torch.clamp(imp_weights, 1.0 - self.clip_param, 1.0 + self.clip_param) * adv_targ
-        # surr1 = surr1 * weight_masks
-        # surr2 = surr2 * weight_masks
-
         if self._use_policy_active_masks:
             policy_action_loss = (-torch.sum(torch.min(surr1, surr2), dim=-1, keepdim=True) \
                 * active_masks_batch).sum() / active_masks_batch.sum()
@@ -194,95 +188,9 @@ class R_MAPPO():
         :return train_info: (dict) contains information regarding training update (e.g. loss, grad norms, etc).
         """
         
-        low_obs_vec = buffer.share_obs_vec[:-1].copy()
-        low_obs_img = buffer.share_obs_img[:-1].copy() # [len, n_env, n_agent, c, w ,h] 
-        
-        e_len, n_env, n_agent, _ = low_obs_vec.shape
-        
-        cur_vec_sta = low_obs_vec[:,:,:,0:15] # [len, n_env, n_agent, n_size] 
-        hist_vec_sta = low_obs_vec[:,:,:,15:78] # [len, n_env, n_agent, n_size] 
-        anchor_vec = low_obs_vec[:,:,:,78:86] # [len, n_env, n_agent, n_size] 
-        agent_id = low_obs_vec[:,:,:,86:88] # [len, n_env, n_agent, n_size] 
-        time = low_obs_vec[:,:,:,88:89] # [len, n_env, n_agent, n_size] 
-        
-        def get_01(obs):
-            o0 =  np.concatenate([
-                obs[:,:,:,0:3], obs[:,:,:,3:6], 
-                obs[:,:,:,9:11], obs[:,:,:,11:13]
-            ], axis=-1)
-            o1 =  np.concatenate([
-                obs[:,:,:,0:3], obs[:,:,:,6:9], 
-                obs[:,:,:,9:11], obs[:,:,:,13:15]
-            ], axis=-1)
-            return o0, o1
-    
-        def get_hist_01(obs):
-            obs = obs.reshape([e_len, n_env, n_agent, 3, 21])
-            o0s, o1s = [], []
-            for i in range(3):
-                o0, o1 = get_01(obs[:,:,:,i,:15])
-                c0 = obs[:,:,:,i,15:18]
-                c1 = obs[:,:,:,i,18:21]
-                o0s.append(o0)
-                o0s.append(c0)
-                o1s.append(o1)
-                o1s.append(c1)
-            return np.concatenate(o0s,-1), np.concatenate(o1s, -1)
-        
-        cur_vec_sta_0, cur_vec_sta_1 = get_01(cur_vec_sta)
-        hist_vec_sta_0, hist_vec_sta_1 = get_hist_01(hist_vec_sta)
-        anchor_vec_0, anchor_vec_1 = anchor_vec[:,:,:,:4], anchor_vec[:,:,:,4:]
-        agent_id_0, agent_id_1 = np.ones([e_len, n_env, n_agent, 1]), np.ones([e_len, n_env, n_agent, 1])
-        sta_0 = np.concatenate([
-            cur_vec_sta_0, hist_vec_sta_0, anchor_vec_0, agent_id_0, time
-        ], axis=-1)
-        sta_1 = np.concatenate([
-            cur_vec_sta_1, hist_vec_sta_1, anchor_vec_1, agent_id_1, time
-        ], axis=-1)
-        low_obs_vec = np.concatenate([sta_1[:,:,1:2], sta_0[:,:,0:1]], 2)
-        # print("OBS", low_obs_vec.shape)
-        
-        low_obs_img_0 = np.concatenate([
-            low_obs_img[:,:,:,0:2], low_obs_img[:,:,:,2:4], 
-            low_obs_img[:,:,:,6:8], low_obs_img[:,:,:,8:10],
-            low_obs_img[:,:,:,12:14], low_obs_img[:,:,:,14:16],
-            low_obs_img[:,:,:,18:20], low_obs_img[:,:,:,20:22],
-        ], axis=3)
-        for i in range(8):
-            low_obs_img_0[:,:,:,i*2+1] *= 0.
-        low_obs_img_1 = np.concatenate([
-            low_obs_img[:,:,:,0:2], low_obs_img[:,:,:,4:6], 
-            low_obs_img[:,:,:,6:8], low_obs_img[:,:,:,10:12],
-            low_obs_img[:,:,:,12:14], low_obs_img[:,:,:,16:18],
-            low_obs_img[:,:,:,18:20], low_obs_img[:,:,:,22:24],
-        ], axis=3)
-        for i in range(8):
-            low_obs_img_1[:,:,:,i*2+1] *= 0.
-        low_obs_img = np.concatenate([low_obs_img_1[:,:,1:2], low_obs_img_0[:,:,0:1]], 2)
-        # print("IMG", low_obs_img.shape)
-
-        rnn = np.zeros([n_env*n_agent, 1, 256])
-        advantages = []
-        for i in range(e_len):
-            obs = (
-                np.concatenate(low_obs_vec[i], 0),
-                np.concatenate(low_obs_img[i], 0),
-            )
-            mask = np.concatenate(buffer.masks[i,:,:,:1].copy(), 0)
-            rnn[mask[:,0]==True] = np.zeros([(mask==True).sum(), 1, 256])
-            value, rnn = self.policy.critic2(obs, rnn, mask)
-            rnn = rnn.cpu().detach().numpy()
-            value = self.value_normalizer2.denormalize(value.cpu().detach().numpy())
-            adv = buffer.returns[i].copy() - value.reshape([n_env, n_agent, 1])
-            advantages.append(adv)
-        colab_advs = np.array(advantages)   
-        colab_advs = np.clip(np.exp(colab_advs), 0., 2.)
-        
         train_info = {}
         if self._use_popart or self._use_valuenorm:
             advantages = buffer.returns[:-1].copy() - self.value_normalizer.denormalize(buffer.value_preds[:-1].copy()) 
-            advantages *= colab_advs
-            train_info['colab_advs'] = colab_advs.mean()
         # else:
         #     advantages = buffer.returns[:-1] - buffer.value_preds[:-1]
         advantages_copy = advantages.copy()
@@ -320,7 +228,6 @@ class R_MAPPO():
                 train_info['ratio'] += imp_weights.mean()
 
         num_updates = self.ppo_epoch * self.num_mini_batch
-        train_info['colab_advs'] *= num_updates
 
         for k in train_info.keys():
             train_info[k] /= num_updates
