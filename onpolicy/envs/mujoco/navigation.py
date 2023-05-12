@@ -23,15 +23,17 @@ class NavigationEnv(BaseEnv):
         self.init_kd = np.array([[0.02, 0.02, 0.01]])
         self.init_ki = np.array([[0.0, 0.0, 10.]])
         # simulator
-        self.load_mass = 1. * (1 + (np.random.rand()-.5) * self.domain_random_scale)
+        self.load_mass = 3. * (1 + (np.random.rand()-.5) * self.domain_random_scale)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         self.anchor_id = np.random.randint(0, 4, self.num_agent)
+        self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         model = get_xml(
             dog_num = self.num_agent, 
             obs_num = self.num_obs, 
             anchor_id = self.anchor_id,
             load_mass = self.load_mass,
             cable_len = self.cable_len,
+            fric_coef = self.fric_coef,
         )
         super().__init__(model, **kwargs)
         # observation space 
@@ -67,6 +69,8 @@ class NavigationEnv(BaseEnv):
             [0., -self.msize/2-1],
         ])
         self.wall_yaw = np.array([[np.pi/2],[np.pi/2],[0.],[0.]])
+        
+        self.arrive_time = 0.
 
     def seed(self, seed):
         super().seed(seed)
@@ -124,9 +128,10 @@ class NavigationEnv(BaseEnv):
                 return self.reset()
         # init variables
         self.t = 0.
+        self.arrive_time = 0.
         load_pos = self.sim.data.qpos.copy()[:2]
         dist = np.linalg.norm(load_pos-self.goal, axis=-1)
-        self.max_time = dist * 8. + 30.
+        self.max_time = dist * 7.5 + 15.
         # self.obs_map = self._get_obs_map(self.init_obs_pos, self.init_obs_yaw)
         # RL_info
         cur_obs, observation = self._get_obs() 
@@ -179,7 +184,7 @@ class NavigationEnv(BaseEnv):
         self._post_update(command, cur_obs)
         return observation, reward, done, False, info
 
-    def _get_done(self): 
+    def _get_done(self, dt): 
 
         terminate, contact = False, False
         # contact done
@@ -195,6 +200,11 @@ class NavigationEnv(BaseEnv):
         if self.t > self.max_time:
             terminate, contact = True, False
             return terminate, contact
+        # arrive
+        dist = np.linalg.norm(self.sim.data.qpos[:2] - self.goal)
+        self.arrive_time = self.arrive_time + dt if dist < 0.5 else 0.
+        if self.arrive_time >= 3.:
+            terminate, contact = True, False
         
         return terminate, contact
 
@@ -211,7 +221,12 @@ class NavigationEnv(BaseEnv):
         # goal reach rewards
         max_speed = np.linalg.norm(self.action_space.high[:2])
         duration = self.frame_skip / 100
-        rewards.append((dist<0.5) * max_speed * duration)
+        rew = (dist<0.5) * max_speed * duration
+        if self.arrive_time >= 3.:
+            gamma = 0.99
+            remain_t = (self.max_time - self.t) // self.dt
+            rew = rew * (1-gamma**remain_t) / (1-gamma)
+        rewards.append(rew)
         # done penalty
         rewards.append(-contact*1.)
         
@@ -504,7 +519,7 @@ class NavigationEnv(BaseEnv):
             # assert np.array(ctrl).shape==self.action_space.shape, "Action dimension mismatch"
             self.sim.data.ctrl[:] = self._pd_contorl(target_vel=action, dt=self.dt/n_frames).flatten()
             self.sim.step()
-            terminate, contact = self._get_done()
+            terminate, contact = self._get_done(self.dt/n_frames)
             if terminate:
                 break
         return terminate, contact

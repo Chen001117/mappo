@@ -46,7 +46,7 @@ class R_MAPPO():
         else:
             self.value_normalizer = None
 
-    def cal_value_loss(self, values, value_preds_batch, return_batch, active_masks_batch):
+    def cal_value_loss(self, values,mean_values,  value_preds_batch, return_batch, active_masks_batch):
         """
         Calculate value function loss.
         :param values: (torch.Tensor) value function predictions.
@@ -56,8 +56,9 @@ class R_MAPPO():
 
         :return value_loss: (torch.Tensor) value function loss.
         """
-        value_pred_clipped = value_preds_batch + (values - value_preds_batch).clamp(-self.clip_param,
-                                                                                        self.clip_param)
+
+        value_pred_clipped = value_preds_batch + \
+            (values - value_preds_batch).clamp(-self.clip_param, self.clip_param)
         if self._use_popart or self._use_valuenorm:
             self.value_normalizer.update(return_batch)
             error_clipped = self.value_normalizer.normalize(return_batch) - value_pred_clipped
@@ -82,6 +83,35 @@ class R_MAPPO():
             value_loss = (value_loss * active_masks_batch).sum() / active_masks_batch.sum()
         else:
             value_loss = value_loss.mean()
+
+        # mean_value_pred_clipped = value_preds_batch + \
+        #     (mean_values - value_preds_batch).clamp(-self.clip_param, self.clip_param)
+        # if self._use_popart or self._use_valuenorm:
+        #     self.value_normalizer.update(return_batch)
+        #     mean_error_clipped = self.value_normalizer.normalize(return_batch) - mean_value_pred_clipped
+        #     mean_error_original = self.value_normalizer.normalize(return_batch) - mean_values
+        # else:
+        #     mean_error_clipped = return_batch - mean_value_pred_clipped
+        #     mean_error_original = return_batch - mean_values
+
+        # if self._use_huber_loss:
+        #     mean_value_loss_clipped = huber_loss(mean_error_clipped, self.huber_delta)
+        #     mean_value_loss_original = huber_loss(mean_error_original, self.huber_delta)
+        # else:
+        #     mean_value_loss_clipped = mse_loss(mean_error_clipped)
+        #     mean_value_loss_original = mse_loss(mean_error_original)
+
+        # if self._use_clipped_value_loss:
+        #     mean_value_loss = torch.max(mean_value_loss_original, mean_value_loss_clipped)
+        # else:
+        #     mean_value_loss = mean_value_loss_original
+
+        # if self._use_value_active_masks:
+        #     mean_value_loss = (mean_value_loss * active_masks_batch).sum() / active_masks_batch.sum()
+        # else:
+        #     mean_value_loss = mean_value_loss.mean()
+
+        # value_loss = 0.5 * value_loss + 0.5 * mean_value_loss
 
         return value_loss
 
@@ -109,7 +139,7 @@ class R_MAPPO():
         active_masks_batch = check(active_masks_batch).to(**self.tpdv)
 
         # Reshape to do in a single forward pass for all steps
-        values, action_log_probs, dist_entropy = self.policy.evaluate_actions(
+        values, mean_values, action_log_probs, dist_entropy = self.policy.evaluate_actions(
             share_obs_batch, 
             obs_batch, 
             rnn_states_batch, 
@@ -145,7 +175,8 @@ class R_MAPPO():
         self.policy.actor_optimizer.step()
 
         # critic update
-        value_loss = self.cal_value_loss(values, value_preds_batch, return_batch, active_masks_batch)
+        value_loss = \
+            self.cal_value_loss(values, mean_values, value_preds_batch, return_batch, active_masks_batch)
 
         self.policy.critic_optimizer.zero_grad()
 
@@ -157,25 +188,6 @@ class R_MAPPO():
             critic_grad_norm = get_gard_norm(self.policy.critic.parameters())
 
         self.policy.critic_optimizer.step()
-
-        # # discri update
-        # discri_loss = self.policy.get_discri(
-        #     share_obs_batch, 
-        #     rnn_states_critic_batch, 
-        #     masks_batch, 
-        # )
-        # discri_loss = (discri_loss**2).mean()
-
-        # self.policy.discri_optimizer.zero_grad()
-
-        # (discri_loss * self.value_loss_coef).backward()
-
-        # if self._use_max_grad_norm:
-        #     discri_grad_norm = nn.utils.clip_grad_norm_(self.policy.discri.parameters(), self.max_grad_norm)
-        # else:
-        #     discri_grad_norm = get_gard_norm(self.policy.discri.parameters())
-
-        # self.policy.discri_optimizer.step()
 
         return value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights
 
@@ -190,7 +202,8 @@ class R_MAPPO():
         
         train_info = {}
         if self._use_popart or self._use_valuenorm:
-            advantages = buffer.returns[:-1].copy() - self.value_normalizer.denormalize(buffer.value_preds[:-1].copy()) 
+            advantages = buffer.returns[:-1].copy() - \
+                self.value_normalizer.denormalize(buffer.value_preds[:-1].copy()) 
         # else:
         #     advantages = buffer.returns[:-1] - buffer.value_preds[:-1]
         advantages_copy = advantages.copy()

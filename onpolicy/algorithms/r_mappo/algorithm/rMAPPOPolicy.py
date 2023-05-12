@@ -28,17 +28,6 @@ class R_MAPPOPolicy:
 
         self.actor = R_Actor(args, self.obs_space, self.act_space, self.device)
         self.critic = R_Critic(args, self.share_obs_space, self.device)
-        
-        import numpy as np
-        from gym.spaces import Box, Tuple
-        share_observation_space = Tuple((
-            Box(low=-np.inf, high=np.inf, shape=(55,), dtype=np.float64), 
-            Box(low=-np.inf, high=np.inf, shape=(16,57,57), dtype=np.float64),
-        ))
-        self.critic2 = R_Critic(args, share_observation_space, self.device)
-        
-        # self.discri = R_Critic(args, self.share_obs_space, self.device, rnn=False)
-
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(),
                                                 lr=self.lr, eps=self.opti_eps,
                                                 weight_decay=self.weight_decay)
@@ -46,10 +35,6 @@ class R_MAPPOPolicy:
                                                  lr=self.critic_lr,
                                                  eps=self.opti_eps,
                                                  weight_decay=self.weight_decay)
-        # self.discri_optimizer = torch.optim.Adam(self.discri.parameters(),
-        #                                          lr=1e-5, #self.critic_lr,
-        #                                          eps=self.opti_eps,
-        #                                          weight_decay=self.weight_decay)
 
     def lr_decay(self, episode, episodes):
         """
@@ -59,7 +44,6 @@ class R_MAPPOPolicy:
         """
         update_linear_schedule(self.actor_optimizer, episode, episodes, self.lr)
         update_linear_schedule(self.critic_optimizer, episode, episodes, self.critic_lr)
-        # update_linear_schedule(self.discri_optimizer, episode, episodes, self.discri_lr)
 
     def get_actions(self, cent_obs, obs, rnn_states_actor, rnn_states_critic, masks, available_actions=None,
                     deterministic=False):
@@ -123,12 +107,19 @@ class R_MAPPOPolicy:
         action_log_probs, dist_entropy = self.actor.evaluate_actions(
             obs, rnn_states_actor, action, masks, available_actions, active_masks
         )
-        values1, _ = self.critic(cent_obs, rnn_states_critic, masks)
-        cent_obs[0][:,-2:-1] = 1 - cent_obs[0][:,-2:-1]
-        values2, _ = self.critic(cent_obs, rnn_states_critic, masks)
-        values = (values1 + values2) / 2
+        values, _ = self.critic(cent_obs, rnn_states_critic, masks)
+
+        # all_values = []
+        # for i in range(2):
+        #     val, _ = self.critic(cent_obs, rnn_states_critic, masks)
+        #     all_values.append(val)
+        #     if i == 0:
+        #         values = val.clone()
+        #         cent_obs[0][:,-3:-1] = 1 - cent_obs[0][:,-3:-1]
+        # mean_values = torch.stack(all_values, 0).mean(0)
         
-        return values, action_log_probs, dist_entropy
+        # return values, mean_values, action_log_probs, dist_entropy
+        return values, None, action_log_probs, dist_entropy
 
     def act(self, obs, rnn_states_actor, masks, available_actions=None, deterministic=False):
         """

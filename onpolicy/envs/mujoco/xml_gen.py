@@ -1,4 +1,6 @@
-def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None):
+import numpy as np
+
+def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None, fric_coef=None):
     assert len(anchor_id) == dog_num, "length of anchor id should be equal to the dog number"
     strings = \
     """
@@ -18,8 +20,8 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
       <joint axis="0 1 0" limited="false" name="load_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="load_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="load_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="{}" size="0.3 0.3 0.3" name="load" type="box" rgba="0.55 0.27 0.07 1." friction="1 0.005 0.001" />
-    """.format(load_mass)
+      <geom mass="{}" size="0.3 0.3 0.3" name="load" type="box" rgba="0.55 0.27 0.07 1." friction="{} 0.005 0.001" />
+    """.format(load_mass, fric_coef)
 
     for i in range(dog_num):
        if anchor_id[i] == 0:
@@ -124,14 +126,15 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
   </tendon>
     """
     for i in range(dog_num):
-       strings += \
+      max_f = 9.83 * (13. + 2.)  / 2. * np.sqrt(2)
+      strings += \
     """
   <actuator>
-    <motor ctrllimited="true" ctrlrange="-500.0 500.0" joint=dog{:02d}_axisx/>
-    <motor ctrllimited="true" ctrlrange="-500.0 500.0" joint="dog{:02d}_axisy"/>
+    <motor ctrllimited="true" ctrlrange="-{} {}" joint=dog{:02d}_axisx/>
+    <motor ctrllimited="true" ctrlrange="-{} {}" joint="dog{:02d}_axisy"/>
     <motor ctrllimited="true" ctrlrange="-100.0 100.0" joint="dog{:02d}_rootz"/>
   </actuator>
-    """.format(i,i,i)
+    """.format(max_f,max_f,i,max_f,max_f,i,i)
   
     strings += \
     """
