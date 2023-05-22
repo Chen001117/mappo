@@ -51,9 +51,9 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
       <joint axis="0 1 0" limited="false" name="dog{:02d}_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="dog{:02d}_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="dog{:02d}_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="13." size="0.325 0.15 0.15" name="dog{:02d}" type="box" rgba="0.8 0.4 0. 1" friction="1 0.005 0.001" />
+      <geom mass="13." size="0.325 0.15 0.15" name="dog{:02d}" type="box" rgba="0.8 0.4 0. 1" friction="{} 0.005 0.001" />
     </body>
-    """.format(i,i,i,i,i,i,i)
+    """.format(i,i,i,i,i,i,i,fric_coef)
     
     for i in range(obs_num):
       strings += \
@@ -126,15 +126,14 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
   </tendon>
     """
     for i in range(dog_num):
-      max_f = 9.83 * (13. + 2.)  / 2. * np.sqrt(2)
       strings += \
     """
   <actuator>
-    <motor ctrllimited="true" ctrlrange="-{} {}" joint=dog{:02d}_axisx/>
-    <motor ctrllimited="true" ctrlrange="-{} {}" joint="dog{:02d}_axisy"/>
+    <motor ctrllimited="true" ctrlrange="-1000 1000" joint=dog{:02d}_axisx/>
+    <motor ctrllimited="true" ctrlrange="-1000 1000" joint="dog{:02d}_axisy"/>
     <motor ctrllimited="true" ctrlrange="-100.0 100.0" joint="dog{:02d}_rootz"/>
   </actuator>
-    """.format(max_f,max_f,i,max_f,max_f,i,i)
+    """.format(i,i,i)
   
     strings += \
     """

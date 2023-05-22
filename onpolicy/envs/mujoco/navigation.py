@@ -23,10 +23,11 @@ class NavigationEnv(BaseEnv):
         self.init_kd = np.array([[0.02, 0.02, 0.01]])
         self.init_ki = np.array([[0.0, 0.0, 10.]])
         # simulator
-        self.load_mass = 3. * (1 + (np.random.rand()-.5) * self.domain_random_scale)
+        self.load_mass = 5. * (1 + (np.random.rand()-.5) * self.domain_random_scale)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         self.anchor_id = np.random.randint(0, 4, self.num_agent)
         self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
+        self.max_torque = 9.83 * (13. + 2.)
         model = get_xml(
             dog_num = self.num_agent, 
             obs_num = self.num_obs, 
@@ -539,6 +540,10 @@ class NavigationEnv(BaseEnv):
         d_output = cur_vel - self.prev_output_vel
         torque = self.kp * error - self.kd * (d_output/dt) + self.intergral
         torque = np.clip(torque, self.torque_low, self.torque_high)
+        torque_norm = np.linalg.norm(torque[:,:2], axis=-1)
+        for i in range(len(torque_norm)):
+            if torque_norm[i] > self.max_torque:
+                torque[i,:2] = torque[i,:2] * self.max_torque / torque_norm[i] 
         self.prev_output_vel = cur_vel.copy()
         return torque
 
