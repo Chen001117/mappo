@@ -415,19 +415,15 @@ class DummyVecEnv(ShareVecEnv):
 
     def step_wait(self):
         results = [env.step(a) for (a, env) in zip(self.actions, self.envs)]
-        obs, rews, dones, infos = results[0]
+        obs, rews, dones, infos = results[0]    
 
-        for (i, done) in enumerate(dones):
-            if 'bool' in done.__class__.__name__:
-                if done:
-                    obs = self.envs[i].reset()
-                    obs_vec, obs_img, sta_vec, sta_img = obs
-                    obs = np.array(obs_vec), np.array(obs_img), np.array(sta_vec), np.array(sta_img)
-            else:
-                if np.all(done):
-                    obs[i] = self.envs[i].reset()
+        if np.all(dones):
+            obs = self.envs[0].reset()
+            obs_vec, obs_img, sta_vec, sta_img = obs
+            obs = np.array(obs_vec), np.array(obs_img), np.array(sta_vec), np.array(sta_img)
+                    
         self.actions = None
-        self.render('human')
+        self.render('human') # step and render
         obs_vec, obs_img, sta_vec, sta_img = obs
         obs = np.array(obs_vec), np.array(obs_img), np.array(sta_vec), np.array(sta_img)
         return obs, np.stack([rews]), np.stack([dones]), [infos]
@@ -435,7 +431,7 @@ class DummyVecEnv(ShareVecEnv):
     def reset(self):
         obs = [env.reset() for env in self.envs]
         obs_vec, obs_img, sta_vec, sta_img = obs[0]
-        self.render('human')
+        self.render('human') # step and render
         return np.array(obs_vec), np.array(obs_img), np.array(sta_vec), np.array(sta_img)
 
     def close(self):

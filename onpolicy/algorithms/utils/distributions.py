@@ -103,12 +103,12 @@ class DiagGaussian(nn.Module):
     def forward(self, x):
         if self.first_time:
             self.first_time = False
-            self.action_range = self.action_range.to(x.device)
-            self.action_mid = self.action_mid.to(x.device)
+            self.action_range = self.action_range.unsqueeze(0).to(x.device)
+            self.action_mid = self.action_mid.unsqueeze(0).to(x.device)
         action_mean = self.fc_mean(x) * self.action_range + self.action_mid
         action_logstd = self.fc_std(x) 
-        action_std = torch.clamp(action_logstd.exp(), 0.2, 1.) #* self.action_range
-        # action_std = self.action_range * 0. + 0.2
+        action_std = torch.clamp(action_logstd.exp(), 0.1, 5.) * self.action_range
+        # action_std = self.action_range * 0.2
         # action_logstd = self.fc_std(x) 
         # action_std = torch.clamp(action_logstd, -10, 2).exp() #* self.action_range
         # print(action_mean, action_std)

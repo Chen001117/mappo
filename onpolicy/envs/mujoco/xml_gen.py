@@ -11,17 +11,17 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
 
   <worldbody>
     <light cutoff="100" diffuse="1 1 1" dir="-0 0 -1.3" directional="true" exponent="1" pos="0 0 1.3" specular=".1 .1 .1"/>
-    <geom conaffinity="1" condim="3" name="floor" pos="0 0 0" rgba="0.8 0.9 0.8 1" size="5.2 5.2 5" type="plane" material="MatPlane"/>
+    <geom condim="3" friction="1. 0.005 0.001" name="floor" pos="0 0 0" rgba="0.8 0.9 0.8 1" size="5.2 5.2 5" type="plane" material="MatPlane"/>
     
     <body name="load" pos="0 0 0.35">
       <site name="load" pos="0 0 0"/>
-      <camera name="camera" mode="trackcom" pos="0 0. 10." xyaxes="1 0 0 0 1 0"/>
+      <camera name="camera" mode="trackcom" pos="0 0. 15." xyaxes="1 0 0 0 1 0"/>
       <joint axis="1 0 0" limited="false" name="load_axisx" pos="0 0 0" type="slide"/>
       <joint axis="0 1 0" limited="false" name="load_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="load_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="load_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="{}" size="0.3 0.3 0.3" name="load" type="box" rgba="0.55 0.27 0.07 1." friction="{} 0.005 0.001" />
-    """.format(load_mass, fric_coef)
+      <geom mass="{}" size="0.3 0.3 0.3" name="load" type="box" rgba="0.55 0.27 0.07 1."/>
+    """.format(load_mass)
 
     for i in range(dog_num):
        if anchor_id[i] == 0:
@@ -51,9 +51,9 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
       <joint axis="0 1 0" limited="false" name="dog{:02d}_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="dog{:02d}_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="dog{:02d}_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="13." size="0.325 0.15 0.15" name="dog{:02d}" type="box" rgba="0.8 0.4 0. 1" friction="{} 0.005 0.001" />
+      <geom mass="13." size="0.325 0.15 0.15" name="dog{:02d}" type="box" rgba="0.8 0.4 0. 1"/>
     </body>
-    """.format(i,i,i,i,i,i,i,fric_coef)
+    """.format(i,i,i,i,i,i,i)
     
     for i in range(obs_num):
       strings += \
@@ -63,7 +63,7 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
       <joint axis="0 1 0" limited="false" name="obs{:02d}_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="obs{:02d}_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="obs{:02d}_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="1000" size="0.5 0.5 0.5" name="obstacle{:02d}" type="box" rgba="0. 0. 1. 1" friction="1 0.005 0.0001" />
+      <geom mass="1000" size="0.5 0.5 0.5" name="obstacle{:02d}" type="box" rgba="0. 0. 1. 1"/>
     </body>
     """.format(i,i,i,i,i,i)
       
@@ -74,25 +74,25 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
       <joint axis="1 0 0" limited="false" name="wall0_axisx" pos="0 0 0" type="slide"/>
       <joint axis="0 1 0" limited="false" name="wall0_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="wall0_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="1000" size="5. 0.2 0.5" name="wall0" type="box" rgba="0. 0. 1. 1" friction="1 0.005 0.0001" />
+      <geom mass="1000" size="5. 0.2 0.5" name="wall0" type="box" rgba="0. 0. 1. 1"/>
     </body>
     <body name="wall1" pos="0 -5.1 0.5">
       <joint axis="1 0 0" limited="false" name="wall1_axisx" pos="0 0 0" type="slide"/>
       <joint axis="0 1 0" limited="false" name="wall1_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="wall1_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="1000" size="5. 0.2 0.5" name="wall1" type="box" rgba="0. 0. 1. 1" friction="1 0.005 0.0001" />
+      <geom mass="1000" size="5. 0.2 0.5" name="wall1" type="box" rgba="0. 0. 1. 1"/>
     </body>
     <body name="wall2" pos="5.1 0 0.5">
       <joint axis="1 0 0" limited="false" name="wall2_axisx" pos="0 0 0" type="slide"/>
       <joint axis="0 1 0" limited="false" name="wall2_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="wall2_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="1000" size="0.2 5. 0.5" name="wall2" type="box" rgba="0. 0. 1. 1" friction="1 0.005 0.0001" />
+      <geom mass="1000" size="0.2 5. 0.5" name="wall2" type="box" rgba="0. 0. 1. 1"/>
     </body>
     <body name="wall3" pos="-5.1 0 0.5">
       <joint axis="1 0 0" limited="false" name="wall3_axisx" pos="0 0 0" type="slide"/>
       <joint axis="0 1 0" limited="false" name="wall3_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="wall3_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="1000" size="0.2 5. 0.5" name="wall3" type="box" rgba="0. 0. 1. 1" friction="1 0.005 0.0001" />
+      <geom mass="1000" size="0.2 5. 0.5" name="wall3" type="box" rgba="0. 0. 1. 1"/>
     </body>
     """
 
