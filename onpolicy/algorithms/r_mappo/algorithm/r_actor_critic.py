@@ -27,6 +27,7 @@ class R_Actor(nn.Module):
         self._use_naive_recurrent_policy = args.use_naive_recurrent_policy
         self._use_recurrent_policy = args.use_recurrent_policy
         self._recurrent_N = args.recurrent_N
+        self._use_ReLU = args.use_ReLU
         self.tpdv = dict(dtype=torch.float32, device=device)
         
         if obs_space.__class__.__name__ == 'Box':
@@ -44,11 +45,11 @@ class R_Actor(nn.Module):
             raise NotImplementedError
 
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:
-            input_size = self.hidden_size * (1+self.tuple_input)
+            input_size = self.hidden_size #* (1+self.tuple_input)
             self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
 
         # input_size = self.hidden_size * (1+self.tuple_input)
-        self.act = ACTLayer(action_space, self.hidden_size, self._use_orthogonal, self._gain)
+        self.act = ACTLayer(action_space, self.hidden_size, self._use_ReLU, self._use_orthogonal, self._gain)
         
         print("actor")
         print("Total number of param in base_vec is ", sum(x.numel() for x in self.base_vec.parameters()))
@@ -79,10 +80,11 @@ class R_Actor(nn.Module):
 
         if self.tuple_input:
             obs_vec = check(obs[0]).to(**self.tpdv)
-            obs_img = check(obs[1]).to(**self.tpdv)
+            # obs_img = check(obs[1]).to(**self.tpdv)
             vec_features = self.base_vec(obs_vec)
-            img_features = self.base_img(obs_img)
-            actor_features = torch.cat([vec_features, img_features], dim=-1)
+            # img_features = self.base_img(obs_img)
+            # actor_features = torch.cat([vec_features, img_features], dim=-1)
+            actor_features = vec_features
         else:
             obs = check(obs).to(**self.tpdv)
             actor_features = self.base(obs)
@@ -119,10 +121,11 @@ class R_Actor(nn.Module):
 
         if self.tuple_input:
             obs_vec = check(obs[0]).to(**self.tpdv)
-            obs_img = check(obs[1]).to(**self.tpdv)
+            # obs_img = check(obs[1]).to(**self.tpdv)
             vec_features = self.base_vec(obs_vec)
-            img_features = self.base_img(obs_img)
-            actor_features = torch.cat([vec_features, img_features], dim=-1)
+            # img_features = self.base_img(obs_img)
+            # actor_features = torch.cat([vec_features, img_features], dim=-1)
+            actor_features = vec_features
         else:
             obs = check(obs).to(**self.tpdv)
             actor_features = self.base(obs)
@@ -173,7 +176,7 @@ class R_Critic(nn.Module):
             raise NotImplementedError
 
         if self.use_rnn and (self._use_naive_recurrent_policy or self._use_recurrent_policy):
-            input_size = self.hidden_size * (1+self.tuple_input)
+            input_size = self.hidden_size #* (1+self.tuple_input)
             self.rnn = RNNLayer(input_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
         # def init_(m):
         #     return init(m, init_method, lambda x: nn.init.constant_(x, 0))
@@ -183,11 +186,12 @@ class R_Critic(nn.Module):
         else:
             input_size = self.hidden_size * (2-self.use_rnn)
             self.v_out = nn.Sequential(
-                nn.Linear(input_size, self.hidden_size),
-                nn.ReLU(),
-                nn.Linear(self.hidden_size, self.hidden_size),
-                nn.ReLU(),
                 nn.Linear(self.hidden_size, 1),
+                # nn.Linear(input_size, self.hidden_size),
+                # nn.ReLU(),
+                # nn.Linear(self.hidden_size, self.hidden_size),
+                # nn.ReLU(),
+                # nn.Linear(self.hidden_size, 1),
             )
 
         self.to(device)
@@ -213,10 +217,11 @@ class R_Critic(nn.Module):
 
         if self.tuple_input:
             cent_obs_vec = check(cent_obs[0]).to(**self.tpdv)
-            cent_obs_img = check(cent_obs[1]).to(**self.tpdv)
+            # cent_obs_img = check(cent_obs[1]).to(**self.tpdv)
             vec_features = self.base_vec(cent_obs_vec)
-            img_features = self.base_img(cent_obs_img)
-            critic_features = torch.cat([vec_features, img_features], dim=-1)
+            # img_features = self.base_img(cent_obs_img)
+            # critic_features = torch.cat([vec_features, img_features], dim=-1)
+            critic_features = vec_features
         else:
             cent_obs = check(cent_obs).to(**self.tpdv)
             critic_features = self.base(cent_obs)

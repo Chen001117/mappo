@@ -10,7 +10,7 @@ class ACTLayer(nn.Module):
     :param use_orthogonal: (bool) whether to use orthogonal initialization.
     :param gain: (float) gain of the output layer of the network.
     """
-    def __init__(self, action_space, inputs_dim, use_orthogonal, gain):
+    def __init__(self, action_space, inputs_dim, use_ReLU, use_orthogonal, gain):
         super(ACTLayer, self).__init__()
         self.mixed_action = False
         self.multi_discrete = False
@@ -22,7 +22,7 @@ class ACTLayer(nn.Module):
         elif action_space.__class__.__name__ == "Box":
             self.continuous = True
             action_dim = action_space.shape[0]
-            self.action_out = DiagGaussian(action_space, inputs_dim, action_dim, use_orthogonal, gain)
+            self.action_out = DiagGaussian(action_space, inputs_dim, action_dim, use_ReLU, use_orthogonal, gain)
         elif action_space.__class__.__name__ == "MultiBinary":
             action_dim = action_space.shape[0]
             self.action_out = Bernoulli(inputs_dim, action_dim, use_orthogonal, gain)

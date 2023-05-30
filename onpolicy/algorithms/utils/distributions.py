@@ -69,10 +69,13 @@ class Categorical(nn.Module):
 
 
 class DiagGaussian(nn.Module):
-    def __init__(self, action_space, num_inputs, num_outputs, use_orthogonal=True, gain=0.01):
+    def __init__(self, action_space, num_inputs, num_outputs, use_ReLU=False, use_orthogonal=True, gain=0.01):
         super(DiagGaussian, self).__init__()
 
         self.hidden_size = 64
+        
+        self._use_ReLU = use_ReLU
+        active_func = [nn.Tanh(), nn.ReLU()][self._use_ReLU]
         # init_method = [nn.init.xavier_uniform_, nn.init.orthogonal_][use_orthogonal]
         # def init_(m): 
         #     return init(m, init_method, lambda x: nn.init.constant_(x, 0), gain)
@@ -80,24 +83,26 @@ class DiagGaussian(nn.Module):
         self.fc_mean = nn.Sequential(
             # nn.Linear(num_inputs, num_outputs),
             nn.Linear(num_inputs, self.hidden_size),
-            nn.ReLU(),
+            active_func,
             nn.Linear(self.hidden_size, self.hidden_size),
-            nn.ReLU(),
+            active_func,
             nn.Linear(self.hidden_size, num_outputs),
             nn.Tanh(),
         )    
         self.fc_std = nn.Sequential(
             nn.Linear(num_inputs, self.hidden_size),
-            nn.ReLU(),
+            active_func,
             nn.Linear(self.hidden_size, self.hidden_size),
-            nn.ReLU(),
+            active_func,
             nn.Linear(self.hidden_size, num_outputs),
         )
+
         action_range = (action_space.high-action_space.low) / 2
         self.action_range = torch.ones(num_outputs) * action_range
         action_mid = (action_space.high+action_space.low) / 2
         self.action_mid = torch.ones(num_outputs) * action_mid
         self.first_time = True
+
         # self.logstd = AddBias(torch.log(self.action_range))
 
     def forward(self, x):
@@ -105,13 +110,16 @@ class DiagGaussian(nn.Module):
             self.first_time = False
             self.action_range = self.action_range.unsqueeze(0).to(x.device)
             self.action_mid = self.action_mid.unsqueeze(0).to(x.device)
+            self.lower_bound = self.action_range.clone() * 0.4
+            self.upper_bound = torch.ones_like(self.lower_bound) * 10.
+
         action_mean = self.fc_mean(x) * self.action_range + self.action_mid
-        action_logstd = self.fc_std(x) 
-        action_std = torch.clamp(action_logstd.exp(), 0.1, 5.) * self.action_range
-        # action_std = self.action_range * 0.2
-        # action_logstd = self.fc_std(x) 
-        # action_std = torch.clamp(action_logstd, -10, 2).exp() #* self.action_range
-        # print(action_mean, action_std)
+        action_std = self.fc_std(x).exp()
+        action_std = torch.clamp(action_std, self.lower_bound, self.upper_bound)
+        
+        # action_mean = self.fc_mean(x)
+        # action_std = self.action_range * 0. + 0.2
+
         # zeros = torch.zeros(action_mean.size())
         # if x.is_cuda:
         #     zeros = zeros.cuda()

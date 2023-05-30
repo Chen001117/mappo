@@ -153,10 +153,10 @@ class R_MAPPO():
         # actor update
         imp_weights = torch.exp(action_log_probs - old_action_log_probs_batch)
         
-        mask = imp_weights.detach() * 0. + 1.
-        mask[:,1] = 0.05
-        
-        adv_targ = mask * adv_targ
+        # mask = imp_weights.detach() * 0. + 1.
+        # mask[:,1] = 0.05
+        # adv_targ = mask * adv_targ
+
         surr1 = imp_weights * adv_targ
         surr2 = torch.clamp(imp_weights, 1.0 - self.clip_param, 1.0 + self.clip_param) * adv_targ      
         if self._use_policy_active_masks:

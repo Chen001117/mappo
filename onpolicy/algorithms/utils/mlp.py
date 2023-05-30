@@ -13,9 +13,9 @@ class MLPBase(nn.Module):
 
         self.mlp = nn.Sequential(
             nn.Linear(obs_dim, self.hidden_size*2),
-            nn.ReLU(),
+            active_func,
             nn.Linear(self.hidden_size*2, self.hidden_size*2),
-            nn.ReLU(),
+            active_func,
             nn.Linear(self.hidden_size*2, self.hidden_size),
             # active_func,
         )
