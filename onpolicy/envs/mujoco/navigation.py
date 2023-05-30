@@ -15,7 +15,7 @@ class NavigationEnv(BaseEnv):
         self.lmlen = 57 # local map length (pixels)
         self.warm_step = 4 # warm-up: let everything stable (s)
         self.frame_skip = 25 # 100/frame_skip = decision_freq (Hz)
-        self.num_obs = 1
+        self.num_obs = 10
         self.hist_len = 4
         self.num_agent = num_agents
         self.domain_random_scale = 0. # TODO
@@ -44,14 +44,14 @@ class NavigationEnv(BaseEnv):
         obs_size = self.hist_vec_obs_size # * self.hist_len
         self.observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(obs_size,), dtype=np.float64), 
-            Box(low=-np.inf, high=np.inf, shape=(2,self.lmlen,self.lmlen), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(1,self.lmlen,self.lmlen), dtype=np.float64),
         ))
         # self.hist_vec_sta_size = 5 + 8*self.num_agent
         # sta_size = 5 + 5*self.num_agent + self.hist_vec_sta_size * (self.hist_len-1) + self.num_agent + 4*self.num_agent + 1
-        sta_size = obs_size * self.num_agent + 1
+        sta_size = obs_size * self.num_agent + 10
         self.share_observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(sta_size,), dtype=np.float64), 
-            Box(low=-np.inf, high=np.inf, shape=(self.num_agent*2,self.lmlen,self.lmlen), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(self.num_agent*1,self.lmlen,self.lmlen), dtype=np.float64),
         ))
         # action space
         aspace_low = np.array([-0.25, -0.05, -0.5])
@@ -99,8 +99,8 @@ class NavigationEnv(BaseEnv):
         init_load_yaw = np.random.random(1) * 2 * np.pi 
         init_load_z = np.ones(1) * 0.55
         init_load = np.concatenate([init_load_pos, init_load_yaw, init_load_z], axis=-1).flatten()
-        self.init_obs_pos = np.array([[5., 5.]]) # (np.random.random([self.num_obs, 2])-.5) * self.msize 
-        self.init_obs_yaw = np.array([[0.]]) # np.random.random([self.num_obs, 1]) * np.pi
+        self.init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
+        self.init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
         init_obs_z = np.ones([self.num_obs, 1]) * 0.55
         init_obs = np.concatenate([self.init_obs_pos, self.init_obs_yaw, init_obs_z], axis=-1).flatten()
         idx = 4+4*self.num_agent+4*self.num_obs
@@ -145,11 +145,11 @@ class NavigationEnv(BaseEnv):
     
     def _get_obs(self):
         
-        cur_vec_obs, cur_img_obs = self._get_cur_obs()
+        cur_vec_obs, cur_img_obs, cur_vec_sta = self._get_cur_obs()
         self._update_history(cur_vec_obs, cur_img_obs)
         vec_obs = cur_vec_obs.reshape([self.num_agent, -1]) # self.hist_vec_obs.reshape([self.num_agent, -1])
         img_obs = cur_img_obs.reshape([self.num_agent, -1, *self.observation_space[1].shape[-2:]]) # self.hist_img_obs.reshape([self.num_agent, -1, *self.observation_space[1].shape[-2:]])
-        vec_sta = vec_obs.copy().reshape([1, -1])
+        vec_sta = cur_vec_sta.reshape([1, -1])
         vec_sta = np.concatenate([vec_sta, [[self.max_time-self.t]]], -1)
         vec_sta = np.repeat(vec_sta, self.num_agent, axis=0)
         img_sta = img_obs.copy().reshape([1, -1, *self.observation_space[1].shape[-2:]])
@@ -260,23 +260,26 @@ class NavigationEnv(BaseEnv):
         cur_vec_obs = np.concatenate(cur_vec_obs, axis=-1) 
         cur_vec_obs += (np.random.random(cur_vec_obs.shape)-.5) * self.measure_random_scale
         # print("cur_vec_obs.shape", cur_vec_obs.shape) # [num_agent, vec_shape]
+        cur_vec_sta = [load_position, dog_position] + load_yaw + dog_yaw + [anchor_vec] 
+        # + [self.error, self.d_output, self.prev_output_vel]
+        cur_vec_sta = np.concatenate(cur_vec_sta, axis=-1) 
         # image: partial observation
         cur_img_obs = []
         for i in range(self.num_agent):
             cur_img_o = []
-            # dog_pos = self.sim.data.qpos.copy()[4+4*i:4+4*i+2]
-            # dog_yaw = self.sim.data.qpos.copy()[4+4*i+2]
-            # obs_len = np.ones([2])
-            # obs_map = self._draw_map(
-            #     dog_pos, dog_yaw, 
-            #     self.init_obs_pos, self.init_obs_yaw, obs_len
-            # )
-            # wall_len = np.array([self.msize+2, 2.])
-            # obs_map += self._draw_map(
-            #     dog_pos, dog_yaw, 
-            #     self.wall_pos, self.wall_yaw, wall_len
-            # )
-            obs_map = np.zeros(self.observation_space[1].shape[1:]) # TODO
+            dog_pos = self.sim.data.qpos.copy()[4+4*i:4+4*i+2]
+            dog_yaw = self.sim.data.qpos.copy()[4+4*i+2]
+            obs_len = np.ones([2])
+            obs_map = self._draw_map(
+                dog_pos, dog_yaw, 
+                self.init_obs_pos, self.init_obs_yaw, obs_len
+            )
+            wall_len = np.array([self.msize+2, 2.])
+            obs_map += self._draw_map(
+                dog_pos, dog_yaw, 
+                self.wall_pos, self.wall_yaw, wall_len
+            )
+            # obs_map = np.zeros(self.observation_space[1].shape[1:]) # TODO
             cur_img_o.append((obs_map!=0)*1.)
             # dog_pos = self.sim.data.qpos.copy()[4+4*i:4+4*i+2]
             # dog_yaw = self.sim.data.qpos.copy()[4+4*i+2]
@@ -290,15 +293,15 @@ class NavigationEnv(BaseEnv):
             #     dog_pos, dog_yaw, 
             #     all_dog_pos, all_dog_yaw, dog_len
             # )
-            dog_map = np.zeros(self.observation_space[1].shape[1:])
-            cur_img_o.append(dog_map)
+            # dog_map = np.zeros(self.observation_space[1].shape[1:])
+            # cur_img_o.append(dog_map)
             
             cur_img_o = np.stack(cur_img_o, axis=0)
             cur_img_obs.append(cur_img_o)
         cur_img_obs = np.stack(cur_img_obs, axis=0)
         # print("cur_img_obs.shape", cur_img_obs.shape) # [num_agent, vec_shape]
         
-        return cur_vec_obs, cur_img_obs
+        return cur_vec_obs, cur_img_obs, cur_vec_sta
     
     def _draw_map(self, dog_pos, dog_theta, box_pos, box_yaw, box_len):
         """ draw dog/box/obstacle local map
@@ -420,11 +423,11 @@ class NavigationEnv(BaseEnv):
         """
         state = self.sim.data.qvel.copy()[4:4+self.num_agent*4]
         cur_vel = state.reshape([self.num_agent, 4])[:,:3]
-        error = target_vel - cur_vel
+        self.error = target_vel - cur_vel
         # self.intergral += error * self.ki * dt
         # self.intergral = np.clip(self.intergral, self.torque_low, self.torque_high)
-        d_output = cur_vel - self.prev_output_vel
-        torque = self.kp * error - self.kd * (d_output/dt) # + self.intergral
+        self.d_output = cur_vel - self.prev_output_vel
+        torque = self.kp * self.error - self.kd * (self.d_output/dt) # + self.intergral
         # torque = np.clip(torque, self.torque_low, self.torque_high)
         torque_norm = np.linalg.norm(torque[:,:2], axis=-1)
         for i in range(len(torque_norm)):
