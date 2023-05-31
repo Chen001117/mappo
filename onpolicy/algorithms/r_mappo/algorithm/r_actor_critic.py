@@ -157,6 +157,8 @@ class R_Critic(nn.Module):
         self._use_recurrent_policy = args.use_recurrent_policy
         self._recurrent_N = args.recurrent_N
         self._use_popart = args.use_popart
+        self._use_ReLU = args.use_ReLU
+        active_func = [nn.Tanh(), nn.ReLU()][self._use_ReLU]
         self.tpdv = dict(dtype=torch.float32, device=device)
         init_method = [nn.init.xavier_uniform_, nn.init.orthogonal_][self._use_orthogonal]
         self.use_rnn = rnn
@@ -186,12 +188,12 @@ class R_Critic(nn.Module):
         else:
             input_size = self.hidden_size * (2-self.use_rnn)
             self.v_out = nn.Sequential(
-                nn.Linear(self.hidden_size, 1),
-                # nn.Linear(input_size, self.hidden_size),
-                # nn.ReLU(),
-                # nn.Linear(self.hidden_size, self.hidden_size),
-                # nn.ReLU(),
                 # nn.Linear(self.hidden_size, 1),
+                nn.Linear(input_size, self.hidden_size),
+                active_func,
+                nn.Linear(self.hidden_size, self.hidden_size),
+                active_func,
+                nn.Linear(self.hidden_size, 1),
             )
 
         self.to(device)
