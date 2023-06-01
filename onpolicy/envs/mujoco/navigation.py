@@ -19,12 +19,12 @@ class NavigationEnv(BaseEnv):
         self.hist_len = 4
         self.num_agent = num_agents
         self.domain_random_scale = 0. # TODO
-        self.measure_random_scale = 0. # TODO
+        self.measure_random_scale = 5e-3 # TODO
         self.init_kp = np.array([[2000, 2000, 80]])
         self.init_kd = np.array([[0.02, 0.02, 0.01]])
         self.init_ki = np.array([[0.0, 0.0, 10.]])
         # simulator
-        self.load_mass = 3. * (1 + (np.random.rand()-.5) * self.domain_random_scale)
+        self.load_mass = 1. * (1 + (np.random.rand()-.5) * self.domain_random_scale)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         self.anchor_id = np.random.randint(0, 4, self.num_agent)
         self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
@@ -134,7 +134,7 @@ class NavigationEnv(BaseEnv):
         self.arrive_time = 0.
         load_pos = self.sim.data.qpos.copy()[:2]
         dist = np.linalg.norm(load_pos-self.goal, axis=-1)
-        self.max_time = dist * 7.5 + 20.
+        self.max_time = dist * 8. + 20.
         # self.obs_map = self._get_obs_map(self.init_obs_pos, self.init_obs_yaw)
         # RL_info
         observation = self._get_obs() 
@@ -260,9 +260,9 @@ class NavigationEnv(BaseEnv):
         cur_vec_obs = np.concatenate(cur_vec_obs, axis=-1) 
         cur_vec_obs += (np.random.random(cur_vec_obs.shape)-.5) * self.measure_random_scale
         # print("cur_vec_obs.shape", cur_vec_obs.shape) # [num_agent, vec_shape]
-        cur_vec_sta = [load_position, dog_position] + load_yaw + dog_yaw + [anchor_vec] \
-            + [self.error, self.d_output, self.prev_output_vel]
+        cur_vec_sta = [self.error, self.d_output, self.prev_output_vel]
         cur_vec_sta = np.concatenate(cur_vec_sta, axis=-1) 
+        cur_vec_sta = np.concatenate([cur_vec_obs, cur_vec_sta], axis=-1)   
         # image: partial observation
         cur_img_obs = []
         for i in range(self.num_agent):
@@ -284,29 +284,29 @@ class NavigationEnv(BaseEnv):
             # obs_map = np.zeros(self.observation_space[1].shape[1:]) # TODO
             # cur_img_o.append((obs_map!=0)*1.)
             
-            # load_pos = self.sim.data.qpos.copy()[0:2].reshape([1,2])
-            # load_yaw = self.sim.data.qpos.copy()[2].reshape([1,1])
-            # load_len = np.ones([2]) * 0.6
-            # load_map = self._draw_map(
-            #     dog_pos, dog_yaw, 
-            #     load_pos, load_yaw, load_len
-            # )
-            # cur_img_o.append((load_map!=0)*1.)
-            
-            dog_pos = self.sim.data.qpos.copy()[4+4*i:4+4*i+2]
-            dog_yaw = self.sim.data.qpos.copy()[4+4*i+2]
-            all_dog_state = self.sim.data.qpos.copy()[4:4+4*self.num_agent]
-            all_dog_state = all_dog_state.reshape([self.num_agent, 4])
-            all_dog_state = np.delete(all_dog_state, i, axis=0)
-            all_dog_pos = all_dog_state[:,0:2]
-            all_dog_yaw = all_dog_state[:,2:3]
-            dog_len = np.array([0.65, 0.3])
-            dog_map = self._draw_map(
+            load_pos = self.sim.data.qpos.copy()[0:2].reshape([1,2])
+            load_yaw = self.sim.data.qpos.copy()[2].reshape([1,1])
+            load_len = np.ones([2]) * 0.6
+            load_map = self._draw_map(
                 dog_pos, dog_yaw, 
-                all_dog_pos, all_dog_yaw, dog_len
+                load_pos, load_yaw, load_len
             )
-            dog_map = np.zeros(self.observation_space[1].shape[1:])
-            cur_img_o.append((dog_map!=0)*1.)
+            cur_img_o.append((load_map!=0)*1.)
+            
+            # dog_pos = self.sim.data.qpos.copy()[4+4*i:4+4*i+2]
+            # dog_yaw = self.sim.data.qpos.copy()[4+4*i+2]
+            # all_dog_state = self.sim.data.qpos.copy()[4:4+4*self.num_agent]
+            # all_dog_state = all_dog_state.reshape([self.num_agent, 4])
+            # all_dog_state = np.delete(all_dog_state, i, axis=0)
+            # all_dog_pos = all_dog_state[:,0:2]
+            # all_dog_yaw = all_dog_state[:,2:3]
+            # dog_len = np.array([0.65, 0.3])
+            # dog_map = self._draw_map(
+            #     dog_pos, dog_yaw, 
+            #     all_dog_pos, all_dog_yaw, dog_len
+            # )
+            # dog_map = np.zeros(self.observation_space[1].shape[1:])
+            # cur_img_o.append((dog_map!=0)*1.)
             
             cur_img_o = np.stack(cur_img_o, axis=0)
             cur_img_obs.append(cur_img_o)
