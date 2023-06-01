@@ -15,11 +15,11 @@ class NavigationEnv(BaseEnv):
         self.lmlen = 57 # local map length (pixels)
         self.warm_step = 4 # warm-up: let everything stable (s)
         self.frame_skip = 25 # 100/frame_skip = decision_freq (Hz)
-        self.num_obs = 10
+        self.num_obs = 1
         self.hist_len = 4
         self.num_agent = num_agents
         self.domain_random_scale = 0. # TODO
-        self.measure_random_scale = 5e-3 # TODO
+        self.measure_random_scale = 0 # 5e-3 TODO
         self.init_kp = np.array([[2000, 2000, 80]])
         self.init_kd = np.array([[0.02, 0.02, 0.01]])
         self.init_ki = np.array([[0.0, 0.0, 10.]])
@@ -54,7 +54,7 @@ class NavigationEnv(BaseEnv):
             Box(low=-np.inf, high=np.inf, shape=(self.num_agent*2,self.lmlen,self.lmlen), dtype=np.float64),
         ))
         # action space
-        aspace_low = np.array([-0.25, -0.05, -0.5])
+        aspace_low = np.array([-0.15, -0.05, -0.5])
         aspace_high = np.array([0.5, 0.05, 0.5])
         self.action_space = Box(
             low=aspace_low, high=aspace_high, shape=(3,), dtype=np.float64
@@ -95,19 +95,19 @@ class NavigationEnv(BaseEnv):
         self.hist_img_obs = np.zeros([self.num_agent, self.hist_len, *self.observation_space[1].shape])
         self.prev_output_vel = np.zeros([self.num_agent, self.action_space.shape[0]])
         # regenerate env
-        init_load_pos = (np.random.random(2)-.5) * self.msize 
-        init_load_yaw = np.random.random(1) * 2 * np.pi 
+        init_load_pos = np.array([-3., 0.]) # (np.random.random(2)-.5) * self.msize 
+        init_load_yaw = np.array([0.]) # np.random.random(1) * 2 * np.pi 
         init_load_z = np.ones(1) * 0.55
         init_load = np.concatenate([init_load_pos, init_load_yaw, init_load_z], axis=-1).flatten()
-        self.init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
-        self.init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
+        self.init_obs_pos = np.array([[0., 0.]]) # (np.random.random([self.num_obs, 2])-.5) * self.msize 
+        self.init_obs_yaw = np.array([[0.]]) # np.random.random([self.num_obs, 1]) * np.pi
         init_obs_z = np.ones([self.num_obs, 1]) * 0.55
         init_obs = np.concatenate([self.init_obs_pos, self.init_obs_yaw, init_obs_z], axis=-1).flatten()
         idx = 4+4*self.num_agent+4*self.num_obs
         init_wall = self.sim.data.qpos.copy()[idx:idx+12]
-        init_dog_load_len = np.random.random([self.num_agent, 1]) * 0.25 + 0.75
-        init_dog_load_yaw = init_load_yaw + (np.random.random([self.num_agent, 1])-.5) * np.pi
-        init_dog_yaw = np.random.random([self.num_agent, 1]) * np.pi * 2
+        init_dog_load_len = np.array([[1.]]) # np.random.random([self.num_agent, 1]) * 0.25 + 0.75
+        init_dog_load_yaw = np.array([[0.]]) # init_load_yaw + (np.random.random([self.num_agent, 1])-.5) * np.pi
+        init_dog_yaw = np.array([[0.]]) # np.random.random([self.num_agent, 1]) * np.pi * 2
         init_dog_pos = self._get_toward(init_dog_load_yaw)[0] * init_dog_load_len
         anchor_id = self.anchor_id.reshape([self.num_agent, 1])
         init_dog_pos += self._get_toward(init_load_yaw)[0] * 0.3 * (anchor_id==0)
@@ -119,7 +119,7 @@ class NavigationEnv(BaseEnv):
         init_dog = np.concatenate([init_dog_pos, init_dog_yaw, init_dog_z], axis=-1).flatten()
         obs_dist = 0.
         while obs_dist < 0.8:
-            self.goal = (np.random.random(2)-.5) * (self.msize-2.)
+            self.goal = np.array([3., 0.]) # (np.random.random(2)-.5) * (self.msize-2.)
             obs_dist = np.linalg.norm(self.goal.reshape([1,2])-self.init_obs_pos, axis=-1).min()
         self.init_dist = np.linalg.norm(self.goal - init_load_pos)
         qpos = np.concatenate([init_load, init_dog, init_obs, init_wall, self.goal.flatten()])
