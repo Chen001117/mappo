@@ -19,14 +19,15 @@ class NavigationEnv(BaseEnv):
         self.hist_len = 4
         self.num_agent = num_agents
         self.domain_random_scale = 0. # TODO
-        self.measure_random_scale = 0 # 5e-3 TODO
+        self.measure_random_scale = 5e-3
         self.init_kp = np.array([[2000, 2000, 80]])
         self.init_kd = np.array([[0.02, 0.02, 0.01]])
-        self.init_ki = np.array([[0.0, 0.0, 10.]])
+        # self.init_ki = np.array([[0.0, 0.0, 10.]])
         # simulator
-        self.load_mass = 1. * (1 + (np.random.rand()-.5) * self.domain_random_scale)
+        load_mass = np.array([0., 1., 3., 5.])[self.num_agent]
+        self.load_mass = load_mass * (1 + (np.random.rand()-.5) * self.domain_random_scale)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
-        self.anchor_id = np.random.randint(0, 4, self.num_agent)
+        self.anchor_id = np.array([0, 0]) # np.random.randint(0, 4, self.num_agent)
         self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         self.max_torque = 9.83 * (13. + 2.)
         model = get_xml(
@@ -44,14 +45,14 @@ class NavigationEnv(BaseEnv):
         obs_size = self.hist_vec_obs_size # * self.hist_len
         self.observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(obs_size,), dtype=np.float64), 
-            Box(low=-np.inf, high=np.inf, shape=(2,self.lmlen,self.lmlen), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(3,self.lmlen,self.lmlen), dtype=np.float64),
         ))
         # self.hist_vec_sta_size = 5 + 8*self.num_agent
         # sta_size = 5 + 5*self.num_agent + self.hist_vec_sta_size * (self.hist_len-1) + self.num_agent + 4*self.num_agent + 1
-        sta_size = (obs_size + 9) * self.num_agent + 1
+        sta_size = (obs_size + 9) * self.num_agent + 1 # + self.num_agent
         self.share_observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(sta_size,), dtype=np.float64), 
-            Box(low=-np.inf, high=np.inf, shape=(self.num_agent*2,self.lmlen,self.lmlen), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(self.num_agent*3,self.lmlen,self.lmlen), dtype=np.float64),
         ))
         # action space
         aspace_low = np.array([-0.15, -0.05, -0.5])
@@ -75,6 +76,7 @@ class NavigationEnv(BaseEnv):
         self.wall_yaw = np.array([[np.pi/2],[np.pi/2],[0.],[0.]])
         
         self.arrive_time = 0.
+        self.last_done = False
 
     def seed(self, seed):
         super().seed(seed)
@@ -105,9 +107,9 @@ class NavigationEnv(BaseEnv):
         init_obs = np.concatenate([self.init_obs_pos, self.init_obs_yaw, init_obs_z], axis=-1).flatten()
         idx = 4+4*self.num_agent+4*self.num_obs
         init_wall = self.sim.data.qpos.copy()[idx:idx+12]
-        init_dog_load_len = np.array([[1.]]) # np.random.random([self.num_agent, 1]) * 0.25 + 0.75
-        init_dog_load_yaw = np.array([[0.]]) # init_load_yaw + (np.random.random([self.num_agent, 1])-.5) * np.pi
-        init_dog_yaw = np.array([[0.]]) # np.random.random([self.num_agent, 1]) * np.pi * 2
+        init_dog_load_len = np.array([[1.], [1.]]) # np.random.random([self.num_agent, 1]) * 0.25 + 0.75
+        init_dog_load_yaw = np.array([[np.pi/6], [-np.pi/6]]) # init_load_yaw + (np.random.random([self.num_agent, 1])-.5) * np.pi
+        init_dog_yaw = np.array([[0.], [0.]]) # np.random.random([self.num_agent, 1]) * np.pi * 2
         init_dog_pos = self._get_toward(init_dog_load_yaw)[0] * init_dog_load_len
         anchor_id = self.anchor_id.reshape([self.num_agent, 1])
         init_dog_pos += self._get_toward(init_load_yaw)[0] * 0.3 * (anchor_id==0)
@@ -118,9 +120,13 @@ class NavigationEnv(BaseEnv):
         init_dog_z = np.ones([self.num_agent, 1]) * 0.3
         init_dog = np.concatenate([init_dog_pos, init_dog_yaw, init_dog_z], axis=-1).flatten()
         obs_dist = 0.
-        while obs_dist < 0.8:
-            self.goal = np.array([3., 0.]) # (np.random.random(2)-.5) * (self.msize-2.)
-            obs_dist = np.linalg.norm(self.goal.reshape([1,2])-self.init_obs_pos, axis=-1).min()
+        if self.last_done and np.random.rand() < 0.:
+            self.goal = self.sim.data.qpos.copy()[:2].copy()
+        else: 
+            while obs_dist < 0.8:
+                idx = np.random.randint(4)
+                self.goal = np.array([[3., 0.], [-1, 1.2], [0, 1.5], [1.,1.2]])[idx] # (np.random.random(2)-.5) * (self.msize-2.)
+                obs_dist = np.linalg.norm(self.goal.reshape([1,2])-self.init_obs_pos, axis=-1).min()
         self.init_dist = np.linalg.norm(self.goal - init_load_pos)
         qpos = np.concatenate([init_load, init_dog, init_obs, init_wall, self.goal.flatten()])
         self.set_state(np.array(qpos), np.zeros_like(qpos))
@@ -132,6 +138,7 @@ class NavigationEnv(BaseEnv):
         # init variables
         self.t = 0.
         self.arrive_time = 0.
+        self.total_rew = 0.
         load_pos = self.sim.data.qpos.copy()[:2]
         dist = np.linalg.norm(load_pos-self.goal, axis=-1)
         self.max_time = dist * 8. + 20.
@@ -141,6 +148,7 @@ class NavigationEnv(BaseEnv):
         info = dict()
         # post process
         self._post_update(self.last_cmd)
+        self.last_done = False
         return observation, info
     
     def _get_obs(self):
@@ -150,12 +158,23 @@ class NavigationEnv(BaseEnv):
         vec_obs = cur_vec_obs.reshape([self.num_agent, -1]) # self.hist_vec_obs.reshape([self.num_agent, -1])
         img_obs = cur_img_obs.reshape([self.num_agent, -1, *self.observation_space[1].shape[-2:]]) # self.hist_img_obs.reshape([self.num_agent, -1, *self.observation_space[1].shape[-2:]])
         vec_sta = cur_vec_sta.reshape([1, -1])
+        # h_rew = self._get_h_rew()
         vec_sta = np.concatenate([vec_sta, [[self.max_time-self.t]]], -1)
         vec_sta = np.repeat(vec_sta, self.num_agent, axis=0)
+        # vec_idx = np.eye(self.num_agent)
+        # vec_sta = np.concatenate([vec_sta, vec_idx], -1)
         img_sta = img_obs.copy().reshape([1, -1, *self.observation_space[1].shape[-2:]])
         img_sta = np.repeat(img_sta, self.num_agent, axis=0)
         # print("A", vec_obs.shape, img_obs.shape, vec_sta.shape, img_sta.shape)
         return vec_obs, img_obs, vec_sta, img_sta
+    
+    def _get_h_rew(self):
+        self.gamma = 0.99
+        state = self.sim.data.qpos.copy().flatten()
+        dist = np.linalg.norm(state[:2]-self.goal)
+        remain_t = self.max_time - self.t
+        h_rew = self.gamma**(remain_t//self.dt) * dist
+        return h_rew
 
     def _update_history(self, cur_vec_obs, cur_img_obs):
         
@@ -180,8 +199,10 @@ class NavigationEnv(BaseEnv):
         # update RL info
         observation = self._get_obs()
         reward, info = self._get_reward(done)
+        self.total_rew += reward
         # post process
         self._post_update(command)
+        self.last_done |= (done and ~contact)
         return observation, reward, done, False, info
 
     def _get_done(self, dt): 
@@ -194,7 +215,10 @@ class NavigationEnv(BaseEnv):
             obj2 = self.sim.model.geom_id2name(con.geom2)
             if obj1=="floor" or obj2=="floor":
                 continue
-            terminate, contact = True, True
+            if "obstacle" in obj1 or "obstacle" in obj2:
+                terminate, contact = True, True
+            else:
+                terminate, contact = True, False
             return terminate, contact
         # out of time
         if self.t > self.max_time:
@@ -212,7 +236,7 @@ class NavigationEnv(BaseEnv):
 
         rewards = []
         # pre-process
-        weights = np.array([1., 1.])
+        weights = np.array([0., 1., 1.])
         weights = weights / weights.sum()
         state = self.sim.data.qpos.copy().flatten()
         # dist_per_step
@@ -222,10 +246,13 @@ class NavigationEnv(BaseEnv):
         duration = self.frame_skip / 100
         max_speed = np.linalg.norm(self.action_space.high[:2])
         rewards.append((dist<=self.arrive_dist)*max_speed*duration)
+        # contact
+        rewards.append(done*(self.init_dist-dist))
 
         rew_dict = dict()
         rew_dict["dist_per_step"] = rewards[0]
         rew_dict["goal_reach"] = rewards[1]
+        rew_dict["contact_done"] = rewards[2]
         rews = np.dot(rewards, weights)
         
         return rews, rew_dict
@@ -293,20 +320,20 @@ class NavigationEnv(BaseEnv):
             )
             cur_img_o.append((load_map!=0)*1.)
             
-            # dog_pos = self.sim.data.qpos.copy()[4+4*i:4+4*i+2]
-            # dog_yaw = self.sim.data.qpos.copy()[4+4*i+2]
-            # all_dog_state = self.sim.data.qpos.copy()[4:4+4*self.num_agent]
-            # all_dog_state = all_dog_state.reshape([self.num_agent, 4])
-            # all_dog_state = np.delete(all_dog_state, i, axis=0)
-            # all_dog_pos = all_dog_state[:,0:2]
-            # all_dog_yaw = all_dog_state[:,2:3]
-            # dog_len = np.array([0.65, 0.3])
-            # dog_map = self._draw_map(
-            #     dog_pos, dog_yaw, 
-            #     all_dog_pos, all_dog_yaw, dog_len
-            # )
-            # dog_map = np.zeros(self.observation_space[1].shape[1:])
-            # cur_img_o.append((dog_map!=0)*1.)
+            dog_pos = self.sim.data.qpos.copy()[4+4*i:4+4*i+2]
+            dog_yaw = self.sim.data.qpos.copy()[4+4*i+2]
+            all_dog_state = self.sim.data.qpos.copy()[4:4+4*self.num_agent]
+            all_dog_state = all_dog_state.reshape([self.num_agent, 4])
+            all_dog_state = np.delete(all_dog_state, i, axis=0)
+            all_dog_pos = all_dog_state[:,0:2]
+            all_dog_yaw = all_dog_state[:,2:3]
+            dog_len = np.array([0.65, 0.3])
+            dog_map = self._draw_map(
+                dog_pos, dog_yaw, 
+                all_dog_pos, all_dog_yaw, dog_len
+            )
+            dog_map = np.zeros(self.observation_space[1].shape[1:])
+            cur_img_o.append((dog_map!=0)*1.)
             
             cur_img_o = np.stack(cur_img_o, axis=0)
             cur_img_obs.append(cur_img_o)

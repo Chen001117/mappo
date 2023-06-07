@@ -2,6 +2,7 @@ import torch
 from onpolicy.algorithms.r_mappo.algorithm.r_actor_critic import R_Actor, R_Critic
 from onpolicy.utils.util import update_linear_schedule
 from onpolicy.algorithms.utils.util import check
+import numpy as np
 
 
 class R_MAPPOPolicy:
@@ -21,6 +22,7 @@ class R_MAPPOPolicy:
         self.critic_lr = args.critic_lr
         self.opti_eps = args.opti_eps
         self.weight_decay = args.weight_decay
+        self.num_agents = args.num_agents
 
         self.obs_space = obs_space
         self.share_obs_space = cent_obs_space
@@ -110,12 +112,11 @@ class R_MAPPOPolicy:
         values, _ = self.critic(cent_obs, rnn_states_critic, masks)
 
         # all_values = []
-        # for i in range(2):
+        # for _ in range(2):
         #     val, _ = self.critic(cent_obs, rnn_states_critic, masks)
         #     all_values.append(val)
-        #     if i == 0:
-        #         values = val.clone()
-        #         cent_obs[0][:,-3:-1] = 1 - cent_obs[0][:,-3:-1]
+        #     values = val.clone()
+        #     cent_obs[0][:,-2:] = 1 - cent_obs[0][:,-2:]
         # mean_values = torch.stack(all_values, 0).mean(0)
         
         # return values, mean_values, action_log_probs, dist_entropy

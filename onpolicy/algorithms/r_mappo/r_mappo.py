@@ -46,7 +46,7 @@ class R_MAPPO():
         else:
             self.value_normalizer = None
 
-    def cal_value_loss(self, values,mean_values,  value_preds_batch, return_batch, active_masks_batch):
+    def cal_value_loss(self, values, mean_values, value_preds_batch, return_batch, active_masks_batch):
         """
         Calculate value function loss.
         :param values: (torch.Tensor) value function predictions.
@@ -84,6 +84,8 @@ class R_MAPPO():
         else:
             value_loss = value_loss.mean()
 
+        # # credit assignment
+        
         # mean_value_pred_clipped = value_preds_batch + \
         #     (mean_values - value_preds_batch).clamp(-self.clip_param, self.clip_param)
         # if self._use_popart or self._use_valuenorm:
@@ -153,9 +155,11 @@ class R_MAPPO():
         # actor update
         imp_weights = torch.exp(action_log_probs - old_action_log_probs_batch)
         
-        # mask = imp_weights.detach() * 0. + 1.
-        # mask[:,1] = 0.05
-        # adv_targ = mask * adv_targ
+        # denorm_values = self.value_normalizer.denormalize(values.detach())
+        # h_adv = denorm_values - share_obs_batch[0][:,-1:]
+        # h_adv = check(h_adv).to(**self.tpdv)
+        # h_weight = torch.exp(torch.where(h_adv<0., h_adv, 0.)*5.)
+        # adv_targ = (adv_targ>0.)*adv_targ*h_weight + (adv_targ<=0.)*adv_targ
 
         surr1 = imp_weights * adv_targ
         surr2 = torch.clamp(imp_weights, 1.0 - self.clip_param, 1.0 + self.clip_param) * adv_targ      
