@@ -14,20 +14,20 @@ class NavigationEnv(BaseEnv):
         self.msize = 10. # map size (m)
         self.lmlen = 57 # local map length (pixels)
         self.warm_step = 4 # warm-up: let everything stable (s)
-        self.frame_skip = 25 # 100/frame_skip = decision_freq (Hz)
-        self.num_obs = 1
+        self.frame_skip = 100 # 100/frame_skip = decision_freq (Hz)
+        self.num_obs = 3
         self.hist_len = 4
         self.num_agent = num_agents
         self.domain_random_scale = 0. # TODO
         self.measure_random_scale = 5e-3
-        self.init_kp = np.array([[2000, 2000, 80]])
-        self.init_kd = np.array([[0.02, 0.02, 0.01]])
+        self.init_kp = np.array([[2000, 2000, 800]])
+        self.init_kd = np.array([[0.02, 0.02, 0.0]])
         # self.init_ki = np.array([[0.0, 0.0, 10.]])
         # simulator
         load_mass = np.array([0., 1., 3., 5.])[self.num_agent]
         self.load_mass = load_mass * (1 + (np.random.rand()-.5) * self.domain_random_scale)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
-        self.anchor_id = np.array([0, 0]) # np.random.randint(0, 4, self.num_agent)
+        self.anchor_id = np.random.randint(0, 4, self.num_agent)
         self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         self.max_torque = 9.83 * (13. + 2.)
         model = get_xml(
@@ -77,6 +77,7 @@ class NavigationEnv(BaseEnv):
         
         self.arrive_time = 0.
         self.last_done = False
+        self.total_step = 0
 
     def seed(self, seed):
         super().seed(seed)
@@ -96,21 +97,22 @@ class NavigationEnv(BaseEnv):
         self.hist_vec_obs = np.zeros([self.num_agent, self.hist_len, self.hist_vec_obs_size]) 
         self.hist_img_obs = np.zeros([self.num_agent, self.hist_len, *self.observation_space[1].shape])
         self.prev_output_vel = np.zeros([self.num_agent, self.action_space.shape[0]])
+        # idx
         # regenerate env
-        init_load_pos = np.array([-3., 0.]) # (np.random.random(2)-.5) * self.msize 
-        init_load_yaw = np.array([0.]) # np.random.random(1) * 2 * np.pi 
+        init_load_pos = (np.random.random(2)-.5) * self.msize 
+        init_load_yaw = np.random.random(1) * 2 * np.pi 
         init_load_z = np.ones(1) * 0.55
         init_load = np.concatenate([init_load_pos, init_load_yaw, init_load_z], axis=-1).flatten()
-        self.init_obs_pos = np.array([[0., 0.]]) # (np.random.random([self.num_obs, 2])-.5) * self.msize 
-        self.init_obs_yaw = np.array([[0.]]) # np.random.random([self.num_obs, 1]) * np.pi
+        self.init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
+        self.init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
         init_obs_z = np.ones([self.num_obs, 1]) * 0.55
         init_obs = np.concatenate([self.init_obs_pos, self.init_obs_yaw, init_obs_z], axis=-1).flatten()
         idx = 4+4*self.num_agent+4*self.num_obs
         init_wall = self.sim.data.qpos.copy()[idx:idx+12]
-        init_dog_load_len = np.array([[1.], [1.]]) # np.random.random([self.num_agent, 1]) * 0.25 + 0.75
-        init_dog_load_yaw = np.array([[np.pi/6], [-np.pi/6]]) # init_load_yaw + (np.random.random([self.num_agent, 1])-.5) * np.pi
-        init_dog_yaw = np.array([[0.], [0.]]) # np.random.random([self.num_agent, 1]) * np.pi * 2
-        init_dog_pos = self._get_toward(init_dog_load_yaw)[0] * init_dog_load_len
+        init_dog_load_len = np.random.random([self.num_agent, 1]) * 0.25 + 0.75
+        init_dog_load_yaw = init_load_yaw + (np.random.random([self.num_agent, 1])-.5) * np.pi
+        init_dog_yaw = np.random.random([self.num_agent, 1]) * np.pi * 2
+        init_dog_pos = self._get_toward(init_dog_load_yaw+init_load_yaw)[0] * init_dog_load_len
         anchor_id = self.anchor_id.reshape([self.num_agent, 1])
         init_dog_pos += self._get_toward(init_load_yaw)[0] * 0.3 * (anchor_id==0)
         init_dog_pos += self._get_toward(init_load_yaw)[1] * 0.3 * (anchor_id==1)
@@ -120,14 +122,12 @@ class NavigationEnv(BaseEnv):
         init_dog_z = np.ones([self.num_agent, 1]) * 0.3
         init_dog = np.concatenate([init_dog_pos, init_dog_yaw, init_dog_z], axis=-1).flatten()
         obs_dist = 0.
-        if self.last_done and np.random.rand() < 0.:
-            self.goal = self.sim.data.qpos.copy()[:2].copy()
-        else: 
+        if np.random.rand() < 0. and self.last_done:
+            self.goal = self.sim.data.qpos.copy()[:2]
+        else:
             while obs_dist < 0.8:
-                idx = np.random.randint(4)
-                self.goal = np.array([[3., 0.], [-1, 1.2], [0, 1.5], [1.,1.2]])[idx] # (np.random.random(2)-.5) * (self.msize-2.)
+                self.goal = (np.random.random(2)-.5) * (self.msize-2.)
                 obs_dist = np.linalg.norm(self.goal.reshape([1,2])-self.init_obs_pos, axis=-1).min()
-        self.init_dist = np.linalg.norm(self.goal - init_load_pos)
         qpos = np.concatenate([init_load, init_dog, init_obs, init_wall, self.goal.flatten()])
         self.set_state(np.array(qpos), np.zeros_like(qpos))
         for _ in range(self.warm_step):
@@ -140,8 +140,8 @@ class NavigationEnv(BaseEnv):
         self.arrive_time = 0.
         self.total_rew = 0.
         load_pos = self.sim.data.qpos.copy()[:2]
-        dist = np.linalg.norm(load_pos-self.goal, axis=-1)
-        self.max_time = dist * 8. + 20.
+        self.init_dist = np.linalg.norm(self.goal - load_pos)
+        self.max_time = self.init_dist * 8. + 20.
         # self.obs_map = self._get_obs_map(self.init_obs_pos, self.init_obs_yaw)
         # RL_info
         observation = self._get_obs() 
@@ -198,7 +198,7 @@ class NavigationEnv(BaseEnv):
         self.t += self.dt
         # update RL info
         observation = self._get_obs()
-        reward, info = self._get_reward(done)
+        reward, info = self._get_reward(contact)
         self.total_rew += reward
         # post process
         self._post_update(command)
@@ -220,6 +220,18 @@ class NavigationEnv(BaseEnv):
             else:
                 terminate, contact = True, False
             return terminate, contact
+        # contact rope done
+        state = self.sim.data.qpos.copy().flatten()
+        dog_state = state[4:4+self.num_agent*4]
+        dog_state = dog_state.reshape([self.num_agent, 4])
+        load_pos = state[:2].reshape([1, 2])
+        load_dog_vec = dog_state[:,:2] - load_pos
+        load_dog_yaw = np.arctan2(load_dog_vec[:,1], load_dog_vec[:,0])
+        anchor_yaw = self.anchor_id * np.pi/2 + self.sim.data.qpos.copy()[2]
+        yaw_cos = np.cos(load_dog_yaw-anchor_yaw)
+        if (yaw_cos<-0.25).any():
+            terminate, contact = True, False
+            return terminate, contact
         # out of time
         if self.t > self.max_time:
             terminate, contact = True, False
@@ -232,11 +244,11 @@ class NavigationEnv(BaseEnv):
         
         return terminate, contact
 
-    def _get_reward(self, done):
+    def _get_reward(self, contact):
 
         rewards = []
         # pre-process
-        weights = np.array([0., 1., 1.])
+        weights = np.array([1., 2., 0.])
         weights = weights / weights.sum()
         state = self.sim.data.qpos.copy().flatten()
         # dist_per_step
@@ -247,8 +259,8 @@ class NavigationEnv(BaseEnv):
         max_speed = np.linalg.norm(self.action_space.high[:2])
         rewards.append((dist<=self.arrive_dist)*max_speed*duration)
         # contact
-        rewards.append(done*(self.init_dist-dist))
-
+        rewards.append(contact)
+        
         rew_dict = dict()
         rew_dict["dist_per_step"] = rewards[0]
         rew_dict["goal_reach"] = rewards[1]
@@ -332,14 +344,14 @@ class NavigationEnv(BaseEnv):
                 dog_pos, dog_yaw, 
                 all_dog_pos, all_dog_yaw, dog_len
             )
-            dog_map = np.zeros(self.observation_space[1].shape[1:])
             cur_img_o.append((dog_map!=0)*1.)
             
             cur_img_o = np.stack(cur_img_o, axis=0)
             cur_img_obs.append(cur_img_o)
         cur_img_obs = np.stack(cur_img_obs, axis=0)
         # print("cur_img_obs.shape", cur_img_obs.shape) # [num_agent, vec_shape]
-        
+        # import imageio
+        # imageio.imwrite("../envs/mujoco/assets/dog.png", dog_map)
         return cur_vec_obs, cur_img_obs, cur_vec_sta
     
     def _draw_map(self, dog_pos, dog_theta, box_pos, box_yaw, box_len):
@@ -425,6 +437,14 @@ class NavigationEnv(BaseEnv):
         x_axis = np.arange(length) + .5 + min_idx #[0]
         y_axis = np.arange(length) + .5 + min_idx #[1]
         y_map, x_map = np.meshgrid(y_axis, x_axis)
+        if (a > 10).any():
+            x_min = np.min(lines[:,:,0])
+            x_max = np.max(lines[:,:,0])
+            y_min = np.min(lines[:,:,1])
+            y_max = np.max(lines[:,:,1])
+            b_map = (x_map>x_min) & (x_map<x_max) \
+                & (y_map>y_min) & (y_map<y_max)
+            return b_map.astype('long')
         x_map = np.expand_dims(x_map, 0) 
         x_map = np.repeat(x_map, 4, 0)
         y_map = np.expand_dims(y_map, 0) 
@@ -483,6 +503,7 @@ class NavigationEnv(BaseEnv):
         load_pos = self.sim.data.qpos.copy()[0:2]
         self.prev_dist = np.linalg.norm(load_pos-self.goal)
         self.last_load_pos = load_pos.copy()
+        self.total_step += 1
 
     def _local_to_global(self, input_action):
 
