@@ -50,7 +50,7 @@ class NavigationEnv(BaseEnv):
         ))
         # self.hist_vec_sta_size = 5 + 8*self.num_agent
         # sta_size = 5 + 5*self.num_agent + self.hist_vec_sta_size * (self.hist_len-1) + self.num_agent + 4*self.num_agent + 1
-        sta_size = (obs_size + 9) * self.num_agent + 1 # + self.num_agent
+        sta_size = (obs_size + 9) * self.num_agent + 1 + 20 # + self.num_agent
         self.share_observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(sta_size,), dtype=np.float64), 
             Box(low=-np.inf, high=np.inf, shape=(self.num_agent*3,self.lmlen,self.lmlen), dtype=np.float64),
@@ -147,15 +147,18 @@ class NavigationEnv(BaseEnv):
         goal_pos = (self.goal / self.msize + .5) * self.mlen
         astar_path = find_path(load_pos, goal_pos, obs_map)
         
-        path = []
+        if astar_path is None:
+            return self.reset()
+        
+        self.path = []
         for i in range(9):
             idx = int(len(astar_path)/10*i)
-            path.append(astar_path[idx][0])
-            path.append(astar_path[idx][1])
-        path.append(self.goal[0])
-        path.append(self.goal[1])
+            self.path.append(astar_path[idx][0])
+            self.path.append(astar_path[idx][1])
+        self.path.append(self.goal[0])
+        self.path.append(self.goal[1])
         
-        qpos = np.concatenate([qpos[:-20], path])
+        qpos = np.concatenate([qpos[:-20], self.path])
         self.set_state(np.array(qpos), np.zeros_like(qpos))
         
         # init variables
@@ -183,6 +186,8 @@ class NavigationEnv(BaseEnv):
         vec_sta = cur_vec_sta.reshape([1, -1])
         # h_rew = self._get_h_rew()
         vec_sta = np.concatenate([vec_sta, [[self.max_time-self.t]]], -1)
+        path = np.expand_dims(self.path, 0)
+        vec_sta = np.concatenate([vec_sta, path], axis=-1)  
         vec_sta = np.repeat(vec_sta, self.num_agent, axis=0)
         # vec_idx = np.eye(self.num_agent)
         # vec_sta = np.concatenate([vec_sta, vec_idx], -1)
@@ -323,7 +328,7 @@ class NavigationEnv(BaseEnv):
         # print("cur_vec_obs.shape", cur_vec_obs.shape) # [num_agent, vec_shape]
         cur_vec_sta = [self.error, self.d_output, self.prev_output_vel]
         cur_vec_sta = np.concatenate(cur_vec_sta, axis=-1) 
-        cur_vec_sta = np.concatenate([cur_vec_obs, cur_vec_sta], axis=-1)   
+        cur_vec_sta = np.concatenate([cur_vec_obs, cur_vec_sta], axis=-1)
         # image: partial observation
         cur_img_obs = []
         for i in range(self.num_agent):

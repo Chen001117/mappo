@@ -237,6 +237,9 @@ def find_path(
 
     gen = FindPath().astar(start, goal, reversePath)
     
+    if gen is None:
+        return None
+    
     result = []
     for node in gen:
         coor_x, coor_y = node//500, node%500
