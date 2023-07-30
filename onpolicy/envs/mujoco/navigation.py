@@ -3,6 +3,7 @@ from os import path
 from gym import utils
 from onpolicy.envs.mujoco.base_env import BaseEnv
 from onpolicy.envs.mujoco.xml_gen import get_xml
+from onpolicy.envs.mujoco.astar import find_path
 from gym.spaces import Box, Tuple
 import time
 
@@ -15,13 +16,14 @@ class NavigationEnv(BaseEnv):
         self.lmlen = 57 # local map length (pixels)
         self.warm_step = 4 # warm-up: let everything stable (s)
         self.frame_skip = 100 # 100/frame_skip = decision_freq (Hz)
-        self.num_obs = 3
+        self.num_obs = 10
         self.hist_len = 4
         self.num_agent = num_agents
         self.domain_random_scale = 0. # TODO
         self.measure_random_scale = 5e-3
         self.init_kp = np.array([[2000, 2000, 800]])
         self.init_kd = np.array([[0.02, 0.02, 0.0]])
+        self.max_axis_torque = 100.
         # self.init_ki = np.array([[0.0, 0.0, 10.]])
         # simulator
         load_mass = np.array([0., 1., 3., 5.])[self.num_agent]
@@ -29,7 +31,6 @@ class NavigationEnv(BaseEnv):
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         self.anchor_id = np.random.randint(0, 4, self.num_agent)
         self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
-        self.max_torque = 9.83 * (13. + 2.)
         model = get_xml(
             dog_num = self.num_agent, 
             obs_num = self.num_obs, 
@@ -128,13 +129,35 @@ class NavigationEnv(BaseEnv):
             while obs_dist < 0.8:
                 self.goal = (np.random.random(2)-.5) * (self.msize-2.)
                 obs_dist = np.linalg.norm(self.goal.reshape([1,2])-self.init_obs_pos, axis=-1).min()
-        qpos = np.concatenate([init_load, init_dog, init_obs, init_wall, self.goal.flatten()])
+        qpos = np.concatenate([init_load, init_dog, init_obs, init_wall, np.zeros([20])])
         self.set_state(np.array(qpos), np.zeros_like(qpos))
         for _ in range(self.warm_step):
             terminated, _ = self._do_simulation(self.last_cmd.copy(), self.frame_skip)
             # regenerate if done
             if terminated:
                 return self.reset()
+        # astar
+        # draw obstacle map
+        obs_len = np.ones([2])
+        obs_map = self._draw_obs_map(
+            self.init_obs_pos, self.init_obs_yaw, obs_len
+        )
+        # do astar
+        load_pos = (init_load_pos / self.msize + .5) * self.mlen
+        goal_pos = (self.goal / self.msize + .5) * self.mlen
+        astar_path = find_path(load_pos, goal_pos, obs_map)
+        
+        path = []
+        for i in range(9):
+            idx = int(len(astar_path)/10*i)
+            path.append(astar_path[idx][0])
+            path.append(astar_path[idx][1])
+        path.append(self.goal[0])
+        path.append(self.goal[1])
+        
+        qpos = np.concatenate([qpos[:-20], path])
+        self.set_state(np.array(qpos), np.zeros_like(qpos))
+        
         # init variables
         self.t = 0.
         self.arrive_time = 0.
@@ -192,9 +215,8 @@ class NavigationEnv(BaseEnv):
         """
         # pre process
         command = np.clip(cmd, self.action_space.low, self.action_space.high)
-        action = self._local_to_global(command)
         # action = command.copy()
-        done, contact = self._do_simulation(action, self.frame_skip)
+        done, contact = self._do_simulation(command, self.frame_skip)
         self.t += self.dt
         # update RL info
         observation = self._get_obs()
@@ -354,6 +376,33 @@ class NavigationEnv(BaseEnv):
         # imageio.imwrite("../envs/mujoco/assets/dog.png", dog_map)
         return cur_vec_obs, cur_img_obs, cur_vec_sta
     
+    def _draw_obs_map(self, box_pos, box_yaw, box_len):
+        """ draw dog/box/obstacle local map
+
+        Args:
+            dog_pos (np.array): size = [2]
+            dog_theta (float): 
+            box_pos (np.array): size = [box_num, 2]
+            box_yaw (np.array): size = [box_num, 1]
+            box_len (np.array): size = [2]
+        """
+        box_len /= 2
+        
+        box_pos = box_pos
+        box_tow, box_ver = self._get_toward(box_yaw)
+        box_rect = self._get_rect(box_pos, box_tow, box_ver, box_len)
+        box_map = np.zeros([self.mlen, self.mlen])
+        min_idx = -self.lmlen*3//2
+        max_idx = self.mlen + self.lmlen*3//2 + 1
+        for rect in box_rect:
+            norm_rect = (rect.copy() / self.msize + .5) * self.mlen
+            norm_rect = norm_rect.astype('long')
+            tmp_map = self._draw_rect(norm_rect, min_idx, max_idx)
+            box_map += tmp_map[-min_idx:self.mlen-min_idx,-min_idx:self.mlen-min_idx]
+        box_map = (box_map!=0) * 1.
+        
+        return box_map
+
     def _draw_map(self, dog_pos, dog_theta, box_pos, box_yaw, box_len):
         """ draw dog/box/obstacle local map
 
@@ -388,6 +437,7 @@ class NavigationEnv(BaseEnv):
         box_map = (box_map!=0) * 1.
         
         return box_map
+        
         
     def _get_toward(self, theta):
         # theta : [env_num, 1]
@@ -466,32 +516,33 @@ class NavigationEnv(BaseEnv):
         # print("B", action)
         for _ in range(n_frames):
             # assert np.array(ctrl).shape==self.action_space.shape, "Action dimension mismatch"
-            self.sim.data.ctrl[:] = self._pd_contorl(target_vel=action, dt=self.dt/n_frames)
+            state = self.sim.data.qvel.flat.copy()[4:4+self.num_agent*4]
+            state = state.reshape([self.num_agent, 4])
+            cur_vel = self._global2local(state[:,:3])
+            local_action = self._pd_contorl(target_vel=action, cur_vel=cur_vel, dt=self.dt/n_frames)
+            self.sim.data.ctrl[:] = self._local2global(local_action).flatten()
             self.sim.step()
             terminate, contact = self._get_done(self.dt/n_frames)
             if terminate:
                 break
         return terminate, contact
 
-    def _pd_contorl(self, target_vel, dt):
+    def _pd_contorl(self, target_vel, cur_vel, dt):
         """
         given the desired velocity, calculate the torque of the actuator.
-        (input) target_vel: 
-        (input) dt: 
+        (input) target_vel: [num_agent, 3]
+        (input) cur_vel: [num_agent, 3]
+        (input) dt: float 
         (output) torque
         """
-        state = self.sim.data.qvel.copy()[4:4+self.num_agent*4]
-        cur_vel = state.reshape([self.num_agent, 4])[:,:3]
         self.error = target_vel - cur_vel
         # self.intergral += error * self.ki * dt
         # self.intergral = np.clip(self.intergral, self.torque_low, self.torque_high)
         self.d_output = cur_vel - self.prev_output_vel
         torque = self.kp * self.error - self.kd * (self.d_output/dt) # + self.intergral
-        # torque = np.clip(torque, self.torque_low, self.torque_high)
-        torque_norm = np.linalg.norm(torque[:,:2], axis=-1)
-        for i in range(len(torque_norm)):
-            if torque_norm[i] > self.max_torque:
-                torque[i,:2] = torque[i,:2] * self.max_torque / torque_norm[i] 
+        torque_low = np.repeat(np.array([[-13*9.83,10.,-100]]), self.num_agent, 0)
+        torque_high = np.repeat(np.array([[13*9.83,10.,100]]), self.num_agent, 0)
+        torque = np.clip(torque, torque_low, torque_high)
         self.prev_output_vel = cur_vel.copy()
         return torque.flatten()
 
@@ -505,13 +556,32 @@ class NavigationEnv(BaseEnv):
         self.last_load_pos = load_pos.copy()
         self.total_step += 1
 
-    def _local_to_global(self, input_action):
+    def _local2global(self, input_action):
 
         state = self.sim.data.qpos.flat.copy()[4:4+self.num_agent*4]
         state = state.reshape([self.num_agent,4])
         tow, ver = self._get_toward(state[:,2:3])
         input_action = input_action.reshape([self.num_agent,3])
-        local_action = input_action[:,:2].copy()
-        global_action = tow * local_action[:,:1] + ver * local_action[:,1:]
+        global_action = tow * input_action[:,0:1] + ver * input_action[:,1:2]
         output_action = np.concatenate([global_action, input_action[:,2:].copy()], axis=-1)
         return output_action
+    
+    def _global2local(self, input_action):
+        
+        state = self.sim.data.qpos.flat.copy()[4:4+self.num_agent*4]
+        theta = state.reshape([self.num_agent,4])[:,2]
+        rot_mat = np.array([[np.cos(theta), np.sin(theta)],[-np.sin(theta), np.cos(theta)]])
+        rot_mat = np.transpose(rot_mat, [2,0,1])
+        action = np.expand_dims(input_action[:,:2], 2)
+        output_action = rot_mat @ action
+        output_action = output_action.squeeze(2) 
+        output_action = np.concatenate([output_action, input_action[:,2:3]], -1)
+        
+        return output_action
+    
+    
+    
+    
+    
+
+

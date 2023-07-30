@@ -96,23 +96,31 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
     </body>
     """
 
-    strings += \
+    for i in range(10):
+      strings += \
     """
-    <body name="destination" pos="0 0 0">
-      <site name="destination" pos="0 0 0"/>
-      <joint axis="1 0 0" limited="false" name="destinationx" pos="0 0 0" type="slide"/>
-      <joint axis="0 1 0" limited="false" name="destinationy" pos="0 0 0" type="slide"/>
-      <geom name="destination" pos="0 0 0" size="0.01 0.01 0.01" type="box"/>
+    <body name="destination_{:02d}" pos="0 0 0">
+      <site name="destination_{:02d}" pos="0 0 0"/>
+      <joint axis="1 0 0" limited="false" name="destinationx_{:02d}" pos="0 0 0" type="slide"/>
+      <joint axis="0 1 0" limited="false" name="destinationy_{:02d}" pos="0 0 0" type="slide"/>
+      <geom name="destination_{:02d}" pos="0 0 0" size="0.01 0.01 0.01" type="box"/>
     </body>
-
-  </worldbody>
-
-  <tendon>
-    <spatial width="0.03" rgba=".95 .0 .0 1" limited="true" range="0 100."> 
-      <site site="load"/>
-      <site site="destination"/>
-    </spatial>
+    """.format(i,i,i,i,i)
+    
+    strings += \
   """
+  </worldbody>
+  
+  <tendon>
+  """
+    for i in range(9):
+      strings += \
+  """
+    <spatial width="0.03" rgba=".95 .0 .0 1" limited="true" range="0 100."> 
+      <site site="destination_{:02d}"/>
+      <site site="destination_{:02d}"/>
+    </spatial>
+  """.format(i,i+1)
     for i in range(dog_num):
       strings += \
   """
