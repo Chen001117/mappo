@@ -1,6 +1,6 @@
 import numpy as np
 
-def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None, fric_coef=None):
+def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None, fric_coef=None, astar_node=1):
     assert len(anchor_id) == dog_num, "length of anchor id should be equal to the dog number"
     strings = \
     """
@@ -52,8 +52,12 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
       <joint axis="0 0 1" limited="false" name="dog{:02d}_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="dog{:02d}_axisz" pos="0 0 0" type="slide"/>
       <geom mass="13." size="0.325 0.15 0.15" name="dog{:02d}" type="box" rgba="0.8 0.4 0. 1"/>
+      
+      <body name="dog{:02d}_head" pos="0.25 0 0.25">
+        <geom mass="0.001" size="0.075 0.1 0.1" name="dog{:02d}_head" type="box" rgba="0.7 0.3 0. 1"/>
+      </body>
     </body>
-    """.format(i,i,i,i,i,i,i)
+    """.format(i,i,i,i,i,i,i,i,i)
     
     for i in range(obs_num):
       strings += \
@@ -96,7 +100,7 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
     </body>
     """
 
-    for i in range(10):
+    for i in range(astar_node):
       strings += \
     """
     <body name="destination_{:02d}" pos="0 0 0">
@@ -108,12 +112,21 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
     """.format(i,i,i,i,i)
     
     strings += \
+    """
+    <body name="local_goal" pos="0 0 0">
+      <joint axis="1 0 0" limited="false" name="local_goal_x" pos="0 0 0" type="slide"/>
+      <joint axis="0 1 0" limited="false" name="local_goal_y" pos="0 0 0" type="slide"/>
+      <geom name="local_goal" pos="0 0 0" size="0.1 0.1 0.1" type="box" rgba=".95 .0 .0 1"/>
+    </body>
+    """
+    
+    strings += \
   """
   </worldbody>
   
   <tendon>
   """
-    for i in range(9):
+    for i in range(astar_node-1):
       strings += \
   """
     <spatial width="0.03" rgba=".95 .0 .0 1" limited="true" range="0 100."> 

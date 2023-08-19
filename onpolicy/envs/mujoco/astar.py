@@ -187,19 +187,20 @@ def neighbors_fnct(node: T, map) -> Iterable[T]:
     node = np.array([node//500, node%500])
     pre_list = [
         np.array([node[0]-5, node[1]-5]),
-        np.array([node[0]-5, node[1]]),
         np.array([node[0]-5, node[1]+5]),
+        np.array([node[0]+5, node[1]-5]),
+        np.array([node[0]+5, node[1]+5]),
+        np.array([node[0]-5, node[1]]),
         np.array([node[0], node[1]-5]),
         np.array([node[0], node[1]+5]),
-        np.array([node[0]+5, node[1]-5]),
         np.array([node[0]+5, node[1]]),
-        np.array([node[0]+5, node[1]+5]),
     ]
     neighbor_list = []
     for node in pre_list:
-        if (node<0).any() or (node>=500).any():
+        buffer = 30
+        if (node<buffer).any() or (node>=500-buffer).any():
             continue
-        neigh = map[int(node[0])-15:int(node[0])+15, int(node[1])-15:int(node[1])+15]
+        neigh = map[int(node[0])-buffer:int(node[0])+buffer, int(node[1])-buffer:int(node[1])+buffer]
         if (neigh == 1).any():
             continue
         neighbor_list.append(node[0]*500+node[1])
@@ -242,7 +243,7 @@ def find_path(
     
     result = []
     for node in gen:
-        coor_x, coor_y = node//500, node%500
+        coor_x, coor_y = node//500, node%500     
         coor_x = (coor_x / 500 - .5) * 10.
         coor_y = (coor_y / 500 - .5) * 10.
         result.append(np.array([coor_x, coor_y]))
