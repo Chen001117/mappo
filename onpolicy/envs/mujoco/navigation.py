@@ -27,7 +27,7 @@ class NavigationEnv(BaseEnv):
         self.max_axis_torque = 100.
         self.astar_node = 10 # for rendering astar path 
         # simulator
-        load_mass = np.array([0., 3., 5., 10., 10.])[self.num_agent]
+        load_mass = np.array([0., 5., 8., 10., 10.])[self.num_agent]
         self.load_mass = load_mass * (1 + (np.random.rand()-.5) * self.domain_random_scale)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         self.anchor_id = np.random.randint(0, 4, self.num_agent)
