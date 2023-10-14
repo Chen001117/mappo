@@ -26,6 +26,7 @@ class R_MAPPO():
         self.entropy_coef = args.entropy_coef
         self.max_grad_norm = args.max_grad_norm       
         self.huber_delta = args.huber_delta
+        self.num_agents = args.num_agents
 
         self._use_recurrent_policy = args.use_recurrent_policy
         self._use_naive_recurrent = args.use_naive_recurrent_policy
@@ -168,8 +169,36 @@ class R_MAPPO():
                 * active_masks_batch).sum() / active_masks_batch.sum()
         else:
             policy_action_loss = -torch.sum(torch.min(surr1, surr2), dim=-1, keepdim=True).mean()
+        
+        self.use_distill = False
 
-        policy_loss = policy_action_loss
+        if self.use_distill:
+            
+            instruction_log_probs = []
+            for i in range(self.num_agents-1):
+                actions, _, _ = self.policy.teachers[i](
+                    obs_batch, rnn_states_batch, masks_batch, available_actions_batch, False
+                )
+                actions = actions.detach()
+                student_log_probs, _ = self.policy.evaluate_aonly(
+                    obs_batch, 
+                    rnn_states_batch, 
+                    actions, 
+                    masks_batch, 
+                    available_actions_batch,
+                    active_masks_batch
+                )
+                instruction_log_probs.append(student_log_probs)
+
+            distill_loss = torch.cat(instruction_log_probs)
+            distill_loss = torch.clamp(distill_loss, -10, 10)
+            distill_loss = distill_loss.mean()
+
+            distill_coef = 2e-3
+            policy_loss = policy_action_loss - distill_loss * distill_coef
+        
+        else:
+            policy_loss = policy_action_loss 
 
         self.policy.actor_optimizer.zero_grad()
 
@@ -198,7 +227,11 @@ class R_MAPPO():
 
         self.policy.critic_optimizer.step()
 
-        return value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights
+        if self.use_distill:
+            return value_loss, critic_grad_norm, policy_action_loss, dist_entropy, distill_loss, imp_weights
+        else:        
+            return value_loss, critic_grad_norm, policy_action_loss, dist_entropy, actor_grad_norm, imp_weights
+
 
     def train(self, buffer, update_actor=True):
         """

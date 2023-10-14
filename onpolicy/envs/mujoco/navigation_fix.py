@@ -10,28 +10,30 @@ import time
 class NavigationEnv(BaseEnv):
     def __init__(self, num_agents, **kwargs):
         # hyper-para
-        self.previledge_critic = True
         self.arrive_dist = 1.
         self.mlen = 500 # global map length (pixels)
         self.msize = 10. # map size (m)
         self.lmlen = 57 # local map length (pixels)
         self.warm_step = 4 # warm-up: let everything stable (s)
         self.frame_skip = 100 # 100/frame_skip = decision_freq (Hz)
-        self.num_obs = 10
+        self.num_obs = 8
         self.hist_len = 4
         self.num_agent = num_agents
-        self.domain_random_scale = 1e-1
-        self.measure_random_scale = 1e-2
+        self.domain_random_scale = 0.
+        self.measure_random_scale = 1e-3
         self.init_kp = np.array([[2000, 2000, 800]])
         self.init_kd = np.array([[0.02, 0.02, 0.0]])
         # self.init_ki = np.array([[0.0, 0.0, 10.]])
         self.max_axis_torque = 100.
-        self.astar_node = 2 # for rendering astar path 
+        self.astar_node = 10 # for rendering astar path 
         # simulator
-        load_mass = np.array([0., 3., 5., 5., 5.])[self.num_agent]
-        self.load_mass = load_mass * np.clip(np.sqrt(np.random.rand()), 0.2, 1.)
-        self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
-        self.anchor_id = np.random.randint(0, 4, self.num_agent)
+        load_mass = 5.
+        self.load_mass = load_mass * (1 + (np.random.rand()-.5) * self.domain_random_scale)
+        self.cable_len = np.ones(self.num_agent) * (1.1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
+        self.cable_len[10:] += 1.
+        # self.anchor_id = np.random.randint(0, 4, self.num_agent)
+        # self.anchor_id = np.array([0,0,1,1,2,3,3,0,0,0,0,0])
+        self.anchor_id = np.array([0,0,1,1,2,2,3,3])
         self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         model = get_xml(
             dog_num = self.num_agent, 
@@ -51,8 +53,7 @@ class NavigationEnv(BaseEnv):
             Box(low=-np.inf, high=np.inf, shape=(obs_size + 3,), dtype=np.float64), 
             Box(low=-np.inf, high=np.inf, shape=(3,self.lmlen,self.lmlen), dtype=np.float64),
         ))
-        sta_size = (obs_size + 10) * self.num_agent + 11
-        sta_size = sta_size if self.previledge_critic else obs_size*self.num_agent
+        sta_size = (obs_size + 10) * self.num_agent + 2 + 3 # + self.num_agent
         self.share_observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(sta_size,), dtype=np.float64), 
             Box(low=-np.inf, high=np.inf, shape=(self.num_agent*3,self.lmlen,self.lmlen), dtype=np.float64),
@@ -77,8 +78,6 @@ class NavigationEnv(BaseEnv):
             [0., -self.msize/2-1],
         ])
         self.wall_yaw = np.array([[np.pi/2],[np.pi/2],[0.],[0.]])
-        self.goal = np.zeros([2]) + 1e6
-        self.env_idx = 0
         
         self.arrive_time = 0.
         self.total_step = 0
@@ -103,32 +102,45 @@ class NavigationEnv(BaseEnv):
         self.hist_img_obs = np.zeros([self.num_agent, self.hist_len, *self.observation_space[1].shape])
         self.prev_output_vel = np.zeros([self.num_agent, self.action_space.shape[0]])
         # idx
-        self.order = np.arange(self.num_agent)
-        np.random.shuffle(self.order)
-        self.env_idx = np.random.randint(2048)
-        if self.env_idx in self.env_data:
-            qpos = self.env_data[self.env_idx]['qpos']
-            self.goal = self.env_data[self.env_idx]['goal']
-            self.path = self.env_data[self.env_idx]['path4render']
-            self.astar_path = self.env_data[self.env_idx]['astar_path']
-            self.init_obs_pos = self.env_data[self.env_idx]['init_obs_pos']
-            self.init_obs_yaw = self.env_data[self.env_idx]['init_obs_yaw']
+        # regenerate env
+        env_idx = np.random.randint(4096)
+        if False:
+            qpos = self.env_data[env_idx]['qpos']
+            self.goal = self.env_data[env_idx]['goal']
+            self.path = self.env_data[env_idx]['path4render']
+            self.astar_path = self.env_data[env_idx]['astar_path']
+            self.init_obs_pos = self.env_data[env_idx]['init_obs_pos']
+            self.init_obs_yaw = self.env_data[env_idx]['init_obs_yaw']
             self.set_state(np.array(qpos), np.zeros_like(qpos))
         else:
-            init_load_pos = (np.random.random(2)-.5) * self.msize 
-            init_load_yaw = np.random.random(1) * 2 * np.pi 
-            # init_load_pos = np.array([0.,0.])
-            # init_load_yaw = np.array([0.])
+            # init_load_pos = (np.random.random(2)-.5) * self.msize 
+            # init_load_yaw = np.random.random(1) * 2 * np.pi 
+            init_load_pos = np.array([-3.,-3.])
+            init_load_yaw = np.array([np.pi/4])
             init_load_z = np.ones(1) * 0.55
             init_load = np.concatenate([init_load_pos, init_load_yaw, init_load_z], axis=-1).flatten()
             min_dist = 0.
             while min_dist < 0.6:
-                init_dog_load_len = np.random.random([self.num_agent, 1]) * 0.25 + 0.75
-                init_dog_load_yaw = (np.random.random([self.num_agent, 1])-.5) * np.pi
-                init_dog_yaw = np.random.random([self.num_agent, 1]) * np.pi * 2
-                # init_dog_load_len = np.array([[.75],[.75]])
-                # init_dog_load_yaw = np.array([[0.],[0.]])
-                # init_dog_yaw = np.array([[0.],[0.]])
+                # init_dog_load_len = np.random.random([self.num_agent, 1]) * 0.25 + 0.75
+                # init_dog_load_yaw = (np.random.random([self.num_agent, 1])-.5) * np.pi
+                # init_dog_yaw = np.random.random([self.num_agent, 1]) * np.pi * 2
+                init_dog_load_len = np.array([
+                    [1.] for _ in range(self.num_agent)
+                ])
+                init_dog_load_len[10:] += 1.
+                init_dog_load_yaw = np.array([
+                    [np.pi/6],
+                    [-np.pi/6],
+                    [np.pi/4],
+                    [-np.pi/4],
+                    [np.pi/6],
+                    [-np.pi/6],
+                    [np.pi/4],
+                    [-np.pi/4],
+                ])
+                init_dog_yaw = np.array([
+                    [np.pi/4,] for _ in range(self.num_agent)
+                ])
                 anchor_id = self.anchor_id.reshape([self.num_agent, 1])
                 anchor_pos = self._get_toward(init_load_yaw)[0] * 0.3 * (anchor_id==0)
                 anchor_pos += self._get_toward(init_load_yaw)[1] * 0.3 * (anchor_id==1)
@@ -149,10 +161,28 @@ class NavigationEnv(BaseEnv):
             min_dist = 0.
             while min_dist < .8:
                 init_obs_z = np.ones([self.num_obs, 1]) * 0.55
-                self.init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
-                self.init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
-                # self.init_obs_pos = np.array([[3.,2.]])
-                # self.init_obs_yaw = np.array([[np.pi/2]])
+                # self.init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
+                # self.init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
+                self.init_obs_pos = np.array([
+                    [0., 2.],
+                    [-.5, 2.5],
+                    [-1, 3.],
+                    [-1.5, 3.5],
+                    [0., -2.],
+                    [.5, -2.5],
+                    [1., -3.],
+                    [1.5, -3.5],
+                ])
+                self.init_obs_yaw = np.array([
+                    [np.pi/4],
+                    [np.pi/4],
+                    [np.pi/4],
+                    [np.pi/4],
+                    [np.pi/4],
+                    [np.pi/4],
+                    [np.pi/4],
+                    [np.pi/4],
+                ])
                 load_dist = np.linalg.norm(self.init_obs_pos-init_load_pos, axis=-1).min()
                 d_pos = init_dog_pos.reshape([1,-1,2])
                 o_pos = self.init_obs_pos.reshape([-1, 1, 2])
@@ -162,8 +192,8 @@ class NavigationEnv(BaseEnv):
             init_obs = np.concatenate([self.init_obs_pos, self.init_obs_yaw, init_obs_z], axis=-1).flatten()
             min_dist = 0.
             while min_dist < 0.8:
-                self.goal = (np.random.random(2)-.5) * (self.msize-2.)
-                # self.goal = np.array([4.,4.])
+                # self.goal = (np.random.random(2)-.5) * (self.msize-2.)
+                self.goal = np.array([3., 3.])
                 min_dist = np.linalg.norm(self.goal.reshape([1,2])-self.init_obs_pos, axis=-1).min()
                     
             qpos = np.concatenate([init_load, init_dog, init_obs, init_wall, np.zeros(self.astar_node*2+2)])
@@ -208,11 +238,7 @@ class NavigationEnv(BaseEnv):
             qpos = np.concatenate([qpos[:-self.astar_node*2-2], self.path, self.goal])
             self.set_state(np.array(qpos), np.zeros_like(qpos))
             
-            done, _ = self._get_done(0)
-            if done:
-                return self.reset()
-            
-            self.env_data[self.env_idx] = {
+            self.env_data[env_idx] = {
                 'qpos': qpos.copy(),
                 'goal':self.goal.copy(),
                 'path4render': self.path.copy(),
@@ -228,25 +254,24 @@ class NavigationEnv(BaseEnv):
         load_pos = self.sim.data.qpos.copy()[:2]
         self.init_dist = np.linalg.norm(self.goal - load_pos)
         self.max_time = self.init_dist * 8. + 20.
+        # self.obs_map = self._get_obs_map(self.init_obs_pos, self.init_obs_yaw)
         # RL_info
         observation = self._get_obs() 
         info = dict()
         # post process
-        self._post_update()
+        self._post_update(self.last_cmd)
         return observation, info
     
     def _get_obs(self):
         
-        # get current observation
         cur_vec_obs, cur_img_obs, cur_vec_sta = self._get_cur_obs()
-        # update history
         self._update_history(cur_vec_obs, cur_img_obs)
-
-        # reshape 
-        vec_obs = cur_vec_obs.reshape([self.num_agent, -1]) # self.hist_vec_obs.reshape([self.num_agent, -1])        
+        vec_obs = cur_vec_obs.reshape([self.num_agent, -1]) # self.hist_vec_obs.reshape([self.num_agent, -1])
+                
         img_obs = cur_img_obs.reshape([self.num_agent, -1, *self.observation_space[1].shape[-2:]]) # self.hist_img_obs.reshape([self.num_agent, -1, *self.observation_space[1].shape[-2:]])
+        vec_sta = cur_vec_sta.reshape([1, -1])
+        vec_sta = np.concatenate([vec_sta, [[self.max_time-self.t]]], -1)
         
-        # get local goal
         load_pos = self.sim.data.qpos.copy()[0:2]
         load_pos = np.expand_dims(load_pos[:2].copy(), 0)
         path_dist = np.linalg.norm(load_pos-self.astar_path, axis=-1)
@@ -255,26 +280,18 @@ class NavigationEnv(BaseEnv):
         local_goal = (self.goal - local_goal) / self.msize
         local_goal = np.expand_dims(local_goal, 0)
         local_goal = self._cart2polar(local_goal)
-        
-        # vector state
-        vec_sta = cur_vec_sta[self.order].reshape([1, -1])
-        if self.previledge_critic:
-            vec_sta = np.concatenate([vec_sta, [[self.max_time-self.t]], self.kp, self.kd], -1)
-            vec_sta = np.concatenate([vec_sta, local_goal, [[self.load_mass]]], -1)
-            vec_sta = np.concatenate([vec_sta, [self.cable_len[self.order]]], axis=-1)  
+        vec_sta = np.concatenate([vec_sta, local_goal, [[self.load_mass]], [self.cable_len]], axis=-1)  
         vec_sta = np.repeat(vec_sta, self.num_agent, axis=0)
         
         # add local goal to actor input
         local_goal = np.repeat(local_goal, self.num_agent, axis=0)
         vec_obs = np.concatenate([vec_obs, local_goal], axis=-1) 
         
-        # shuffle
-        vec_obs = vec_obs[self.order]
-        img_obs = img_obs[self.order]
-        img_sta = img_obs.copy()
-        img_sta = img_sta.reshape([1, -1, *self.observation_space[1].shape[-2:]])
+        # vec_idx = np.eye(self.num_agent)
+        # vec_sta = np.concatenate([vec_sta, vec_idx], -1)
+        img_sta = img_obs.copy().reshape([1, -1, *self.observation_space[1].shape[-2:]])
         img_sta = np.repeat(img_sta, self.num_agent, axis=0)
-        
+        # print("A", vec_obs.shape, img_obs.shape, vec_sta.shape, img_sta.shape)
         return vec_obs, img_obs, vec_sta, img_sta
 
     def _update_history(self, cur_vec_obs, cur_img_obs):
@@ -286,17 +303,13 @@ class NavigationEnv(BaseEnv):
 
     def step(self, cmd):
         """
-        cmd(np.array): [num_agent, 3]
         observation(tuple): 
-        reward(float)
-        done(bool)
-        info(dict)
+        reward(np.array):  [num_agent, 1]
+        done(np.array):  [num_agent]
+        info(dict): 
         """
-        # rearange actions
-        idx = np.argsort(self.order)
-        command = cmd[idx]
         # pre process
-        command = np.clip(command, self.action_space.low, self.action_space.high)
+        command = np.clip(cmd, self.action_space.low, self.action_space.high)
         # action = command.copy()
         done, contact = self._do_simulation(command, self.frame_skip)
         self.t += self.dt
@@ -305,7 +318,7 @@ class NavigationEnv(BaseEnv):
         reward, info = self._get_reward(contact)
         self.total_rew += reward
         # post process
-        self._post_update()
+        self._post_update(command)
         return observation, reward, done, False, info
 
     def _get_done(self, dt): 
@@ -407,15 +420,12 @@ class NavigationEnv(BaseEnv):
         anchor_yaw = self.anchor_id * np.pi/2 + load_y[0]
         anchor_vec, _ = self._get_toward(anchor_yaw.reshape([self.num_agent, 1]))
         anchor_vec = self._cart2polar(anchor_vec)
-        cur_vec_obs = [load_pos, dog_pos] + load_yaw + dog_yaw + [anchor_vec] 
+        cur_vec_obs = [load_pos, dog_pos] + load_yaw + dog_yaw + [anchor_vec] # TODO
         cur_vec_obs = np.concatenate(cur_vec_obs, axis=-1)
         # print("cur_vec_obs.shape", cur_vec_obs.shape) # [num_agent, vec_shape]
-        if self.previledge_critic:
-            cur_vec_sta = [self.error, self.d_output, self.prev_output_vel]
-            cur_vec_sta = np.concatenate(cur_vec_sta, axis=-1)
-            cur_vec_sta = np.concatenate([cur_vec_obs, cur_vec_sta], axis=-1)
-        else:
-            cur_vec_sta = np.concatenate([cur_vec_obs], axis=-1)
+        cur_vec_sta = [self.error, self.d_output, self.prev_output_vel]
+        cur_vec_sta = np.concatenate(cur_vec_sta, axis=-1)
+        cur_vec_sta = np.concatenate([cur_vec_obs, cur_vec_sta], axis=-1)
         # image: partial observation
         cur_img_obs = []
         for i in range(self.num_agent):
@@ -605,7 +615,7 @@ class NavigationEnv(BaseEnv):
         # print("B", action)
         
         
-        # n_frames = n_frames * (1. + (np.random.rand()-.5) * self.domain_random_scale)
+        n_frames = n_frames * (1. + (np.random.rand()-.5) * self.domain_random_scale)
         for _ in range(int(n_frames)):
             # assert np.array(ctrl).shape==self.action_space.shape, "Action dimension mismatch"
             state = self.sim.data.qvel.flat.copy()[4:4+self.num_agent*4]
@@ -637,7 +647,7 @@ class NavigationEnv(BaseEnv):
         self.prev_output_vel = cur_vel.copy()
         return torque.flatten()
 
-    def _post_update(self):
+    def _post_update(self, cmd):
         """
         restore the history information
         """
@@ -679,3 +689,62 @@ class NavigationEnv(BaseEnv):
         output_action = np.concatenate([output_action, input_action[:,2:3]], -1)
         
         return output_action
+    
+    def _check_intersections(self, segments):
+        # Ensure segments is a NumPy array for vectorized operations
+        segments = np.array(segments)
+        
+        # Extract start and end points of line segments
+        start_points = segments[:, 0, :]
+        end_points = segments[:, 1, :]
+
+        # Calculate direction vectors of line segments
+        directions = end_points - start_points
+        
+        # Calculate differences between start points for all combinations of segments
+        start_diffs = start_points[:, np.newaxis] - start_points
+        
+        # Calculate cross products of direction vectors to detect parallel lines
+        cross_products = np.cross(directions[:, np.newaxis], directions)
+        
+        # Check if any cross product is non-zero (indicating non-parallel lines)
+        non_parallel_mask = np.any(cross_products != 0, axis=1)
+        
+        # Calculate cross products of start point differences and direction vectors
+        cross_products_start = np.cross(start_diffs[:, :, np.newaxis], directions)
+        
+        # Calculate cross products of start point differences for the first direction vector
+        cross_products_first = np.cross(start_diffs, directions)
+        
+        # Check if any cross product sign changes occur, indicating intersections
+        intersect_mask = (
+            np.sign(cross_products_start) != np.sign(cross_products_start[:, :, 0, np.newaxis])
+        )
+        
+        # Check if start point differences are within the bounds of the direction vector magnitudes
+        magnitude_check = (
+            (cross_products_first >= 0) & (cross_products_first <= np.linalg.norm(directions, axis=1)[:, np.newaxis])
+        )
+        
+        # Combine intersection conditions to determine if segments intersect
+        intersection_conditions = non_parallel_mask & intersect_mask & magnitude_check
+        
+        # Check if any segments intersect
+        return np.any(intersection_conditions)
+
+    def _find_mode_cnt(self, the_list):
+        # generated by chat-gpt        
+        
+        num_counts = {}  # Dictionary to store counts of each number
+        
+        # Count occurrences of each number
+        for num in the_list:
+            if num in num_counts:
+                num_counts[num] += 1
+            else:
+                num_counts[num] = 1
+        
+        # Find the maximum count
+        max_count = max(num_counts.values())
+        
+        return max_count

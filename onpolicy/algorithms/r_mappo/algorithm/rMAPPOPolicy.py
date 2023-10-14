@@ -38,6 +38,13 @@ class R_MAPPOPolicy:
                                                  eps=self.opti_eps,
                                                  weight_decay=self.weight_decay)
 
+        self.use_distill = False
+        if self.use_distill:
+            self.teachers = []
+            for _ in range(self.num_agents-1):
+                teacher = R_Actor(args, self.obs_space, self.act_space, self.device)
+                self.teachers.append(teacher)
+
     def lr_decay(self, episode, episodes):
         """
         Decay the actor and critic learning rates.
@@ -71,7 +78,6 @@ class R_MAPPOPolicy:
                                                                  masks,
                                                                  available_actions,
                                                                  deterministic)
-
         values, rnn_states_critic = self.critic(cent_obs, rnn_states_critic, masks)
         return values, actions, action_log_probs, rnn_states_actor, rnn_states_critic
 
@@ -121,6 +127,29 @@ class R_MAPPOPolicy:
         
         # return values, mean_values, action_log_probs, dist_entropy
         return values, None, action_log_probs, dist_entropy
+
+    def evaluate_aonly(self, obs, rnn_states_actor, action, masks, available_actions=None, active_masks=None):
+        """
+        Get action logprobs / entropy and value function predictions for actor update.
+        :param cent_obs (np.ndarray): centralized input to the critic.
+        :param obs (np.ndarray): local agent inputs to the actor.
+        :param rnn_states_actor: (np.ndarray) if actor is RNN, RNN states for actor.
+        :param rnn_states_critic: (np.ndarray) if critic is RNN, RNN states for critic.
+        :param action: (np.ndarray) actions whose log probabilites and entropy to compute.
+        :param masks: (np.ndarray) denotes points at which RNN states should be reset.
+        :param available_actions: (np.ndarray) denotes which actions are available to agent
+                                  (if None, all actions available)
+        :param active_masks: (torch.Tensor) denotes whether an agent is active or dead.
+
+        :return values: (torch.Tensor) value function predictions.
+        :return action_log_probs: (torch.Tensor) log probabilities of the input actions.
+        :return dist_entropy: (torch.Tensor) action distribution entropy for the given inputs.
+        """
+        
+        action_log_probs, dist_entropy = self.actor.evaluate_actions(
+            obs, rnn_states_actor, action, masks, available_actions, active_masks
+        )
+        return action_log_probs, dist_entropy
 
     def act(self, obs, rnn_states_actor, masks, available_actions=None, deterministic=False):
         """

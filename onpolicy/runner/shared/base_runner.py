@@ -143,12 +143,19 @@ class Runner(object):
     def restore(self):
         """Restore policy's networks from a saved model."""
         if self.model_dir:
-            policy_actor_state_dict = torch.load(str(self.model_dir) + '/actor.pt', map_location=torch.device('cpu'))
+            policy_actor_state_dict = torch.load(str(self.model_dir) + '/actor.pt')
             self.policy.actor.load_state_dict(policy_actor_state_dict)
-        #     policy_critic_state_dict = torch.load(str(self.model_dir) + '/critic.pt') #, map_location=torch.device('cpu'))
-        #     self.policy.critic.load_state_dict(policy_critic_state_dict)
-        #     policy_vnorm_state_dict = torch.load(str(self.model_dir) + '/vnorm.pt') #, map_location=torch.device('cpu'))
-        #     self.trainer.value_normalizer.load_state_dict(policy_vnorm_state_dict)
+            # policy_critic_state_dict = torch.load(str(self.model_dir) + '/critic.pt') #, map_location=torch.device('cpu'))
+            # self.policy.critic.load_state_dict(policy_critic_state_dict)
+            # policy_vnorm_state_dict = torch.load(str(self.model_dir) + '/vnorm.pt') #, map_location=torch.device('cpu'))
+            # self.trainer.value_normalizer.load_state_dict(policy_vnorm_state_dict)
+        self.use_distill = False
+        if self.use_distill:
+            for i in range(1,self.num_agents):
+                name = str(self.model_dir) + '/actor_{}.pt'.format(i)
+                policy_actor_state_dict = torch.load(name)
+                self.policy.teachers[i-1].load_state_dict(policy_actor_state_dict)
+
         
  
     def log_train(self, train_infos, total_num_steps):
