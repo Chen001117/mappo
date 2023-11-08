@@ -174,8 +174,8 @@ def main(args):
 
     if all_args.use_wandb:
         run = wandb.init(config=all_args,
-                         project=all_args.env_name,
-                         entity=all_args.user_name,
+                         project="SMAC",
+                         entity="cwz19",
                          notes=socket.gethostname(),
                          name=str(all_args.algorithm_name) + "_" +
                               str(all_args.experiment_name) + "_" + 
