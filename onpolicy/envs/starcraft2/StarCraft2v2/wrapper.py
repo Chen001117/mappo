@@ -2,6 +2,8 @@ from .distributions import get_distribution
 from .starcraft2 import StarCraft2Env
 from ..multiagentenv import MultiAgentEnv
 
+import json
+import numpy as np
 
 class StarCraftCapabilityEnvWrapper(MultiAgentEnv):
     def __init__(self, **kwargs):
@@ -13,6 +15,11 @@ class StarCraftCapabilityEnvWrapper(MultiAgentEnv):
             self.distribution_config.keys()
             == kwargs["capability_config"].keys()
         ), "Must give distribution config and capability config the same keys"
+        
+        # load reset config
+        with open("config.json", "r") as f:
+            data = json.load(f)
+        self.all_config = data
 
     def _parse_distribution_config(self):
         for env_key, config in self.distribution_config.items():
@@ -26,9 +33,14 @@ class StarCraftCapabilityEnvWrapper(MultiAgentEnv):
             self.env_key_to_distribution_map[env_key] = distribution
 
     def reset(self):
-        reset_config = {}
-        for distribution in self.env_key_to_distribution_map.values():
-            reset_config = {**reset_config, **distribution.generate()}
+        # reset_config = {}
+        # for distribution in self.env_key_to_distribution_map.values():
+        #     reset_config = {**reset_config, **distribution.generate()}
+        
+        self.idx = np.random.randint(800)
+        reset_config = self.all_config[str(self.idx)]
+        reset_config["ally_start_positions"]["item"] = np.array(reset_config["ally_start_positions"]["item"])
+        reset_config["enemy_start_positions"]["item"] = np.array(reset_config["enemy_start_positions"]["item"])
 
         return self.env.reset(reset_config)
 

@@ -3,7 +3,7 @@ map="10gen_protoss"
 algo="rmappo"
 units="5v5"
 
-exp="test"
+exp="800task"
 
 CUDA_VISIBLE_DEVICES=0 python ../train/train_smac.py --env_name ${env} \
 --algorithm_name ${algo} --experiment_name ${exp} --map_name ${map} \
