@@ -51,10 +51,10 @@ class R_Actor(nn.Module):
         input_size = self.hidden_size * (1+self.tuple_input)
         self.act = ACTLayer(action_space, self.hidden_size, self._use_ReLU, self._use_orthogonal, self._gain)
         
-        print("actor")
-        print("Total number of param in base_vec is ", sum(x.numel() for x in self.base_vec.parameters()))
-        print("Total number of param in base_img is ", sum(x.numel() for x in self.base_img.parameters()))
-        print("Total number of param in rnn is ", sum(x.numel() for x in self.rnn.parameters()))
+        # print("actor")
+        # print("Total number of param in base_vec is ", sum(x.numel() for x in self.base_vec.parameters()))
+        # print("Total number of param in base_img is ", sum(x.numel() for x in self.base_img.parameters()))
+        # print("Total number of param in rnn is ", sum(x.numel() for x in self.rnn.parameters()))
 
         self.to(device)
 

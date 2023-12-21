@@ -213,7 +213,6 @@ class NavigationEnv(BaseEnv):
             # do astar
             load_pos = (init_load_pos / self.msize + .5) * self.mlen
             goal_pos = (self.goal / self.msize + .5) * self.mlen
-            
             self.astar_path = find_path(load_pos, goal_pos, obs_map)
             
             if self.astar_path is None:

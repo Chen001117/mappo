@@ -16,14 +16,14 @@ class NavigationEnv(BaseEnv):
         self.msize = 10. # map size (m)
         self.lmlen = 57 # local map length (pixels)
         self.warm_step = 4 # warm-up: let everything stable (s)
-        self.frame_skip = 100 # 100/frame_skip = decision_freq (Hz)
+        self.frame_skip = 10 # 100/frame_skip = decision_freq (Hz)
         self.num_obs = 10
         self.hist_len = 4
         self.num_agent = num_agents
         self.domain_random_scale = 1e-1
         self.measure_random_scale = 1e-2
         self.init_kp = np.array([[2000, 2000, 800]])
-        self.init_kd = np.array([[0.02, 0.02, 0.0]])
+        self.init_kd = np.array([[0.02, 0.02, 1e-6]])
         # self.init_ki = np.array([[0.0, 0.0, 10.]])
         self.max_axis_torque = 100.
         self.astar_node = 2 # for rendering astar path 
@@ -259,8 +259,12 @@ class NavigationEnv(BaseEnv):
         # vector state
         vec_sta = cur_vec_sta[self.order].reshape([1, -1])
         if self.previledge_critic:
-            vec_sta = np.concatenate([vec_sta, [[self.max_time-self.t]], self.kp, self.kd], -1)
-            vec_sta = np.concatenate([vec_sta, local_goal, [[self.load_mass]]], -1)
+            kp = self.kp / self.init_kp
+            kd = self.kd / self.init_kd
+            time = (self.max_time-self.t) /20.
+            mass = self.load_mass / 5.
+            vec_sta = np.concatenate([vec_sta, [[time]], kp, kd], -1)
+            vec_sta = np.concatenate([vec_sta, local_goal, [[mass]]], -1)
             vec_sta = np.concatenate([vec_sta, [self.cable_len[self.order]]], axis=-1)  
         vec_sta = np.repeat(vec_sta, self.num_agent, axis=0)
         
@@ -602,9 +606,6 @@ class NavigationEnv(BaseEnv):
         (input) action: the desired velocity of the agent. shape=(num_agent, action_size)
         (input) n_frames: the agent will use this action for n_frames*dt seconds
         """
-        # print("B", action)
-        
-        
         # n_frames = n_frames * (1. + (np.random.rand()-.5) * self.domain_random_scale)
         for _ in range(int(n_frames)):
             # assert np.array(ctrl).shape==self.action_space.shape, "Action dimension mismatch"
