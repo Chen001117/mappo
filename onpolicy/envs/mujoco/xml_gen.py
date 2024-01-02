@@ -1,6 +1,6 @@
 import numpy as np
 
-def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None, fric_coef=None, astar_node=1):
+def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None, fric_coef=None, astar_node=1, box_half_len=0.25):
     assert len(anchor_id) == dog_num, "length of anchor id should be equal to the dog number"
     strings = \
     """
@@ -13,25 +13,25 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
     <light cutoff="100" diffuse="1 1 1" dir="-0 0 -1.3" directional="true" exponent="1" pos="0 0 1.3" specular=".1 .1 .1"/>
     <geom condim="3" friction="1. 0.005 0.001" name="floor" pos="0 0 0" rgba="0.8 0.9 0.8 1" size="5.2 5.2 5" type="plane" material="MatPlane"/>
     
-    <body name="load" pos="0 0 0.35">
+    <body name="load" pos="0 0 0.3">
       <site name="load" pos="0 0 0"/>
       <camera name="camera" mode="trackcom" pos="0 0. 15." xyaxes="1 0 0 0 1 0"/>
       <joint axis="1 0 0" limited="false" name="load_axisx" pos="0 0 0" type="slide"/>
       <joint axis="0 1 0" limited="false" name="load_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="load_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="load_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="{}" size="0.3 0.3 0.3" name="load" type="box" rgba="0.55 0.27 0.07 1."/>
-    """.format(load_mass)
+      <geom mass="{}" size="{} {} {}" name="load" type="box" rgba="0.55 0.27 0.07 1."/>
+    """.format(load_mass, box_half_len, box_half_len, box_half_len)
 
     for i in range(dog_num):
        if anchor_id[i] == 0:
-         x_coor, y_coor = 0.3, 0.
+         x_coor, y_coor = box_half_len, 0.
        elif anchor_id[i] == 1:
-         x_coor, y_coor = 0., 0.3
+         x_coor, y_coor = 0., box_half_len
        elif anchor_id[i] == 2:
-         x_coor, y_coor = -0.3, 0.
+         x_coor, y_coor = -box_half_len, 0.
        elif anchor_id[i] == 3:
-         x_coor, y_coor = 0., -0.3
+         x_coor, y_coor = 0., -box_half_len
        strings += \
     """
       <site name="load_dog_{:02d}" pos="{} {} 0"/>

@@ -197,7 +197,7 @@ def neighbors_fnct(node: T, map) -> Iterable[T]:
     ]
     neighbor_list = []
     for node in pre_list:
-        buffer = 30
+        buffer = 35
         if (node<buffer).any() or (node>=500-buffer).any():
             continue
         neigh = map[int(node[0])-buffer:int(node[0])+buffer, int(node[1])-buffer:int(node[1])+buffer]
