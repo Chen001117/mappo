@@ -1,12 +1,9 @@
+import os 
 
+path = "./results/two_agent"
+file_list = os.listdir(path)
 
-
-
-# Example usage
-line_segments = [
-    [[0, 0], [1, 1]],
-    [[-1, -0.1], [2, 0]],
-    [[2, 2], [3, 3]],
-]
-
-print(check_segment_intersections(line_segments)) 
+for i in range(25):
+    old_name = path + os.sep + "{:04d}.json".format(i)
+    new_name = path + os.sep + "{:04d}.json".format(i+150)
+    os.rename(old_name, new_name)

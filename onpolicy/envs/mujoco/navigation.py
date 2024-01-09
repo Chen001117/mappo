@@ -9,6 +9,9 @@ import time
 
 class NavigationEnv(BaseEnv):
     def __init__(self, num_agents, **kwargs):
+        
+        self._kwargs = kwargs
+        
         # hyper-para
         self.previledge_critic = True
         self.regenerate_ratio = 0.75
@@ -36,7 +39,15 @@ class NavigationEnv(BaseEnv):
         load_mass = np.array([0., 3., 5., 5., 5.])[self.num_agent]
         self.load_mass = load_mass * np.clip(np.sqrt(np.random.rand()), 0.2, 1.)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
-        self.anchor_id = np.random.randint(0, 4, self.num_agent) * 0 + 2
+        self.anchor_type = np.random.choice(np.arange(3), 1, p=np.array([0.4,0.4,0.2]))
+        if self.anchor_type == 0: # [0,0]
+            self.anchor_id = np.random.randint(0, 4) * np.ones(2)
+        elif self.anchor_type == 1: # [0,1]
+            begin_num = np.random.randint(0, 4)
+            self.anchor_id = np.array([begin_num, (begin_num+1)%4])
+        else: # [0,2]
+            begin_num = np.random.randint(0, 2)
+            self.anchor_id = np.array([begin_num, begin_num+2])
         self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         model = get_xml(
             dog_num = self.num_agent, 
@@ -96,6 +107,10 @@ class NavigationEnv(BaseEnv):
         np.random.seed(int(time.time()))
 
     def reset(self):
+        
+        if np.random.rand() < 1e-3:
+            self.__init__(self.num_agent, **self._kwargs)
+        
         # init random tasks
         self.kp  = self.init_kp * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
         self.kd  = self.init_kd * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
@@ -111,13 +126,38 @@ class NavigationEnv(BaseEnv):
         # idx
         self.order = np.arange(self.num_agent)
         # np.random.shuffle(self.order)
-        self.env_idx = np.random.randint(128)
+        use1st_data = np.random.rand() < 0.5
+        if self.anchor_type == 0:
+            if use1st_data:
+                self.env_idx = np.random.randint(50)
+            else:
+                self.env_idx = np.random.randint(25) + 128
+        elif self.anchor_type == 1:
+            if use1st_data:
+                self.env_idx = np.random.randint(50) + 50
+            else:
+                self.env_idx = np.random.randint(25) + 25 + 128
+        else:
+            if use1st_data:
+                self.env_idx = np.random.randint(28) + 100
+            else:
+                self.env_idx = np.random.randint(14) + 50 + 128
+        
+        if self.env_idx in [0,3,7,8,10,12,15,20,22,30,31,35,37,39,43,45]:
+            return self.reset()
+        if self.env_idx in [54,56,61,72,74,81,85,87,88,89,94,97,98,110,123,125,126]:
+            return self.reset()
+        
         if True: # self.env_idx in self.env_data:
             import json 
-            data_path = "./results/single_agent/{:04d}.json".format(self.env_idx)
-            with open(data_path) as file:
-                data = json.load(file)
-            self.env_data[self.env_idx] = data
+            if self.env_idx not in self.env_data:
+                if use1st_data:
+                    data_path = "./results/two_agent1/{:04d}.json".format(self.env_idx)
+                else:
+                    data_path = "./results/two_agent2/{:04d}.json".format(self.env_idx-128)
+                with open(data_path) as file:
+                    data = json.load(file)
+                self.env_data[self.env_idx] = data
             qpos = np.array(self.env_data[self.env_idx]['qpos'])
             qpos[2] -= np.pi/2 * self.anchor_id[0]
             self.goal = np.array(self.env_data[self.env_idx]['goal'])
@@ -392,6 +432,24 @@ class NavigationEnv(BaseEnv):
             if dist < 0.2:
                 terminate, contact = True, False
                 return terminate, contact
+            
+        if self.t > 5.:
+            state = self.sim.data.qpos.copy().flatten()
+            robot_state = state[4:4+self.num_agent*4]
+            robot_state = robot_state.reshape([self.num_agent, 4])
+            robot_pos = robot_state[:,:2]
+            load_pos = state[:2].reshape([1, 2])
+            load2robot = robot_pos - load_pos
+            cosine_distance = np.dot(load2robot[0], load2robot[1])
+            cosine_distance /= np.linalg.norm(load2robot[0])
+            cosine_distance /= np.linalg.norm(load2robot[1])
+            robot_yaw = robot_state[:,2]
+            robot0_dir = np.array([np.cos(robot_yaw[0]), np.sin(robot_yaw[0])])
+            robot1_dir = np.array([np.cos(robot_yaw[1]), np.sin(robot_yaw[1])])
+            cosine_distance2 = np.dot(robot0_dir, robot1_dir)
+            if cosine_distance < np.cos(np.pi*.75) and cosine_distance2 < np.cos(np.pi*.6) and not goal_reach:
+                terminate, contact = True, False
+                return terminate, contact
         
         return terminate, contact
 
@@ -399,7 +457,7 @@ class NavigationEnv(BaseEnv):
 
         rewards = []
         # pre-process
-        weights = np.array([1., 1., -0.01, 1.])
+        weights = np.array([1., 1., -0.001, 1., 0.001])
         weights = weights / weights.sum()
         state = self.sim.data.qpos.copy().flatten()
         # # dist_per_step
@@ -436,11 +494,19 @@ class NavigationEnv(BaseEnv):
         accu_coef = (1 - self.gamma**remain_t) / (1 - self.gamma)
         rewards.append(accu_coef * max_rew * arrive4awhile)
         
+        state = self.sim.data.qpos.copy().flatten()
+        robot_state = state[4:4+self.num_agent*4]
+        robot_state = robot_state.reshape([self.num_agent, 4])
+        robot_yaw = robot_state[:,2]
+        cosine = np.cos(robot_yaw[0]-robot_yaw[1])
+        rewards.append(cosine)
+        
         rew_dict = dict()
         rew_dict["dist_per_step"] = rewards[0]
         rew_dict["goal_reach"] = rewards[1]
         rew_dict["contact_done"] = rewards[2]
         rew_dict["arrive4awhile"] = rewards[3]
+        rew_dict["cosine"] = rewards[4]
         rews = np.dot(rewards, weights)
         
         return rews, rew_dict
@@ -715,7 +781,7 @@ class NavigationEnv(BaseEnv):
         load_pos = self.sim.data.qpos.copy()[0:2]
         load_pos = np.expand_dims(load_pos[:2].copy(), 0)
         path_dist = np.linalg.norm(load_pos-self.astar_path, axis=-1)
-        goal_idx = min(np.argmin(path_dist, axis=-1)+10, len(self.astar_path)-1) 
+        goal_idx = min(np.argmin(path_dist, axis=-1)+12, len(self.astar_path)-1) 
         local_goal = self.astar_path[goal_idx]
         self.prev_dist = np.linalg.norm(load_pos-local_goal)
         self.last_local_goal = local_goal.copy()

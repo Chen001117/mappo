@@ -152,7 +152,7 @@ class Runner(object):
         self.use_distill = False
         if self.use_distill:
             for i in range(1,self.num_agents):
-                name = str(self.model_dir) + '/actor_{}.pt'.format(i)
+                name = str(self.model_dir) + '/actor.pt'.format(i)
                 policy_actor_state_dict = torch.load(name)
                 self.policy.teachers[i-1].load_state_dict(policy_actor_state_dict)
 
