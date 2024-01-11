@@ -8,11 +8,12 @@ from gym.spaces import Box, Tuple
 import time
 
 class NavigationEnv(BaseEnv):
-    def __init__(self, num_agents, **kwargs):
+    def __init__(self, num_agents, env_rank, **kwargs):
         
         self._kwargs = kwargs
         
         # hyper-para
+        self.env_rank = env_rank
         self.previledge_critic = True
         self.regenerate_ratio = 0.75
         self.arrive_dist = 1.
@@ -39,15 +40,12 @@ class NavigationEnv(BaseEnv):
         load_mass = np.array([0., 3., 5., 5., 5.])[self.num_agent]
         self.load_mass = load_mass * np.clip(np.sqrt(np.random.rand()), 0.2, 1.)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
-        self.anchor_type = np.random.choice(np.arange(3), 1, p=np.array([0.4,0.4,0.2]))
-        if self.anchor_type == 0: # [0,0]
-            self.anchor_id = np.random.randint(0, 4) * np.ones(2)
-        elif self.anchor_type == 1: # [0,1]
-            begin_num = np.random.randint(0, 4)
-            self.anchor_id = np.array([begin_num, (begin_num+1)%4])
-        else: # [0,2]
-            begin_num = np.random.randint(0, 2)
-            self.anchor_id = np.array([begin_num, begin_num+2])
+        if self.env_rank % 10 < 4:
+            self.anchor_id = np.zeros(2) + self.env_rank % 10
+        elif self.env_rank % 10 < 8:
+            self.anchor_id = (np.arange(2) + self.env_rank % 10) % 4
+        else:
+            self.anchor_id = (np.array([0,2]) + self.env_rank % 10) % 4
         self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         model = get_xml(
             dog_num = self.num_agent, 
@@ -108,9 +106,6 @@ class NavigationEnv(BaseEnv):
 
     def reset(self):
         
-        if np.random.rand() < 1e-3:
-            self.__init__(self.num_agent, **self._kwargs)
-        
         # init random tasks
         self.kp  = self.init_kp * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
         self.kd  = self.init_kd * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
@@ -125,36 +120,17 @@ class NavigationEnv(BaseEnv):
         self.prev_output_vel = np.zeros([self.num_agent, self.action_space.shape[0]])
         # idx
         self.order = np.arange(self.num_agent)
-        # np.random.shuffle(self.order)
-        use1st_data = np.random.rand() < 0.5
-        if self.anchor_type == 0:
-            if use1st_data:
-                self.env_idx = np.random.randint(50)
-            else:
-                self.env_idx = np.random.randint(25) + 128
-        elif self.anchor_type == 1:
-            if use1st_data:
-                self.env_idx = np.random.randint(50) + 50
-            else:
-                self.env_idx = np.random.randint(25) + 25 + 128
+        if self.env_rank % 10 < 4:
+            self.env_idx = np.random.randint(87)
+        elif self.env_rank % 10 < 8:
+            self.env_idx = np.random.randint(76) + 87
         else:
-            if use1st_data:
-                self.env_idx = np.random.randint(28) + 100
-            else:
-                self.env_idx = np.random.randint(14) + 50 + 128
-        
-        if self.env_idx in [0,3,7,8,10,12,15,20,22,30,31,35,37,39,43,45]:
-            return self.reset()
-        if self.env_idx in [54,56,61,72,74,81,85,87,88,89,94,97,98,110,123,125,126]:
-            return self.reset()
+            self.env_idx = np.random.randint(36) + 163
         
         if True: # self.env_idx in self.env_data:
             import json 
             if self.env_idx not in self.env_data:
-                if use1st_data:
-                    data_path = "./results/two_agent1/{:04d}.json".format(self.env_idx)
-                else:
-                    data_path = "./results/two_agent2/{:04d}.json".format(self.env_idx-128)
+                data_path = "./results/2agent_final/{:04d}.json".format(self.env_idx)
                 with open(data_path) as file:
                     data = json.load(file)
                 self.env_data[self.env_idx] = data
@@ -166,7 +142,6 @@ class NavigationEnv(BaseEnv):
             self.init_obs_pos = np.array(self.env_data[self.env_idx]['init_obs_pos'])
             self.init_obs_yaw = np.array(self.env_data[self.env_idx]['init_obs_yaw'])
             self.set_state(np.array(qpos), np.zeros_like(qpos))
-            
             self._do_simulation(self.last_cmd.copy(), self.frame_skip)
         else:
             init_load_pos = (np.random.random(2)-.5) * self.msize 

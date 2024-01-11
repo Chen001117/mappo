@@ -38,7 +38,7 @@ class R_MAPPOPolicy:
                                                  eps=self.opti_eps,
                                                  weight_decay=self.weight_decay)
 
-        self.use_distill = False
+        self.use_distill = True
         if self.use_distill:
             self.teachers = []
             for _ in range(self.num_agents-1):
