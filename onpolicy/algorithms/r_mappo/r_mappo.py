@@ -194,7 +194,7 @@ class R_MAPPO():
             distill_loss = torch.clamp(distill_loss, -10, 10)
             distill_loss = distill_loss.mean()
 
-            distill_coef = 1e-2
+            distill_coef = 1e-3
             policy_loss = policy_action_loss - distill_loss * distill_coef
         
         else:

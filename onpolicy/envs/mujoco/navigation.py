@@ -40,12 +40,13 @@ class NavigationEnv(BaseEnv):
         load_mass = np.array([0., 3., 5., 5., 5.])[self.num_agent]
         self.load_mass = load_mass * np.clip(np.sqrt(np.random.rand()), 0.2, 1.)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
-        if self.env_rank % 10 < 4:
-            self.anchor_id = np.zeros(2) + self.env_rank % 10
-        elif self.env_rank % 10 < 8:
-            self.anchor_id = (np.arange(2) + self.env_rank % 10) % 4
-        else:
-            self.anchor_id = (np.array([0,2]) + self.env_rank % 10) % 4
+        self.anchor_id = (np.array([0,0,1]) + self.env_rank) % 4
+        # if self.env_rank % 10 < 4:
+        #     self.anchor_id = np.zeros(2) + self.env_rank % 10
+        # elif self.env_rank % 10 < 8:
+        #     self.anchor_id = (np.arange(2) + self.env_rank % 10) % 4
+        # else:
+        #     self.anchor_id = (np.array([0,2]) + self.env_rank % 10) % 4
         self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         model = get_xml(
             dog_num = self.num_agent, 
@@ -120,17 +121,18 @@ class NavigationEnv(BaseEnv):
         self.prev_output_vel = np.zeros([self.num_agent, self.action_space.shape[0]])
         # idx
         self.order = np.arange(self.num_agent)
-        if self.env_rank % 10 < 4:
-            self.env_idx = np.random.randint(87)
-        elif self.env_rank % 10 < 8:
-            self.env_idx = np.random.randint(76) + 87
-        else:
-            self.env_idx = np.random.randint(36) + 163
+        self.env_idx = np.random.randint(7) + 16
+        # if self.env_rank % 10 < 4:
+        #     self.env_idx = np.random.randint(87)
+        # elif self.env_rank % 10 < 8:
+        #     self.env_idx = np.random.randint(76) + 87
+        # else:
+        #     self.env_idx = np.random.randint(36) + 163
         
         if True: # self.env_idx in self.env_data:
             import json 
             if self.env_idx not in self.env_data:
-                data_path = "./results/2agent_final/{:04d}.json".format(self.env_idx)
+                data_path = "./results/3agent/{:04d}.json".format(self.env_idx)
                 with open(data_path) as file:
                     data = json.load(file)
                 self.env_data[self.env_idx] = data
@@ -264,7 +266,7 @@ class NavigationEnv(BaseEnv):
         self.total_rew = 0.
         load_pos = self.sim.data.qpos.copy()[:2]
         self.init_dist = np.linalg.norm(self.goal - load_pos)
-        self.max_time = self.init_dist * 8. + 20. #self.init_dist * 8. + 20.
+        self.max_time = 120 # self.init_dist * 8. + 20. #self.init_dist * 8. + 20.
         self.hist_load = []
         # RL_info
         observation = self._get_obs() 
