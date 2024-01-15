@@ -46,6 +46,10 @@ class R_MAPPO():
             self.value_normalizer = ValueNorm(1).to(self.device)
         else:
             self.value_normalizer = None
+            
+        self._episode_length = args.episode_length
+        self._n_rollout_threads = args.n_rollout_threads
+        self._total_step = 0
 
     def cal_value_loss(self, values, mean_values, value_preds_batch, return_batch, active_masks_batch):
         """
@@ -203,7 +207,10 @@ class R_MAPPO():
         self.policy.actor_optimizer.zero_grad()
 
         if update_actor:
-            (policy_loss - dist_entropy * self.entropy_coef).backward()
+            policy_l = (policy_loss - dist_entropy * self.entropy_coef)
+            if self._total_step < 1e4:
+                policy_l = policy_l * 0.
+            policy_l.backward()
 
         if self._use_max_grad_norm:
             actor_grad_norm = nn.utils.clip_grad_norm_(self.policy.actor.parameters(), self.max_grad_norm)
@@ -241,6 +248,8 @@ class R_MAPPO():
 
         :return train_info: (dict) contains information regarding training update (e.g. loss, grad norms, etc).
         """
+        
+        self._total_step += self._episode_length * self._n_rollout_threads
         
         train_info = {}
         if self._use_popart or self._use_valuenorm:

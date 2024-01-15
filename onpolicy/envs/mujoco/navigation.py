@@ -33,7 +33,7 @@ class NavigationEnv(BaseEnv):
         self.max_axis_torque = 100.
         self.astar_node = 20 # for rendering astar path 
         self.box_half_len = 0.25
-        self.arrive_thresh = 2.
+        self.arrive_thresh = 0.2
         self.stuck_time = 5.
         self.gamma = 0.99
         # simulator
@@ -121,7 +121,7 @@ class NavigationEnv(BaseEnv):
         self.prev_output_vel = np.zeros([self.num_agent, self.action_space.shape[0]])
         # idx
         self.order = np.arange(self.num_agent)
-        self.env_idx = np.random.randint(7) + 16
+        self.env_idx = np.random.randint(69)
         # if self.env_rank % 10 < 4:
         #     self.env_idx = np.random.randint(87)
         # elif self.env_rank % 10 < 8:
@@ -266,7 +266,7 @@ class NavigationEnv(BaseEnv):
         self.total_rew = 0.
         load_pos = self.sim.data.qpos.copy()[:2]
         self.init_dist = np.linalg.norm(self.goal - load_pos)
-        self.max_time = 120 # self.init_dist * 8. + 20. #self.init_dist * 8. + 20.
+        self.max_time = self.init_dist * 8. + 20. #self.init_dist * 8. + 20.
         self.hist_load = []
         # RL_info
         observation = self._get_obs() 
@@ -291,7 +291,7 @@ class NavigationEnv(BaseEnv):
         load_pos = self.sim.data.qpos.copy()[0:2]
         load_pos = np.expand_dims(load_pos[:2].copy(), 0)
         path_dist = np.linalg.norm(load_pos-self.astar_path, axis=-1)
-        goal_idx = min(np.argmin(path_dist, axis=-1)+10, len(self.astar_path)-1) 
+        goal_idx = min(np.argmin(path_dist, axis=-1)+18, len(self.astar_path)-1) 
         local_goal = self.astar_path[goal_idx]
         local_goal = (self.goal - local_goal) / self.msize
         local_goal = np.expand_dims(local_goal, 0)
@@ -410,23 +410,23 @@ class NavigationEnv(BaseEnv):
                 terminate, contact = True, False
                 return terminate, contact
             
-        if self.t > 5.:
-            state = self.sim.data.qpos.copy().flatten()
-            robot_state = state[4:4+self.num_agent*4]
-            robot_state = robot_state.reshape([self.num_agent, 4])
-            robot_pos = robot_state[:,:2]
-            load_pos = state[:2].reshape([1, 2])
-            load2robot = robot_pos - load_pos
-            cosine_distance = np.dot(load2robot[0], load2robot[1])
-            cosine_distance /= np.linalg.norm(load2robot[0])
-            cosine_distance /= np.linalg.norm(load2robot[1])
-            robot_yaw = robot_state[:,2]
-            robot0_dir = np.array([np.cos(robot_yaw[0]), np.sin(robot_yaw[0])])
-            robot1_dir = np.array([np.cos(robot_yaw[1]), np.sin(robot_yaw[1])])
-            cosine_distance2 = np.dot(robot0_dir, robot1_dir)
-            if cosine_distance < np.cos(np.pi*.75) and cosine_distance2 < np.cos(np.pi*.6) and not goal_reach:
-                terminate, contact = True, False
-                return terminate, contact
+        # if self.t > 5.:
+        #     state = self.sim.data.qpos.copy().flatten()
+        #     robot_state = state[4:4+self.num_agent*4]
+        #     robot_state = robot_state.reshape([self.num_agent, 4])
+        #     robot_pos = robot_state[:,:2]
+        #     load_pos = state[:2].reshape([1, 2])
+        #     load2robot = robot_pos - load_pos
+        #     cosine_distance = np.dot(load2robot[0], load2robot[1])
+        #     cosine_distance /= np.linalg.norm(load2robot[0])
+        #     cosine_distance /= np.linalg.norm(load2robot[1])
+        #     robot_yaw = robot_state[:,2]
+        #     robot0_dir = np.array([np.cos(robot_yaw[0]), np.sin(robot_yaw[0])])
+        #     robot1_dir = np.array([np.cos(robot_yaw[1]), np.sin(robot_yaw[1])])
+        #     cosine_distance2 = np.dot(robot0_dir, robot1_dir)
+        #     if cosine_distance < np.cos(np.pi*.75) and cosine_distance2 < np.cos(np.pi*.6) and not goal_reach:
+        #         terminate, contact = True, False
+        #         return terminate, contact
         
         return terminate, contact
 
@@ -460,13 +460,13 @@ class NavigationEnv(BaseEnv):
         rewards.append(dist_rew)
         # goal_reach
         max_speed = np.linalg.norm(self.action_space.high[:2])
-        goal_reach = (dist<=self.arrive_dist)
-        rewards.append(goal_reach*max_speed*self.dt)
+        goal_reach = (dist<=self.arrive_dist) 
+        rewards.append(goal_reach*(max_speed*self.dt+0.0006))
         # contact
         rewards.append(contact)
         # arrive for a while
         arrive4awhile = self.arrive_time > self.arrive_thresh
-        max_rew = max_speed * self.dt * goal_reach
+        max_rew = max_speed * self.dt * goal_reach + 0.0006
         remain_t = int((self.max_time - self.t) / self.dt)
         accu_coef = (1 - self.gamma**remain_t) / (1 - self.gamma)
         rewards.append(accu_coef * max_rew * arrive4awhile)
@@ -475,8 +475,17 @@ class NavigationEnv(BaseEnv):
         robot_state = state[4:4+self.num_agent*4]
         robot_state = robot_state.reshape([self.num_agent, 4])
         robot_yaw = robot_state[:,2]
-        cosine = np.cos(robot_yaw[0]-robot_yaw[1])
-        rewards.append(cosine)
+        load_pos = state[:2].copy().reshape([1,2])
+        load2robot = robot_state[:,:2] - load_pos
+        cosine, cos_cnt = 0., 0
+        for i in range(self.num_agent):
+            for j in range(i+1, self.num_agent):    
+                cosine += np.cos(robot_yaw[i]-robot_yaw[j])
+                cosine += np.dot(load2robot[i], load2robot[j]) / np.linalg.norm(load2robot[i]) / np.linalg.norm(load2robot[j])
+                cos_cnt += 2
+        cosine = cosine / cos_cnt
+        dist = np.linalg.norm(state[:2]-self.goal)
+        rewards.append((cosine-0.4) * (dist > self.arrive_dist))
         
         rew_dict = dict()
         rew_dict["dist_per_step"] = rewards[0]
@@ -758,7 +767,7 @@ class NavigationEnv(BaseEnv):
         load_pos = self.sim.data.qpos.copy()[0:2]
         load_pos = np.expand_dims(load_pos[:2].copy(), 0)
         path_dist = np.linalg.norm(load_pos-self.astar_path, axis=-1)
-        goal_idx = min(np.argmin(path_dist, axis=-1)+12, len(self.astar_path)-1) 
+        goal_idx = min(np.argmin(path_dist, axis=-1)+18, len(self.astar_path)-1) 
         local_goal = self.astar_path[goal_idx]
         self.prev_dist = np.linalg.norm(load_pos-local_goal)
         self.last_local_goal = local_goal.copy()
