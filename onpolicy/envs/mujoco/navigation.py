@@ -40,7 +40,7 @@ class NavigationEnv(BaseEnv):
         load_mass = np.array([0., 3., 5., 5., 5.])[self.num_agent]
         self.load_mass = load_mass * np.clip(np.sqrt(np.random.rand()), 0.2, 1.)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
-        self.anchor_id = (np.array([0,0,1]) + self.env_rank) % 4
+        self.anchor_id = (np.array([0,0,1,3]) + self.env_rank) % 4
         # if self.env_rank % 10 < 4:
         #     self.anchor_id = np.zeros(2) + self.env_rank % 10
         # elif self.env_rank % 10 < 8:
