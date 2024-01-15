@@ -7,6 +7,9 @@ exp="check"
 
 seed=7
 
+git add .
+git commit -m 'exp'
+
 CUDA_VISIBLE_DEVICES=0 python3 train/train_mujoco.py --env_name ${env} \
     --algorithm_name ${algo} --experiment_name ${exp} --scenario_name ${scenario} \
     --num_agents ${num_agents} --seed ${seed} --n_training_threads 1 --n_rollout_threads 16 \
