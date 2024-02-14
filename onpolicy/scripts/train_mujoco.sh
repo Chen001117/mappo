@@ -1,11 +1,11 @@
 #!/bin/sh
 env="MuJoCo"
 scenario="Walker2d-v3"
-num_agents=3
+num_agents=2
 algo="rmappo"
 exp="check"
 
-seed=7
+seed=8
 
 git add .
 git commit -m 'exp'
@@ -17,5 +17,5 @@ CUDA_VISIBLE_DEVICES=0 python3 train/train_mujoco.py --env_name ${env} \
     --ppo_epoch 5 --entropy_coef 0 --hidden_size 64 --log_interval 1 \
     --critic_hidden_size 128 --data_chunk_length 8 --lr 5e-5 --critic_lr 5e-5 \
     --wandb_name "cwz19" --user_name "cwz19" \
-    --model_dir "results/MuJoCo/Walker2d-v3/rmappo/check/wandb/run-20240212_090809-51f1jrze/files" 
+    --model_dir "results/MuJoCo/Walker2d-v3/rmappo/check/wandb/run-20240110_224445-yhuytopt/files" 
 done
