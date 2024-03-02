@@ -5,7 +5,7 @@ num_agents=3
 algo="rmappo"
 exp="check"
 
-seed=9
+seed=10
 
 git add .
 git commit -m 'exp'
