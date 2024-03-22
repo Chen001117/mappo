@@ -92,7 +92,7 @@ class SMACRunner(Runner):
                 self.log_train(train_infos, total_num_steps)
 
             # eval
-            if episode % self.eval_interval == 0 and self.use_eval:
+            if episode % self.eval_interval == self.eval_interval-1 and self.use_eval:
                 self.eval(total_num_steps)
 
     def warmup(self):
