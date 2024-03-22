@@ -137,7 +137,7 @@ class Runner(object):
     def train(self):
         """Train policies with data in buffer. """
         self.trainer.prep_training()
-        train_infos = self.trainer.train(self.buffer)      
+        train_infos = self.trainer.train(self.buffer)   
         self.buffer.after_update()
         return train_infos
 
