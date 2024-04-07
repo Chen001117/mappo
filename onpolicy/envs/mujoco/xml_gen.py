@@ -24,15 +24,15 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
     """.format(load_mass, box_half_len, box_half_len, box_half_len)
 
     for i in range(dog_num):
-       if anchor_id[i] == 0:
-         x_coor, y_coor = box_half_len, 0.
-       elif anchor_id[i] == 1:
-         x_coor, y_coor = 0., box_half_len
-       elif anchor_id[i] == 2:
-         x_coor, y_coor = -box_half_len, 0.
-       elif anchor_id[i] == 3:
-         x_coor, y_coor = 0., -box_half_len
-       strings += \
+        if anchor_id[i] == 0:
+          x_coor, y_coor = box_half_len, 0.
+        elif anchor_id[i] == 1:
+          x_coor, y_coor = 0., box_half_len
+        elif anchor_id[i] == 2:
+          x_coor, y_coor = -box_half_len, 0.
+        elif anchor_id[i] == 3:
+          x_coor, y_coor = 0., -box_half_len
+        strings += \
     """
       <site name="load_dog_{:02d}" pos="{} {} 0"/>
     """.format(i, x_coor, y_coor)
