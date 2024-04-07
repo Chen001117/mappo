@@ -208,9 +208,8 @@ class R_MAPPO():
 
         if update_actor:
             policy_l = (policy_loss - dist_entropy * self.entropy_coef)
-            if self._total_step < 1e4:
-                policy_l = policy_l * 0.
-            policy_l.backward()
+            if self._total_step > 1e4:
+                policy_l.backward()
 
         if self._use_max_grad_norm:
             actor_grad_norm = nn.utils.clip_grad_norm_(self.policy.actor.parameters(), self.max_grad_norm)
@@ -235,9 +234,9 @@ class R_MAPPO():
         self.policy.critic_optimizer.step()
 
         if self.use_distill:
-            return value_loss, critic_grad_norm, policy_action_loss, dist_entropy, distill_loss, imp_weights
+            return value_loss, critic_grad_norm, policy_action_loss, dist_entropy, distill_loss, imp_weights, return_batch.mean()
         else:        
-            return value_loss, critic_grad_norm, policy_action_loss, dist_entropy, actor_grad_norm, imp_weights
+            return value_loss, critic_grad_norm, policy_action_loss, dist_entropy, actor_grad_norm, imp_weights, return_batch.mean()
 
 
     def train(self, buffer, update_actor=True):
@@ -270,6 +269,7 @@ class R_MAPPO():
         train_info['actor_grad_norm'] = 0
         train_info['critic_grad_norm'] = 0
         train_info['ratio'] = 0
+        train_info['return_mean'] = 0
 
         for _ in range(self.ppo_epoch):
             if self._use_recurrent_policy:
@@ -281,7 +281,7 @@ class R_MAPPO():
 
             for sample in data_generator:
 
-                value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights \
+                value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights, return_mean \
                     = self.ppo_update(sample, update_actor)
 
                 train_info['value_loss'] += value_loss.item()
@@ -290,6 +290,7 @@ class R_MAPPO():
                 train_info['actor_grad_norm'] += actor_grad_norm
                 train_info['critic_grad_norm'] += critic_grad_norm
                 train_info['ratio'] += imp_weights.mean()
+                train_info['return_mean'] += return_mean.mean()
 
         num_updates = self.ppo_epoch * self.num_mini_batch
 

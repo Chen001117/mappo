@@ -40,7 +40,7 @@ class NavigationEnv(BaseEnv):
         load_mass = np.array([0., 3., 5., 5., 5.])[self.num_agent]
         self.load_mass = load_mass * np.clip(np.sqrt(np.random.rand()), 0.2, 1.)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
-        self.anchor_id = (np.array([0,0,1,3]) + self.env_rank) % 4
+        self.anchor_id = (np.array([3, 0, 1]) + self.env_rank) #% 4
         # if self.env_rank % 10 < 4:
         #     self.anchor_id = np.zeros(2) + self.env_rank % 10
         # elif self.env_rank % 10 < 8:
@@ -121,7 +121,7 @@ class NavigationEnv(BaseEnv):
         self.prev_output_vel = np.zeros([self.num_agent, self.action_space.shape[0]])
         # idx
         self.order = np.arange(self.num_agent)
-        self.env_idx = np.random.randint(69)
+        # self.env_idx = np.random.randint(69)
         # if self.env_rank % 10 < 4:
         #     self.env_idx = np.random.randint(87)
         # elif self.env_rank % 10 < 8:
@@ -129,7 +129,7 @@ class NavigationEnv(BaseEnv):
         # else:
         #     self.env_idx = np.random.randint(36) + 163
         
-        if True: # self.env_idx in self.env_data:
+        if False: # self.env_idx in self.env_data:
             import json 
             if self.env_idx not in self.env_data:
                 data_path = "./results/3agent/{:04d}.json".format(self.env_idx)
@@ -191,11 +191,12 @@ class NavigationEnv(BaseEnv):
                 dog_dist = np.linalg.norm(obs2dog, axis=-1).min()
                 min_dist = min(load_dist, dog_dist)
             init_obs = np.concatenate([self.init_obs_pos, self.init_obs_yaw, init_obs_z], axis=-1).flatten()
-            min_dist = 0.
-            while min_dist < 0.8:
+            min_dist, load_goal_dist = 0., 1e6
+            while min_dist < 0.8 or load_goal_dist > 7.:
                 self.goal = (np.random.random(2)-.5) * (self.msize-2.)
                 # self.goal = np.array([4.,4.])
                 min_dist = np.linalg.norm(self.goal.reshape([1,2])-self.init_obs_pos, axis=-1).min()
+                load_goal_dist = np.linalg.norm(self.goal-init_load_pos)
                     
             qpos = np.concatenate([init_load, init_dog, init_obs, init_wall, np.zeros(self.astar_node*2+2)])
             self.set_state(np.array(qpos), np.zeros_like(qpos))
@@ -243,21 +244,21 @@ class NavigationEnv(BaseEnv):
             if done:
                 return self.reset()
             
-            self.env_data[self.env_idx] = {
-                'anchor': self.anchor_id.copy().tolist(),
-                'qpos': qpos.copy().tolist(),
-                'goal':self.goal.copy().tolist(),
-                'path4render': self.path.copy(),
-                'astar_path': self.astar_path.copy().tolist(),
-                'init_obs_pos': self.init_obs_pos.copy().tolist(),
-                'init_obs_yaw': self.init_obs_yaw.copy().tolist(),
-            }
+            # self.env_data[self.env_idx] = {
+            #     'anchor': self.anchor_id.copy().tolist(),
+            #     'qpos': qpos.copy().tolist(),
+            #     'goal':self.goal.copy().tolist(),
+            #     'path4render': self.path.copy(),
+            #     'astar_path': self.astar_path.copy().tolist(),
+            #     'init_obs_pos': self.init_obs_pos.copy().tolist(),
+            #     'init_obs_yaw': self.init_obs_yaw.copy().tolist(),
+            # }
             
-            import json
-            with open("results/all_data/{:04d}.json".format(self.env_idx), "w") as file:
-                json.dump(self.env_data[self.env_idx], file)
-            print("current env idx", self.env_idx)
-            self.env_idx += 1
+            # import json
+            # with open("results/all_data/{:04d}.json".format(self.env_idx), "w") as file:
+            #     json.dump(self.env_data[self.env_idx], file)
+            # print("current env idx", self.env_idx)
+            # self.env_idx += 1
             
         
         # init variables
@@ -434,7 +435,7 @@ class NavigationEnv(BaseEnv):
 
         rewards = []
         # pre-process
-        weights = np.array([1., 1., -0.001, 1., 0.001])
+        weights = np.array([1., 1., -0.001, 1., 0.])
         weights = weights / weights.sum()
         state = self.sim.data.qpos.copy().flatten()
         # # dist_per_step
@@ -577,7 +578,7 @@ class NavigationEnv(BaseEnv):
             all_dog_pos = np.delete(all_dog_pos, i, axis=0)
             all_dog_yaw = dog_y.copy()
             all_dog_yaw = np.delete(all_dog_yaw, i, axis=0)
-            dog_len = np.array([0.65, 0.3])
+            dog_len = np.array([0.75, 0.4])
             dog_map = self._draw_map(
                 dog_p[i], dog_y[i][0], 
                 all_dog_pos, all_dog_yaw, dog_len
