@@ -1,7 +1,7 @@
 #!/bin/sh
 env="MuJoCo"
 scenario="Walker2d-v3"
-num_agents=3
+num_agents=12
 algo="rmappo"
 exp="check"
 
