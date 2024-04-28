@@ -244,8 +244,8 @@ def find_path(
     result = []
     for node in gen:
         coor_x, coor_y = node//500, node%500     
-        coor_x = (coor_x / 500 - .5) * 10.
-        coor_y = (coor_y / 500 - .5) * 10.
+        coor_x = (coor_x / 500 - .5) * 50.
+        coor_y = (coor_y / 500 - .5) * 50.
         result.append(np.array([coor_x, coor_y]))
     result = np.array(result)
     
