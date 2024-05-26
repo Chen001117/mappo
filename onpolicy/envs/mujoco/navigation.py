@@ -73,7 +73,7 @@ class NavigationEnv(BaseEnv):
         sta_size = sta_size if self.previledge_critic else obs_size*self.num_agent
         self.share_observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(sta_size,), dtype=np.float64), 
-            Box(low=-np.inf, high=np.inf, shape=(self.num_agent*3,self.lmlen,self.lmlen), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(self.num_agent,self.lmlen,self.lmlen), dtype=np.float64),
         ))
         # action space
         aspace_low = np.array([-0.15, -0.05, -0.5])
@@ -184,7 +184,7 @@ class NavigationEnv(BaseEnv):
                 init_obs_z = np.ones([self.num_obs, 1]) * 0.55
                 # self.init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
                 # self.init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
-                self.init_obs_pos = np.array([[-10.,-10.]])
+                self.init_obs_pos = np.array([[10.,0.]])
                 self.init_obs_yaw = np.array([[np.pi/2]])
                 load_dist = np.linalg.norm(self.init_obs_pos-init_load_pos, axis=-1).min()
                 d_pos = init_dog_pos.reshape([1,-1,2])
@@ -320,6 +320,7 @@ class NavigationEnv(BaseEnv):
         vec_obs = vec_obs[self.order]
         img_obs = img_obs[self.order]
         img_sta = img_obs.copy()
+        img_sta = (np.sum(img_sta, axis=1) != 0) * 1. # TODO
         img_sta = img_sta.reshape([1, -1, *self.observation_space[1].shape[-2:]])
         img_sta = np.repeat(img_sta, self.num_agent, axis=0)
         
