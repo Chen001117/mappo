@@ -68,10 +68,10 @@ def get_xml(dog_num=1, obs_num=1, anchor_id=None, load_mass=None, cable_len=None
       <joint axis="0 1 0" limited="false" name="dog{:02d}_axisy" pos="0 0 0" type="slide"/>
       <joint axis="0 0 1" limited="false" name="dog{:02d}_rootz" pos="0 0 0" type="hinge"/>
       <joint axis="0 0 1" limited="false" name="dog{:02d}_axisz" pos="0 0 0" type="slide"/>
-      <geom mass="13." size="0.375 0.2 0.15" name="dog{:02d}" type="box" rgba="0.8 0.4 0. 1"/>
+      <geom mass="13." size="0.075 0.04 0.15" name="dog{:02d}" type="box" rgba="0.8 0.4 0. 1"/>
       
       <body name="dog{:02d}_head" pos="0.25 0 0.25">
-        <geom mass="0.001" size="0.075 0.1 0.1" name="dog{:02d}_head" type="box" rgba="0.7 0.3 0. 1"/>
+        <geom mass="0.001" size="0.075 0.1 0.1" name="dog{:02d}_head" type="box" rgba="0.7 0.3 0. 0"/>
       </body>
     </body>
     """.format(i,i,i,i,i,i,i,i,i)
