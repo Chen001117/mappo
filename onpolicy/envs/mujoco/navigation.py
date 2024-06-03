@@ -73,7 +73,7 @@ class NavigationEnv(BaseEnv):
         sta_size = sta_size if self.previledge_critic else obs_size*self.num_agent
         self.share_observation_space = Tuple((
             Box(low=-np.inf, high=np.inf, shape=(sta_size,), dtype=np.float64), 
-            Box(low=-np.inf, high=np.inf, shape=(self.num_agent*3,self.lmlen,self.lmlen), dtype=np.float64),
+            Box(low=-np.inf, high=np.inf, shape=(self.num_agent,self.lmlen,self.lmlen), dtype=np.float64),
         ))
         # action space
         aspace_low = np.array([-0.15, -0.05, -0.5])
@@ -184,7 +184,7 @@ class NavigationEnv(BaseEnv):
                 init_obs_z = np.ones([self.num_obs, 1]) * 0.55
                 # self.init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
                 # self.init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
-                self.init_obs_pos = np.array([[-10.,-10.]])
+                self.init_obs_pos = np.array([[10.,0.]])
                 self.init_obs_yaw = np.array([[np.pi/2]])
                 load_dist = np.linalg.norm(self.init_obs_pos-init_load_pos, axis=-1).min()
                 d_pos = init_dog_pos.reshape([1,-1,2])
@@ -294,7 +294,7 @@ class NavigationEnv(BaseEnv):
         load_pos = self.sim.data.qpos.copy()[0:2]
         load_pos = np.expand_dims(load_pos[:2].copy(), 0)
         path_dist = np.linalg.norm(load_pos-self.astar_path, axis=-1)
-        goal_idx = min(np.argmin(path_dist, axis=-1)+18, len(self.astar_path)-1) 
+        goal_idx = min(np.argmin(path_dist, axis=-1)+8, len(self.astar_path)-1) 
         local_goal = self.astar_path[goal_idx]
         local_goal = (self.goal - local_goal) / self.msize
         local_goal = np.expand_dims(local_goal, 0)
@@ -320,6 +320,7 @@ class NavigationEnv(BaseEnv):
         vec_obs = vec_obs[self.order]
         img_obs = img_obs[self.order]
         img_sta = img_obs.copy()
+        img_sta = (np.sum(img_sta, axis=1) != 0) * 1. # TODO
         img_sta = img_sta.reshape([1, -1, *self.observation_space[1].shape[-2:]])
         img_sta = np.repeat(img_sta, self.num_agent, axis=0)
         
@@ -373,25 +374,25 @@ class NavigationEnv(BaseEnv):
                 terminate, contact = True, False
             return terminate, contact
 
-        # load contact rope done
-        state = self.sim.data.qpos.copy().flatten()
-        robot_state = state[4:4+self.num_agent*4]
-        robot_state = robot_state.reshape([self.num_agent, 4])
-        robot_pos = robot_state[:,:2]
-        load_pos = state[:2].reshape([1, 2])
-        load_yaw = state[2]
-        anchor_yaw = self.anchor_id * np.pi/2 + load_yaw
-        anchor_pos = np.stack([
-            np.cos(anchor_yaw)*self.box_half_len+load_pos[:,0],
-            np.sin(anchor_yaw)*self.box_half_len+load_pos[:,1],
-        ], axis=-1)
-        anchor2robot = robot_pos - anchor_pos
-        anchor2robot_yaw = np.arctan2(anchor2robot[:,1], anchor2robot[:,0])
-        cos_dist = np.cos(anchor2robot_yaw)*np.cos(anchor_yaw)
-        cos_dist += np.sin(anchor2robot_yaw)*np.sin(anchor_yaw)
-        if (cos_dist < np.cos(np.pi*3/4)).any():
-            terminate, contact = True, False
-            return terminate, contact
+        # # load contact rope done
+        # state = self.sim.data.qpos.copy().flatten()
+        # robot_state = state[4:4+self.num_agent*4]
+        # robot_state = robot_state.reshape([self.num_agent, 4])
+        # robot_pos = robot_state[:,:2]
+        # load_pos = state[:2].reshape([1, 2])
+        # load_yaw = state[2]
+        # anchor_yaw = self.anchor_id * np.pi/2 + load_yaw
+        # anchor_pos = np.stack([
+        #     np.cos(anchor_yaw)*self.box_half_len+load_pos[:,0],
+        #     np.sin(anchor_yaw)*self.box_half_len+load_pos[:,1],
+        # ], axis=-1)
+        # anchor2robot = robot_pos - anchor_pos
+        # anchor2robot_yaw = np.arctan2(anchor2robot[:,1], anchor2robot[:,0])
+        # cos_dist = np.cos(anchor2robot_yaw)*np.cos(anchor_yaw)
+        # cos_dist += np.sin(anchor2robot_yaw)*np.sin(anchor_yaw)
+        # if (cos_dist < np.cos(np.pi*3/4)).any():
+        #     terminate, contact = True, False
+        #     return terminate, contact
         
         # out of time
         if self.t > self.max_time:
@@ -406,12 +407,12 @@ class NavigationEnv(BaseEnv):
             terminate, contact = True, False
             return terminate, contact
         
-        # load stuck for a while
-        if self.t > 2 * self.stuck_time:
-            dist = np.linalg.norm(state[:2]-self.hist_load[0])
-            if dist < 0.2:
-                terminate, contact = True, False
-                return terminate, contact
+        # # load stuck for a while
+        # if self.t > 2 * self.stuck_time:
+        #     dist = np.linalg.norm(state[:2]-self.hist_load[0])
+        #     if dist < 0.2:
+        #         terminate, contact = True, False
+        #         return terminate, contact
             
         # if self.t > 5.:
         #     state = self.sim.data.qpos.copy().flatten()
@@ -580,7 +581,7 @@ class NavigationEnv(BaseEnv):
             all_dog_pos = np.delete(all_dog_pos, i, axis=0)
             all_dog_yaw = dog_y.copy()
             all_dog_yaw = np.delete(all_dog_yaw, i, axis=0)
-            dog_len = np.array([0.75, 0.4])
+            dog_len = np.array([0.15, 0.08])
             dog_map = self._draw_map(
                 dog_p[i], dog_y[i][0], 
                 all_dog_pos, all_dog_yaw, dog_len
@@ -770,7 +771,7 @@ class NavigationEnv(BaseEnv):
         load_pos = self.sim.data.qpos.copy()[0:2]
         load_pos = np.expand_dims(load_pos[:2].copy(), 0)
         path_dist = np.linalg.norm(load_pos-self.astar_path, axis=-1)
-        goal_idx = min(np.argmin(path_dist, axis=-1)+18, len(self.astar_path)-1) 
+        goal_idx = min(np.argmin(path_dist, axis=-1)+8, len(self.astar_path)-1) 
         local_goal = self.astar_path[goal_idx]
         self.prev_dist = np.linalg.norm(load_pos-local_goal)
         self.last_local_goal = local_goal.copy()
