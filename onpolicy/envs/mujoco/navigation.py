@@ -15,7 +15,7 @@ class NavigationEnv(BaseEnv):
         # hyper-para
         self.env_rank = env_rank
         self.previledge_critic = True
-        self.regenerate_ratio = 0.75
+        self.regenerate_ratio = 0.75 # higher ratio -> harder task
         self.arrive_dist = 1.
         self.mlen = 500 # global map length (pixels)
         self.msize = 10. # map size (m)
@@ -29,7 +29,6 @@ class NavigationEnv(BaseEnv):
         self.measure_random_scale = 1e-2
         self.init_kp = np.array([[2000, 2000, 800]])
         self.init_kd = np.array([[0.02, 0.02, 1e-6]])
-        # self.init_ki = np.array([[0.0, 0.0, 10.]])
         self.max_axis_torque = 100.
         self.astar_node = 20 # for rendering astar path 
         self.box_half_len = 0.25
@@ -41,12 +40,6 @@ class NavigationEnv(BaseEnv):
         self.load_mass = load_mass * np.clip(np.sqrt(np.random.rand()), 0.2, 1.)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         self.anchor_id = (np.array([3,0,1]) + self.env_rank) % 4
-        # if self.env_rank % 10 < 4:
-        #     self.anchor_id = np.zeros(2) + self.env_rank % 10
-        # elif self.env_rank % 10 < 8:
-        #     self.anchor_id = (np.arange(2) + self.env_rank % 10) % 4
-        # else:
-        #     self.anchor_id = (np.array([0,2]) + self.env_rank % 10) % 4
         self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         model = get_xml(
             dog_num = self.num_agent, 
@@ -110,7 +103,6 @@ class NavigationEnv(BaseEnv):
         # init random tasks
         self.kp  = self.init_kp * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
         self.kd  = self.init_kd * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
-        # self.ki  = self.init_ki * (1. + (np.random.random(3)-.5) * self.domain_random_scale)
         # init variables
         self.t = 0.
         self.max_time = 1e6
@@ -121,15 +113,8 @@ class NavigationEnv(BaseEnv):
         self.prev_output_vel = np.zeros([self.num_agent, self.action_space.shape[0]])
         # idx
         self.order = np.arange(self.num_agent)
-        # self.env_idx = np.random.randint(69)
-        # if self.env_rank % 10 < 4:
-        #     self.env_idx = np.random.randint(87)
-        # elif self.env_rank % 10 < 8:
-        #     self.env_idx = np.random.randint(76) + 87
-        # else:
-        #     self.env_idx = np.random.randint(36) + 163
         
-        if False: # self.env_idx in self.env_data:
+        if False: 
             import json 
             if self.env_idx not in self.env_data:
                 data_path = "./results/3agent/{:04d}.json".format(self.env_idx)
@@ -148,8 +133,6 @@ class NavigationEnv(BaseEnv):
         else:
             init_load_pos = (np.random.random(2)-.5) * self.msize 
             init_load_yaw = np.random.random(1) * 2 * np.pi 
-            # init_load_pos = np.array([0.,0.])
-            # init_load_yaw = np.array([0.])
             init_load_z = np.ones(1) * 0.55
             init_load = np.concatenate([init_load_pos, init_load_yaw, init_load_z], axis=-1).flatten()
             min_dist = 0.
@@ -157,9 +140,6 @@ class NavigationEnv(BaseEnv):
                 init_dog_load_len = np.random.random([self.num_agent, 1]) * 0.25 + 0.75
                 init_dog_load_yaw = (np.random.random([self.num_agent, 1])-.5) * np.pi
                 init_dog_yaw = np.random.random([self.num_agent, 1]) * np.pi * 2
-                # init_dog_load_len = np.array([[1.75],[1.75],[1.75],[1.75],[1.75],[1.75],[1.75],[1.75],[3.75],[3.75],[3.75],[3.75]])
-                # init_dog_load_yaw = np.array([[np.pi/6],[0.],[-np.pi/6],[np.pi/6],[-np.pi/6],[0.],[np.pi/6],[-np.pi/6],[np.pi/6],[-np.pi/6],[0.],[0.]])
-                # init_dog_yaw = np.array([[0.],[0.],[0.],[0.],[0.],[0.],[0.],[0.],[0.],[0.],[0.],[0.]])
                 anchor_id = self.anchor_id.reshape([self.num_agent, 1])
                 anchor_pos = self._get_toward(init_load_yaw)[0] * self.box_half_len * (anchor_id==0)
                 anchor_pos += self._get_toward(init_load_yaw)[1] * self.box_half_len * (anchor_id==1)
@@ -167,8 +147,8 @@ class NavigationEnv(BaseEnv):
                 anchor_pos += self._get_toward(init_load_yaw)[1] * (-self.box_half_len) * (anchor_id==3)
                 anchor_pos += init_load_pos.reshape([1,2])
                 anc_dog_yaw = init_load_yaw + anchor_id * np.pi/2 + init_dog_load_yaw
-                init_dog_pos = self._get_toward(anc_dog_yaw)[0] * init_dog_load_len
-                init_dog_pos += anchor_pos
+                init_dog_pos = anchor_pos
+                init_dog_pos += self._get_toward(anc_dog_yaw)[0] * init_dog_load_len
                 init_dog_z = np.ones([self.num_agent, 1]) * self.box_half_len
                 dog2dog = init_dog_pos.reshape([-1,1,2])-init_dog_pos.reshape([1,-1,2])
                 min_dist = np.linalg.norm(dog2dog, axis=-1) + np.eye(self.num_agent)
@@ -182,8 +162,6 @@ class NavigationEnv(BaseEnv):
                 init_obs_z = np.ones([self.num_obs, 1]) * 0.55
                 self.init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
                 self.init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
-                # self.init_obs_pos = np.array([[10.,0.]])
-                # self.init_obs_yaw = np.array([[np.pi/2]])
                 load_dist = np.linalg.norm(self.init_obs_pos-init_load_pos, axis=-1).min()
                 d_pos = init_dog_pos.reshape([1,-1,2])
                 o_pos = self.init_obs_pos.reshape([-1, 1, 2])
@@ -194,28 +172,25 @@ class NavigationEnv(BaseEnv):
             min_dist, load_goal_dist = 0., 1e6
             while min_dist < 0.8:
                 self.goal = (np.random.random(2)-.5) * (self.msize-2.)
-                # self.goal = np.array([20.,0.])
                 min_dist = np.linalg.norm(self.goal.reshape([1,2])-self.init_obs_pos, axis=-1).min()
                 load_goal_dist = np.linalg.norm(self.goal-init_load_pos)
                     
             qpos = np.concatenate([init_load, init_dog, init_obs, init_wall, np.zeros(self.astar_node*2+2)])
             self.set_state(np.array(qpos), np.zeros_like(qpos))
             
+            # warm-up is used for stability
             for _ in range(self.warm_step):
                 terminated, _ = self._do_simulation(self.last_cmd.copy(), self.frame_skip)
-                # regenerate if done
                 if terminated:
                     return self.reset()
+            
             # astar
-            # draw obstacle map
             obs_len = np.ones([2])
-            obs_map = self._draw_obs_map(
+            obs_map = self._draw_obs_map( # draw obstacle map
                 self.init_obs_pos, self.init_obs_yaw, obs_len
             )
-            # do astar
             load_pos = (init_load_pos / self.msize + .5) * self.mlen
             goal_pos = (self.goal / self.msize + .5) * self.mlen
-            
             self.astar_path = find_path(load_pos, goal_pos, obs_map)
             
             if self.astar_path is None:
@@ -226,9 +201,11 @@ class NavigationEnv(BaseEnv):
                 node = (goal_pos * i/20) + (load_pos * (20-i)/20)
                 node_x, node_y = int(node[0]), int(node[1])
                 straight &= not obs_map[node_x, node_y]
+            # regenerate the path if it is too easy
             if straight and np.random.rand() < self.regenerate_ratio:
                 return self.reset()
             
+            # self.path is used for rendering
             self.path = []
             for i in range(self.astar_node-1):
                 idx = int(len(self.astar_path)/self.astar_node*i)
@@ -244,21 +221,21 @@ class NavigationEnv(BaseEnv):
             if done:
                 return self.reset()
             
-            # self.env_data[self.env_idx] = {
-            #     'anchor': self.anchor_id.copy().tolist(),
-            #     'qpos': qpos.copy().tolist(),
-            #     'goal':self.goal.copy().tolist(),
-            #     'path4render': self.path.copy(),
-            #     'astar_path': self.astar_path.copy().tolist(),
-            #     'init_obs_pos': self.init_obs_pos.copy().tolist(),
-            #     'init_obs_yaw': self.init_obs_yaw.copy().tolist(),
-            # }
+            self.env_data[self.env_idx] = {
+                'anchor': self.anchor_id.copy().tolist(),
+                'qpos': qpos.copy().tolist(),
+                'goal':self.goal.copy().tolist(),
+                'path4render': self.path.copy(),
+                'astar_path': self.astar_path.copy().tolist(),
+                'init_obs_pos': self.init_obs_pos.copy().tolist(),
+                'init_obs_yaw': self.init_obs_yaw.copy().tolist(),
+            }
             
-            # import json
-            # with open("results/all_data/{:04d}.json".format(self.env_idx), "w") as file:
-            #     json.dump(self.env_data[self.env_idx], file)
-            # print("current env idx", self.env_idx)
-            # self.env_idx += 1
+            import json
+            with open("results/3agents/{:04d}.json".format(self.env_idx), "w") as file:
+                json.dump(self.env_data[self.env_idx], file)
+            print("current env idx", self.env_idx)
+            self.env_idx += 1
             
         
         # init variables
