@@ -39,7 +39,7 @@ class NavigationEnv(BaseEnv):
         load_mass = np.array([0., 3., 5., 5., 5.])[self.num_agent]
         self.load_mass = load_mass * np.clip(np.sqrt(np.random.rand()), 0.2, 1.)
         self.cable_len = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
-        self.anchor_id = (np.array([3,0,1]) + self.env_rank) % 4
+        self.anchor_id = (np.array([0,]) + self.env_rank) % 4
         self.fric_coef = 1. * (1 + (np.random.random(self.num_agent)-.5) * self.domain_random_scale)
         model = get_xml(
             dog_num = self.num_agent, 
@@ -114,10 +114,11 @@ class NavigationEnv(BaseEnv):
         # idx
         self.order = np.arange(self.num_agent)
         
-        if False: 
+        if len(self.env_data) > 64: 
+            self.env_idx = np.random.randint(0, len(self.env_data))
             import json 
             if self.env_idx not in self.env_data:
-                data_path = "./results/3agent/{:04d}.json".format(self.env_idx)
+                data_path = "./results/3agent/{:04d}.json".format(self.env_idx+self.env_rank*64)
                 with open(data_path) as file:
                     data = json.load(file)
                 self.env_data[self.env_idx] = data
@@ -232,7 +233,7 @@ class NavigationEnv(BaseEnv):
             }
             
             import json
-            with open("results/3agents/{:04d}.json".format(self.env_idx), "w") as file:
+            with open("results/3agents/{:04d}.json".format(self.env_idx+self.env_rank*64), "w") as file:
                 json.dump(self.env_data[self.env_idx], file)
             print("current env idx", self.env_idx)
             self.env_idx += 1
@@ -413,7 +414,7 @@ class NavigationEnv(BaseEnv):
 
         rewards = []
         # pre-process
-        weights = np.array([1., 1., -0.001, 1., 0.])
+        weights = np.array([1., 1., -0.001, 1.])
         weights = weights / weights.sum()
         state = self.sim.data.qpos.copy().flatten()
         # # dist_per_step
@@ -450,28 +451,28 @@ class NavigationEnv(BaseEnv):
         accu_coef = (1 - self.gamma**remain_t) / (1 - self.gamma)
         rewards.append(accu_coef * max_rew * arrive4awhile)
         
-        state = self.sim.data.qpos.copy().flatten()
-        robot_state = state[4:4+self.num_agent*4]
-        robot_state = robot_state.reshape([self.num_agent, 4])
-        robot_yaw = robot_state[:,2]
-        load_pos = state[:2].copy().reshape([1,2])
-        load2robot = robot_state[:,:2] - load_pos
-        cosine, cos_cnt = 0., 0
-        for i in range(self.num_agent):
-            for j in range(i+1, self.num_agent):    
-                cosine += np.cos(robot_yaw[i]-robot_yaw[j])
-                cosine += np.dot(load2robot[i], load2robot[j]) / np.linalg.norm(load2robot[i]) / np.linalg.norm(load2robot[j])
-                cos_cnt += 2
-        cosine = cosine / cos_cnt
-        dist = np.linalg.norm(state[:2]-self.goal)
-        rewards.append((cosine-0.4) * (dist > self.arrive_dist))
+        # state = self.sim.data.qpos.copy().flatten()
+        # robot_state = state[4:4+self.num_agent*4]
+        # robot_state = robot_state.reshape([self.num_agent, 4])
+        # robot_yaw = robot_state[:,2]
+        # load_pos = state[:2].copy().reshape([1,2])
+        # load2robot = robot_state[:,:2] - load_pos
+        # cosine, cos_cnt = 0., 0
+        # for i in range(self.num_agent):
+        #     for j in range(i+1, self.num_agent):    
+        #         cosine += np.cos(robot_yaw[i]-robot_yaw[j])
+        #         cosine += np.dot(load2robot[i], load2robot[j]) / np.linalg.norm(load2robot[i]) / np.linalg.norm(load2robot[j])
+        #         cos_cnt += 2
+        # cosine = cosine / cos_cnt
+        # dist = np.linalg.norm(state[:2]-self.goal)
+        # rewards.append((cosine-0.4) * (dist > self.arrive_dist))
         
         rew_dict = dict()
         rew_dict["dist_per_step"] = rewards[0]
         rew_dict["goal_reach"] = rewards[1]
         rew_dict["contact_done"] = rewards[2]
         rew_dict["arrive4awhile"] = rewards[3]
-        rew_dict["cosine"] = rewards[4]
+        # rew_dict["cosine"] = rewards[4]
         rews = np.dot(rewards, weights)
         
         return rews, rew_dict
