@@ -6,6 +6,7 @@ from onpolicy.envs.mujoco.xml_gen import get_xml
 from onpolicy.envs.mujoco.astar import find_path
 from gym.spaces import Box, Tuple
 import time
+import math
 
 class NavigationEnv(BaseEnv):
     def __init__(self, num_agents, env_rank, **kwargs):
@@ -15,14 +16,29 @@ class NavigationEnv(BaseEnv):
         # hyper-para
         self.env_rank = env_rank
         self.previledge_critic = True
-        self.regenerate_ratio = 0.75
+        self.regenerate_ratio = 0.25
         self.arrive_dist = 1.
         self.mlen = 500 # global map length (pixels)
         self.msize = 10. # map size (m)
         self.lmlen = 57 # local map length (pixels)
         self.warm_step = 4 # warm-up: let everything stable (s)
         self.frame_skip = 10 # 100/frame_skip = decision_freq (Hz)
-        self.num_obs = 2
+        self.init_obs_pos = np.array([
+            [1.5,1.25],
+            [1.5,1.75],
+            [1.5,2.25],
+            [2.,2.25],
+            [2.5,2.25],
+            [3.,2.25],
+            [3.25,-0.8],
+            [3.25,-1.3],
+            [3.25,-1.8],
+            [2.75,-1.8],
+            [2.25,-1.8],
+            [1.75,-1.8],
+        ])
+        self.goal = np.array([3.25,1.25])
+        self.num_obs = len(self.init_obs_pos)
         self.hist_len = 4
         self.num_agent = num_agents
         self.domain_random_scale = 1e-1
@@ -93,13 +109,17 @@ class NavigationEnv(BaseEnv):
             [0., -self.msize/2-1],
         ])
         self.wall_yaw = np.array([[np.pi/2],[np.pi/2],[0.],[0.]])
-        self.goal = np.zeros([2]) + 1e6
+        # self.goal = np.zeros([2]) + 1e6
         self.env_idx = 0
         
         self.arrive_time = 0.
         self.total_step = 0
         self.hist_load = []
         self.env_data = dict()
+
+        # stat
+        self.total_cnt = 0
+        self.suc_cnt = 0
 
     def seed(self, seed):
         super().seed(seed)
@@ -148,20 +168,22 @@ class NavigationEnv(BaseEnv):
             self.set_state(np.array(qpos), np.zeros_like(qpos))
             self._do_simulation(self.last_cmd.copy(), self.frame_skip)
         else:
-            # init_load_pos = (np.random.random(2)-.5) * self.msize 
-            # init_load_yaw = np.random.random(1) * 2 * np.pi 
-            init_load_pos = np.array([0.,0.])
-            init_load_yaw = np.array([0.])
+            pre_goal = (np.random.random(2)-.5) * (self.msize-2.)
+            init_load_pos = (np.random.random(2)-.5) * self.msize 
+            load2goal = pre_goal - init_load_pos
+            init_load_yaw = np.array([math.atan2(load2goal[1], load2goal[0])]) #np.random.random(1) * 2 * np.pi 
+            # init_load_pos = np.array([0.,0.])
+            # init_load_yaw = np.array([0.])
             init_load_z = np.ones(1) * 0.55
             init_load = np.concatenate([init_load_pos, init_load_yaw, init_load_z], axis=-1).flatten()
             min_dist = 0.
             while min_dist < 0.6:
-                # init_dog_load_len = np.random.random([self.num_agent, 1]) * 0.25 + 0.75
-                # init_dog_load_yaw = (np.random.random([self.num_agent, 1])-.5) * np.pi
-                # init_dog_yaw = np.random.random([self.num_agent, 1]) * np.pi * 2
-                init_dog_load_len = np.array([[.75],[.75],[.75]])
-                init_dog_load_yaw = np.array([[np.pi/4],[0.],[-np.pi/4]])
-                init_dog_yaw = np.array([[0.],[0.],[0.]])
+                init_dog_load_len = np.random.random([self.num_agent, 1]) * 0.25 + 0.75
+                init_dog_load_yaw = (np.random.random([self.num_agent, 1])-.5) * np.pi
+                init_dog_yaw = init_load_yaw[0] + (np.random.random([self.num_agent, 1])-.5) * np.pi / 2 # np.random.random([self.num_agent, 1]) * np.pi * 2
+                # init_dog_load_len = np.array([[.75],[.75],[.75]])
+                # init_dog_load_yaw = np.array([[np.pi/4],[0.],[-np.pi/4]])
+                # init_dog_yaw = np.array([[0.],[0.],[0.]])
                 anchor_id = self.anchor_id.reshape([self.num_agent, 1])
                 anchor_pos = self._get_toward(init_load_yaw)[0] * self.box_half_len * (anchor_id==0)
                 anchor_pos += self._get_toward(init_load_yaw)[1] * self.box_half_len * (anchor_id==1)
@@ -182,10 +204,9 @@ class NavigationEnv(BaseEnv):
             min_dist = 0.
             while min_dist < .8:
                 init_obs_z = np.ones([self.num_obs, 1]) * 0.55
-                # self.init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
-                # self.init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
-                self.init_obs_pos = np.array([[1.5,1.25],[1.5,-1.25]])
-                self.init_obs_yaw = np.array([[0.],[0.]])
+                self.init_obs_pos = (np.random.random([self.num_obs, 2])-.5) * self.msize 
+                self.init_obs_yaw = np.random.random([self.num_obs, 1]) * np.pi
+                # self.init_obs_yaw = np.array([[0.] for _ in range(len(self.init_obs_pos))])
                 load_dist = np.linalg.norm(self.init_obs_pos-init_load_pos, axis=-1).min()
                 d_pos = init_dog_pos.reshape([1,-1,2])
                 o_pos = self.init_obs_pos.reshape([-1, 1, 2])
@@ -195,8 +216,10 @@ class NavigationEnv(BaseEnv):
             init_obs = np.concatenate([self.init_obs_pos, self.init_obs_yaw, init_obs_z], axis=-1).flatten()
             min_dist, load_goal_dist = 0., 1e6
             while min_dist < 0.8:
-                # self.goal = (np.random.random(2)-.5) * (self.msize-2.)
-                self.goal = np.array([3.,0.])
+                self.goal = pre_goal + (np.random.random(2)-.5) * 2.
+                if (self.goal < (-self.msize/2+1.)).any() or (self.goal > (self.msize/2-1.)).any():
+                    continue
+                # self.goal = np.array([4.,0.])
                 min_dist = np.linalg.norm(self.goal.reshape([1,2])-self.init_obs_pos, axis=-1).min()
                 load_goal_dist = np.linalg.norm(self.goal-init_load_pos)
                     
@@ -210,7 +233,7 @@ class NavigationEnv(BaseEnv):
                     return self.reset()
             # astar
             # draw obstacle map
-            obs_len = np.ones([2]) * 0.5
+            obs_len = np.ones([2]) #* 0.5
             obs_map = self._draw_obs_map(
                 self.init_obs_pos, self.init_obs_yaw, obs_len
             )
@@ -342,11 +365,11 @@ class NavigationEnv(BaseEnv):
         info(dict)
         """
         
-        if self.reset_:
-            import time
-            time.sleep(3)
-            print("pause")
-        self.reset_ = False
+        # if self.reset_:
+        #     import time
+        #     time.sleep(3)
+        #     print("pause")
+        # self.reset_ = False
         
         # rearange actions
         idx = np.argsort(self.order)
@@ -362,6 +385,17 @@ class NavigationEnv(BaseEnv):
         self.total_rew += reward
         # post process
         self._post_update()
+        
+        if done:
+            state = self.sim.data.qpos.copy().flatten()
+            dist = np.linalg.norm(state[:2]-self.goal)
+            goal_reach = (dist<=self.arrive_dist)
+            self.total_cnt += 1
+            self.suc_cnt += goal_reach * 1.
+            print("suc_rate", self.suc_cnt/self.total_cnt)
+
+        self.arrive_time = 0.
+
         return observation, reward, done, False, info
 
     def _get_done(self, dt): 
@@ -410,7 +444,7 @@ class NavigationEnv(BaseEnv):
         state = self.sim.data.qpos.copy().flatten()
         dist = np.linalg.norm(state[:2]-self.goal)
         goal_reach = (dist<=self.arrive_dist)
-        if self.arrive_time > self.arrive_thresh and goal_reach:
+        if goal_reach: # self.arrive_time > arrive_thresh
             terminate, contact = True, False
             return terminate, contact
         
@@ -560,7 +594,7 @@ class NavigationEnv(BaseEnv):
             obs_pos += (np.random.random(obs_pos.shape)-.5) * self.measure_random_scale
             obs_yaw = self.init_obs_yaw.copy()
             obs_yaw += (np.random.random(obs_yaw.shape)-.5) * self.measure_random_scale
-            obs_len = np.ones([2]) * 0.5
+            obs_len = np.ones([2]) #* 0.5
             obs_map = self._draw_map(
                 dog_p[i], dog_y[i][0], 
                 obs_pos, obs_yaw, obs_len
