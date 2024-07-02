@@ -20,7 +20,7 @@ def make_render_env(all_args):
     def get_env_fn(rank):
         def init_env(rank):
             if all_args.env_name == "MuJoCo":
-                env = MujocoEnv(all_args.num_agents) #gym.make(all_args.scenario_name) #(all_args)
+                env = MujocoEnv(all_args.num_agents, rank) #gym.make(all_args.scenario_name) #(all_args)
                 env = MARLWrapper(env)
             else:
                 print("Can not support the " +
